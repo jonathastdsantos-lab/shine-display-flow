@@ -134,6 +134,7 @@ export default function Dashboard() {
     const reordered = arrayMove(items, oldIndex, newIndex);
     setPlaylists((prev) => prev.map((p) => p.id === playlistId ? { ...p, ordem_arquivos: reordered } : p));
     await supabase.from("playlists").update({ ordem_arquivos: reordered }).eq("id", playlistId);
+  };
 
   const deletePlaylist = async (id: string) => {
     await supabase.from("playlists").delete().eq("id", id);
