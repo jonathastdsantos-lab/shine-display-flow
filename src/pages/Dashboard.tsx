@@ -6,8 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Upload, Plus, Trash2, GripVertical, Eye, Monitor, Settings, Image, ListVideo } from "lucide-react";
+import { LogOut, Upload, Plus, Trash2, Eye, Monitor, Settings, Image, ListVideo } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers" ;
+import SortablePlaylistItem from "@/components/SortablePlaylistItem";
 
 interface MediaItem {
   id: string;
