@@ -6,8 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Upload, Plus, Trash2, GripVertical, Eye, Monitor, Settings, Image, ListVideo } from "lucide-react";
+import { LogOut, Upload, Plus, Trash2, Eye, Monitor, Settings, Image, ListVideo } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers" ;
+import SortablePlaylistItem from "@/components/SortablePlaylistItem";
 
 interface MediaItem {
   id: string;
@@ -111,6 +115,25 @@ export default function Dashboard() {
     updated.splice(index, 1);
     await supabase.from("playlists").update({ ordem_arquivos: updated }).eq("id", playlistId);
     fetchData();
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = async (playlistId: string, event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const pl = playlists.find((p) => p.id === playlistId);
+    if (!pl) return;
+    const items = pl.ordem_arquivos || [];
+    const oldIndex = items.findIndex((_, i) => `${playlistId}-${i}` === active.id);
+    const newIndex = items.findIndex((_, i) => `${playlistId}-${i}` === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(items, oldIndex, newIndex);
+    setPlaylists((prev) => prev.map((p) => p.id === playlistId ? { ...p, ordem_arquivos: reordered } : p));
+    await supabase.from("playlists").update({ ordem_arquivos: reordered }).eq("id", playlistId);
   };
 
   const deletePlaylist = async (id: string) => {
@@ -222,15 +245,21 @@ export default function Dashboard() {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {(pl.ordem_arquivos || []).map((mediaId, idx) => (
-                        <div key={`${mediaId}-${idx}`} className="flex items-center gap-2 rounded border border-border/50 bg-muted/30 px-3 py-2 text-sm">
-                          <GripVertical className="h-4 w-4 text-muted-foreground" />
-                          <span className="flex-1">{getMediaName(mediaId)}</span>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFromPlaylist(pl.id, idx)}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={(e) => handleDragEnd(pl.id, e)}>
+                        <SortableContext items={(pl.ordem_arquivos || []).map((_, i) => `${pl.id}-${i}`)} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-2">
+                            {(pl.ordem_arquivos || []).map((mediaId, idx) => (
+                              <SortablePlaylistItem
+                                key={`${pl.id}-${idx}`}
+                                id={`${pl.id}-${idx}`}
+                                index={idx}
+                                name={getMediaName(mediaId)}
+                                onRemove={() => removeFromPlaylist(pl.id, idx)}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
                       {media.length > 0 && (
                         <div className="flex flex-wrap gap-1 pt-2">
                           {media.map((m) => (
