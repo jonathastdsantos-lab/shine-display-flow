@@ -11,9 +11,12 @@ export default function ClockWidget() {
   }, []);
 
   return (
-    <div className="rounded-xl bg-background/20 px-4 py-2 backdrop-blur-md text-primary-foreground">
-      <p className="text-2xl font-bold font-display tabular-nums">{format(now, "HH:mm:ss")}</p>
-      <p className="text-xs opacity-70">{format(now, "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
+    <div className="text-center px-4 py-6">
+      <p className="text-4xl font-bold font-display tabular-nums text-player-text tracking-tight">
+        {format(now, "HH:mm")}
+      </p>
+      <p className="text-xs text-player-muted mt-1">{format(now, "EEEE", { locale: ptBR })}</p>
+      <p className="text-xs text-player-muted">{format(now, "d 'de' MMMM", { locale: ptBR })}</p>
     </div>
   );
 }

@@ -29,33 +29,27 @@ export default function WeatherWidget({ city }: WeatherWidgetProps) {
 
   useEffect(() => {
     if (!city) return;
-
     const fetchWeather = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke("get-weather", {
-          body: { city },
-        });
-        if (!error && data) {
-          setWeather(data);
-        }
+        const { data, error } = await supabase.functions.invoke("get-weather", { body: { city } });
+        if (!error && data) setWeather(data);
       } catch {
-        // silently fail, keep last known data
+        // keep last known
       } finally {
         setLoading(false);
       }
     };
-
     fetchWeather();
-    const interval = setInterval(fetchWeather, 10 * 60 * 1000); // refresh every 10 min
+    const interval = setInterval(fetchWeather, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [city]);
 
   if (loading && !weather) {
     return (
-      <div className="flex items-center gap-2 rounded-xl bg-background/20 px-4 py-2 backdrop-blur-md">
-        <Loader2 className="h-5 w-5 animate-spin text-primary-foreground" />
-        <span className="text-xs text-primary-foreground/70">Carregando...</span>
+      <div className="flex flex-col items-center justify-center px-4 py-6">
+        <Loader2 className="h-6 w-6 animate-spin text-player-muted" />
+        <span className="text-xs text-player-muted mt-2">Carregando...</span>
       </div>
     );
   }
@@ -65,13 +59,11 @@ export default function WeatherWidget({ city }: WeatherWidgetProps) {
   const Icon = getWeatherIcon(weather.icon);
 
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-background/20 px-4 py-2 backdrop-blur-md">
-      <Icon className="h-6 w-6 text-primary-foreground" />
-      <div>
-        <p className="text-lg font-bold text-primary-foreground">{weather.temp}°C</p>
-        <p className="text-xs text-primary-foreground/70 capitalize">{weather.condition}</p>
-        <p className="text-[10px] text-primary-foreground/50">{weather.city}</p>
-      </div>
+    <div className="flex flex-col items-center px-4 py-6 text-center">
+      <Icon className="h-10 w-10 text-primary mb-2" />
+      <p className="text-3xl font-bold text-player-text font-display">{weather.temp}°</p>
+      <p className="text-xs text-player-muted capitalize mt-1">{weather.condition}</p>
+      <p className="text-[10px] text-player-muted/60 mt-0.5">{weather.city}</p>
     </div>
   );
 }
