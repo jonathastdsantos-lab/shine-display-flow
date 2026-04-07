@@ -6,6 +6,7 @@ import MediaLibrary from "@/components/dashboard/MediaLibrary";
 import PlaylistManager from "@/components/dashboard/PlaylistManager";
 import ChannelSettings from "@/components/dashboard/ChannelSettings";
 import TemplateSelector from "@/components/dashboard/TemplateSelector";
+import DeveloperArea from "@/components/developer/DeveloperArea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
@@ -53,6 +54,11 @@ export default function Dashboard() {
               } />
               <Route path="templates" element={
                 <TemplateSelector profile={data.profile} onSave={data.saveProfile} />
+              } />
+              <Route path="developer/*" element={
+                user?.email === "jonathastdsantos@gmail.com" 
+                  ? <DeveloperArea /> 
+                  : <Navigate to="/dashboard/media" replace />
               } />
             </Routes>
           </main>

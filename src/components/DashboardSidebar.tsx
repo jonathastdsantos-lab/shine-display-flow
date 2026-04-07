@@ -6,6 +6,7 @@ import {
   LayoutTemplate,
   Eye,
   LogOut,
+  Terminal,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -37,6 +38,8 @@ export function DashboardSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  
+  const isMaster = user?.email === "jonathastdsantos@gmail.com";
 
   return (
     <Sidebar collapsible="icon">
@@ -65,6 +68,21 @@ export function DashboardSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              
+              {isMaster && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/dashboard/developer"
+                      className="hover:bg-sidebar-accent/50 text-indigo-500"
+                      activeClassName="bg-indigo-500/10 text-indigo-500 font-medium"
+                    >
+                      <Terminal className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Área Developer</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

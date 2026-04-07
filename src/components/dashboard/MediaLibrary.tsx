@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Trash2, Film, ImageIcon } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { MediaItem } from "@/hooks/useDashboardData";
 
@@ -19,75 +19,137 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete }: M
 
   const handleFiles = async (files: FileList) => {
     const ok = await onUpload(files);
-    if (ok) toast({ title: "Upload concluído!" });
+    if (ok) toast({ title: "Upload concluído com sucesso!" });
     else toast({ title: "Erro no upload", variant: "destructive" });
   };
 
+  const getFormat = (name: string) => name.split('.').pop()?.toUpperCase() || 'ARQUIVO';
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h2 className="font-display text-2xl font-bold">Biblioteca de Mídia</h2>
-        <p className="text-muted-foreground text-sm mt-1">Gerencie imagens e vídeos do seu canal</p>
+    <div className="space-y-8 animate-fade-in pb-10">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h2 className="font-display text-3xl font-bold tracking-tight">Biblioteca de Mídia</h2>
+          <p className="text-muted-foreground mt-1">
+            Faça upload e gerencie os vídeos e imagens que serão exibidos na TV.
+          </p>
+        </div>
       </div>
 
       <div
-        className={`relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-12 transition-all duration-200 ${
-          dragOver ? "border-primary bg-primary/5 scale-[1.01]" : "border-border hover:border-primary/40 hover:bg-muted/30"
+        className={`relative flex cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-14 transition-all duration-300 ${
+          dragOver 
+            ? "border-indigo-500 bg-indigo-500/10 scale-[1.02] shadow-xl shadow-indigo-500/10" 
+            : "border-border hover:border-indigo-400/50 hover:bg-muted/30"
         }`}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); }}
+        onDrop={(e) => { 
+          e.preventDefault(); 
+          setDragOver(false); 
+          if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); 
+        }}
         onClick={() => inputRef.current?.click()}
       >
-        <div className="rounded-full bg-primary/10 p-4">
-          <Upload className="h-6 w-6 text-primary" />
+        <div className={`rounded-2xl p-5 transition-colors ${dragOver ? 'bg-indigo-500 text-white' : 'bg-primary/5 text-primary'}`}>
+          {uploading ? (
+            <CloudUpload className="h-8 w-8 animate-bounce" />
+          ) : (
+            <Upload className="h-8 w-8" />
+          )}
         </div>
-        <div className="text-center">
-          <p className="font-medium">{uploading ? "Enviando..." : "Arraste arquivos ou clique para enviar"}</p>
-          <p className="text-xs text-muted-foreground mt-1">Suporte a imagens (JPG, PNG, WebP) e vídeos (MP4, WebM)</p>
+        <div className="text-center max-w-md">
+          <p className="text-lg font-semibold mb-1">
+            {uploading ? "Enviando arquivos..." : "Arraste seus vídeos e fotos para cá"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            ou clique para procurar no seu computador. Suporte para formato MP4, JPG e PNG (Máximo 50MB por arquivo).
+          </p>
         </div>
-        <input ref={inputRef} type="file" className="hidden" multiple accept="image/*,video/*" onChange={(e) => e.target.files && handleFiles(e.target.files)} disabled={uploading} />
+        <input 
+          ref={inputRef} 
+          type="file" 
+          className="hidden" 
+          multiple 
+          accept="image/*,video/*" 
+          onChange={(e) => e.target.files && handleFiles(e.target.files)} 
+          disabled={uploading} 
+        />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {media.map((item) => (
-          <Card key={item.id} className="group overflow-hidden border-border/50 transition-shadow hover:shadow-md">
-            <div className="relative aspect-video bg-muted">
-              {item.tipo === "video" ? (
-                <video src={item.url_arquivo} className="h-full w-full object-cover" muted />
-              ) : (
-                <img src={item.url_arquivo} alt={item.nome} className="h-full w-full object-cover" />
-              )}
-              <div className="absolute top-2 left-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-background/80 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
-                  {item.tipo === "video" ? <Film className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />}
-                  {item.tipo}
-                </span>
-              </div>
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-2 right-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
-                onClick={() => onDelete(item.id)}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-lg flex items-center gap-2">
+            Acervo Disponível <span className="bg-muted px-2 py-0.5 rounded-full text-xs font-mono">{media.length}</span>
+          </h3>
+        </div>
+
+        {media.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 max-w-none md:grid-cols-3 xl:grid-cols-4">
+            {media.map((item) => (
+              <Card key={item.id} className="group overflow-hidden border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 bg-card">
+                <div className="relative aspect-video bg-black/5 flex items-center justify-center overflow-hidden">
+                  {item.tipo === "video" ? (
+                    <>
+                      <video src={item.url_arquivo} className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" />
+                      <PlayCircle className="absolute z-10 w-12 h-12 text-white/50 group-hover:text-white transition-colors drop-shadow-md" />
+                    </>
+                  ) : (
+                    <img src={item.url_arquivo} alt={item.nome} className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  )}
+                  
+                  {/* Gradiente de proteção */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Badges do topo */}
+                  <div className="absolute top-3 left-3 z-20 flex gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase backdrop-blur-md text-foreground shadow-sm">
+                      {item.tipo === "video" ? <Film className="h-3 w-3 text-indigo-500" /> : <ImageIcon className="h-3 w-3 text-emerald-500" />}
+                      {item.tipo}
+                    </span>
+                  </div>
+
+                  {/* Actions Layer */}
+                  <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 scale-95 group-hover:scale-100 bg-black/20 backdrop-blur-[2px]">
+                     <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" title="Visualizar">
+                        <Eye className="w-4 h-4" />
+                     </Button>
+                     <Button 
+                       size="icon" 
+                       variant="destructive" 
+                       className="h-10 w-10 rounded-full shadow-lg"
+                       onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+                       title="Excluir arquivo"
+                     >
+                        <Trash2 className="w-4 h-4" />
+                     </Button>
+                  </div>
+                </div>
+
+                <CardContent className="p-4 bg-background">
+                  <p className="text-sm font-medium truncate mb-1" title={item.nome}>{item.nome}</p>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+                    <span className="bg-muted px-2 py-0.5 rounded">{getFormat(item.nome)}</span>
+                    <span className="flex items-center gap-1">
+                      {item.duracao}s
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed rounded-xl bg-muted/10">
+            <div className="bg-muted p-4 rounded-full mb-4">
+               <ImageIcon className="h-10 w-10 text-muted-foreground/50" />
             </div>
-            <CardContent className="p-3">
-              <p className="text-sm font-medium truncate">{item.nome}</p>
-              <p className="text-xs text-muted-foreground">{item.duracao}s</p>
-            </CardContent>
-          </Card>
-        ))}
+            <p className="text-lg font-medium text-foreground mb-1">Nenhuma mídia encontrada</p>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              Sua galeria está vazia. Faça o upload do seu primeiro arquivo arrastando-o para a caixa acima.
+            </p>
+          </div>
+        )}
       </div>
-
-      {media.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <ImageIcon className="h-12 w-12 text-muted-foreground/30 mb-3" />
-          <p className="text-muted-foreground">Nenhuma mídia enviada ainda</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">Envie imagens e vídeos para começar</p>
-        </div>
-      )}
     </div>
   );
 }
