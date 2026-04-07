@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN template TEXT NOT NULL DEFAULT 'corporativo' CHECK (template IN ('varejo', 'corporativo'));
