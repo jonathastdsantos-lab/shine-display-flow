@@ -12,13 +12,23 @@ interface MediaItem {
   duracao: number;
 }
 
-const mockNews = [
-  "Tecnologia: IA revoluciona a indústria de mídia digital",
-  "Economia: Mercado financeiro em alta nesta semana",
-  "Ciência: Nova descoberta sobre energia renovável",
-  "Esportes: Brasil avança nas eliminatórias",
-  "Saúde: Estudo revela benefícios de exercícios regulares",
-];
+const mockNews: Record<string, string[]> = {
+  technology: [
+    "Tecnologia: IA generativa redefine processos industriais em 2026",
+    "Tecnologia: Computação quântica atinge novo marco de estabilidade",
+    "Tecnologia: Startups brasileiras captam US$ 2 bi no primeiro trimestre",
+  ],
+  sports: [
+    "Esportes: Brasil lidera eliminatórias sul-americanas",
+    "Esportes: NBA anuncia expansão para novas cidades",
+    "Esportes: Liga dos Campeões define semifinalistas",
+  ],
+  business: [
+    "Economia: Bolsa atinge máxima histórica com otimismo do mercado",
+    "Economia: Banco Central mantém taxa Selic em 11,25%",
+    "Economia: Exportações do agro crescem 18% no trimestre",
+  ],
+};
 
 export default function Player() {
   const { id_cliente } = useParams<{ id_cliente: string }>();
@@ -28,21 +38,25 @@ export default function Player() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fading, setFading] = useState(false);
   const [city, setCity] = useState("São Paulo");
+  const [template, setTemplate] = useState("corporativo");
+  const [newsCategory, setNewsCategory] = useState("technology");
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (!id_cliente) return;
 
     const fetchData = async () => {
-      // Fetch profile for widget config
       const { data: profile } = await supabase
         .from("profiles")
-        .select("config_clima, config_noticias")
+        .select("config_clima, config_noticias, template")
         .eq("user_id", id_cliente)
         .single();
-      if (profile) setCity(profile.config_clima || "São Paulo");
+      if (profile) {
+        setCity(profile.config_clima || "São Paulo");
+        setTemplate((profile as any).template || "corporativo");
+        setNewsCategory(profile.config_noticias || "technology");
+      }
 
-      // Fetch media
       let mediaIds: string[] | null = null;
       if (playlistId) {
         const { data: playlist } = await supabase
@@ -71,8 +85,6 @@ export default function Player() {
     };
 
     fetchData();
-
-    // Enter fullscreen
     document.documentElement.requestFullscreen?.().catch(() => {});
   }, [id_cliente, playlistId]);
 
@@ -81,7 +93,7 @@ export default function Player() {
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % mediaItems.length);
       setFading(false);
-    }, 500);
+    }, 600);
   }, [mediaItems.length]);
 
   useEffect(() => {
@@ -90,7 +102,6 @@ export default function Player() {
     if (!current) return;
 
     if (current.tipo === "video") {
-      // Video: wait for it to end
       const video = videoRef.current;
       if (video) {
         video.play().catch(() => {});
@@ -99,18 +110,19 @@ export default function Player() {
         return () => video.removeEventListener("ended", onEnded);
       }
     } else {
-      // Image: show for duracao seconds (default 10)
       const timer = setTimeout(goToNext, (current.duracao || 10) * 1000);
       return () => clearTimeout(timer);
     }
   }, [currentIndex, mediaItems, goToNext]);
 
+  const headlines = mockNews[newsCategory] || mockNews.technology;
+
   if (mediaItems.length === 0) {
     return (
-      <div className="dark flex h-screen w-screen items-center justify-center bg-background">
+      <div className="flex h-screen w-screen items-center justify-center" style={{ background: "#000" }}>
         <div className="text-center space-y-3">
-          <div className="mx-auto h-16 w-16 animate-pulse rounded-full bg-primary/20" />
-          <p className="text-muted-foreground font-display">Aguardando conteúdo...</p>
+          <div className="mx-auto h-16 w-16 animate-pulse rounded-full" style={{ background: "rgba(255,255,255,0.05)" }} />
+          <p className="font-display" style={{ color: "rgba(255,255,255,0.4)" }}>Aguardando conteúdo...</p>
         </div>
       </div>
     );
@@ -118,48 +130,65 @@ export default function Player() {
 
   const current = mediaItems[currentIndex];
 
+  // ── RETAIL MODE: fullscreen ──
+  if (template === "varejo") {
+    return (
+      <div className="h-screen w-screen flex flex-col overflow-hidden" style={{ background: "#000" }}>
+        <div className="flex-1 relative">
+          <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${fading ? "opacity-0" : "opacity-100"}`}>
+            {current?.tipo === "video" ? (
+              <video ref={videoRef} key={current.id} src={current.url_arquivo} className="h-full w-full object-cover" muted autoPlay playsInline />
+            ) : (
+              <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-cover" />
+            )}
+          </div>
+          {/* Progress dots */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {mediaItems.map((_, i) => (
+              <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === currentIndex ? "w-6 bg-primary" : "w-1.5 bg-player-text/30"}`} />
+            ))}
+          </div>
+        </div>
+        <NewsTicker headlines={headlines} />
+      </div>
+    );
+  }
+
+  // ── CORPORATE MODE: zoned layout ──
   return (
-    <div className="dark relative h-screen w-screen overflow-hidden bg-background">
-      {/* Media Content */}
-      <div className={`absolute inset-0 transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`}>
-        {current?.tipo === "video" ? (
-          <video
-            ref={videoRef}
-            key={current.id}
-            src={current.url_arquivo}
-            className="h-full w-full object-cover"
-            muted
-            autoPlay
-            playsInline
-          />
-        ) : (
-          <img
-            key={current?.id}
-            src={current?.url_arquivo}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        )}
+    <div className="h-screen w-screen flex flex-col overflow-hidden" style={{ background: "#000" }}>
+      <div className="flex-1 flex min-h-0">
+        {/* Main Zone */}
+        <div className="flex-1 relative player-zone-main">
+          <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${fading ? "opacity-0" : "opacity-100"}`}>
+            {current?.tipo === "video" ? (
+              <video ref={videoRef} key={current.id} src={current.url_arquivo} className="h-full w-full object-cover" muted autoPlay playsInline />
+            ) : (
+              <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-cover" />
+            )}
+          </div>
+          {/* Progress bar */}
+          <div className="absolute top-0 left-0 right-0 flex gap-0.5 p-2 z-10">
+            {mediaItems.map((_, i) => (
+              <div key={i} className={`h-0.5 flex-1 rounded-full transition-all duration-500 ${i === currentIndex ? "bg-primary" : "bg-player-text/10"}`} />
+            ))}
+          </div>
+        </div>
+
+        {/* Sidebar Zone */}
+        <div className="w-[200px] flex flex-col player-zone-sidebar border-l" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+          <ClockWidget />
+          <div className="w-full h-px" style={{ background: "rgba(255,255,255,0.05)" }} />
+          <WeatherWidget city={city} />
+          <div className="flex-1" />
+          <div className="px-4 py-3 text-center">
+            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>SignageOS</p>
+          </div>
+        </div>
       </div>
 
-      {/* Overlay */}
-      <div className="player-overlay absolute inset-0 pointer-events-none" />
-
-      {/* Top-right widgets */}
-      <div className="absolute top-6 right-6 flex flex-col items-end gap-3 z-10">
-        <ClockWidget />
-        <WeatherWidget city={city} />
-      </div>
-
-      {/* Progress indicator */}
-      <div className="absolute top-0 left-0 right-0 flex gap-1 p-2 z-10">
-        {mediaItems.map((_, i) => (
-          <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i === currentIndex ? "bg-primary" : "bg-primary-foreground/20"}`} />
-        ))}
-      </div>
-
-      {/* News Ticker */}
-      <NewsTicker headlines={mockNews} />
+      {/* Footer Zone: Ticker */}
+      <NewsTicker headlines={headlines} />
     </div>
   );
 }
