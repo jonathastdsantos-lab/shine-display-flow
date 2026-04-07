@@ -244,15 +244,21 @@ export default function Dashboard() {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {(pl.ordem_arquivos || []).map((mediaId, idx) => (
-                        <div key={`${mediaId}-${idx}`} className="flex items-center gap-2 rounded border border-border/50 bg-muted/30 px-3 py-2 text-sm">
-                          <GripVertical className="h-4 w-4 text-muted-foreground" />
-                          <span className="flex-1">{getMediaName(mediaId)}</span>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFromPlaylist(pl.id, idx)}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={(e) => handleDragEnd(pl.id, e)}>
+                        <SortableContext items={(pl.ordem_arquivos || []).map((_, i) => `${pl.id}-${i}`)} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-2">
+                            {(pl.ordem_arquivos || []).map((mediaId, idx) => (
+                              <SortablePlaylistItem
+                                key={`${pl.id}-${idx}`}
+                                id={`${pl.id}-${idx}`}
+                                index={idx}
+                                name={getMediaName(mediaId)}
+                                onRemove={() => removeFromPlaylist(pl.id, idx)}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
                       {media.length > 0 && (
                         <div className="flex flex-wrap gap-1 pt-2">
                           {media.map((m) => (
