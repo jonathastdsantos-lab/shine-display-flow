@@ -14,7 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      media_library: {
+        Row: {
+          client_id: string
+          created_at: string
+          duracao: number
+          id: string
+          nome: string
+          tipo: string
+          url_arquivo: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          duracao?: number
+          id?: string
+          nome?: string
+          tipo: string
+          url_arquivo: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          duracao?: number
+          id?: string
+          nome?: string
+          tipo?: string
+          url_arquivo?: string
+        }
+        Relationships: []
+      }
+      playlists: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          nome_da_tela: string
+          ordem_arquivos: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          nome_da_tela?: string
+          ordem_arquivos?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          nome_da_tela?: string
+          ordem_arquivos?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          config_clima: string | null
+          config_noticias: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          nome_empresa: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config_clima?: string | null
+          config_noticias?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          nome_empresa?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config_clima?: string | null
+          config_noticias?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          nome_empresa?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
