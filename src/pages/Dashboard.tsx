@@ -117,6 +117,24 @@ export default function Dashboard() {
     fetchData();
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = async (playlistId: string, event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const pl = playlists.find((p) => p.id === playlistId);
+    if (!pl) return;
+    const items = pl.ordem_arquivos || [];
+    const oldIndex = items.findIndex((_, i) => `${playlistId}-${i}` === active.id);
+    const newIndex = items.findIndex((_, i) => `${playlistId}-${i}` === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(items, oldIndex, newIndex);
+    setPlaylists((prev) => prev.map((p) => p.id === playlistId ? { ...p, ordem_arquivos: reordered } : p));
+    await supabase.from("playlists").update({ ordem_arquivos: reordered }).eq("id", playlistId);
+
   const deletePlaylist = async (id: string) => {
     await supabase.from("playlists").delete().eq("id", id);
     fetchData();
