@@ -1,0 +1,15 @@
+feat: Cenarios por segmento, Heartbeat, Proof of Play, L-Bar, Split, QR dinamico
+
+- ScenarioWizard: 6 cenarios (Mercado, Salao, Padaria, Clinica, Academia, Corporativo)
+- DeviceMonitor: Status Online/Offline via heartbeat a cada 60s no Supabase
+- ReportsPanel: Analytics Proof of Play com graficos Recharts e log de exibicoes
+- Player: 2 novos templates L-Bar e Split 60/40 + Supabase Realtime Channel
+- Player: Heartbeat (last_seen) e log de exibicoes (play_logs) com fallback gracioso
+- QRWidget: QR Code real via qrcode.react com URL dinamica por midia
+- MediaLibrary: Campo qr_link editavel inline por midia com badge visual
+- TemplateSelector: Aba Cenarios, previews visuais dos 4 templates, widgets com status real
+- DashboardSidebar: Grupos Principal, Monitoramento e Developer
+- NewsTicker: Badge AO VIVO e accentColor por template (indigo/amber/orange)
+- ClockWidget e WeatherWidget: Modo compact para sidebar do L-Bar
+- useDashboardData: Exposicao de fetchData publicamente
+- Instalado: qrcode.react

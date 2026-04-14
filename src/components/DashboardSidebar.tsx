@@ -7,6 +7,8 @@ import {
   Eye,
   LogOut,
   Terminal,
+  BarChart2,
+  Tv2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -29,7 +31,12 @@ const navItems = [
   { title: "Biblioteca de Mídia", url: "/dashboard/media", icon: Image },
   { title: "Playlists", url: "/dashboard/playlists", icon: ListVideo },
   { title: "Config. do Canal", url: "/dashboard/settings", icon: Settings },
-  { title: "Templates", url: "/dashboard/templates", icon: LayoutTemplate },
+  { title: "Templates & Cenários", url: "/dashboard/templates", icon: LayoutTemplate },
+];
+
+const analyticsItems = [
+  { title: "Meus Dispositivos", url: "/dashboard/devices", icon: Tv2 },
+  { title: "Relatórios", url: "/dashboard/reports", icon: BarChart2 },
 ];
 
 export function DashboardSidebar() {
@@ -44,6 +51,7 @@ export function DashboardSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
+        {/* Grupo principal */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 py-4">
             <div className="flex items-center gap-2">
@@ -68,8 +76,48 @@ export function DashboardSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              
-              {isMaster && (
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Grupo analytics / monitoring */}
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel className="px-3 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-bold">
+              Monitoramento
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {analyticsItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Developer only */}
+        {isMaster && (
+          <SidebarGroup>
+            {!collapsed && (
+              <SidebarGroupLabel className="px-3 text-[10px] uppercase tracking-widest text-indigo-500/60 font-bold">
+                Developer
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -82,10 +130,10 @@ export function DashboardSidebar() {
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">

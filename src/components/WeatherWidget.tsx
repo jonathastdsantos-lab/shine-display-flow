@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface WeatherWidgetProps {
   city: string;
+  compact?: boolean;
 }
 
 interface WeatherData {
@@ -23,7 +24,7 @@ function getWeatherIcon(icon: string) {
   return Cloud;
 }
 
-export default function WeatherWidget({ city }: WeatherWidgetProps) {
+export default function WeatherWidget({ city, compact = false }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,9 +48,9 @@ export default function WeatherWidget({ city }: WeatherWidgetProps) {
 
   if (loading && !weather) {
     return (
-      <div className="flex flex-col items-center justify-center px-4 py-6">
-        <Loader2 className="h-6 w-6 animate-spin text-player-muted" />
-        <span className="text-xs text-player-muted mt-2">Carregando...</span>
+      <div className="flex flex-col items-center justify-center px-4 py-4">
+        <Loader2 className="h-5 w-5 animate-spin text-player-muted" />
+        <span className="text-[10px] text-player-muted mt-1">Carregando...</span>
       </div>
     );
   }
@@ -57,6 +58,18 @@ export default function WeatherWidget({ city }: WeatherWidgetProps) {
   if (!weather) return null;
 
   const Icon = getWeatherIcon(weather.icon);
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 text-center">
+        <Icon className="h-5 w-5 text-sky-400 shrink-0" />
+        <div className="text-left">
+          <p className="text-lg font-bold text-player-text font-display leading-none">{weather.temp}°</p>
+          <p className="text-[9px] text-player-muted truncate max-w-[70px]">{weather.city}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center px-4 py-6 text-center">

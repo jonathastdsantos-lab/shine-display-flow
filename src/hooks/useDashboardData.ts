@@ -141,6 +141,7 @@ export function useDashboardData() {
     reorderPlaylist,
     deletePlaylist,
     saveProfile,
+    fetchData,
     getMediaName: (id: string) => media.find((m) => m.id === id)?.nome || "Desconhecido",
   };
 }

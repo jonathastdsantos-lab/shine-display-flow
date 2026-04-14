@@ -1,8 +1,10 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Edit2, QrCode, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { MediaItem } from "@/hooks/useDashboardData";
 
 interface MediaLibraryProps {
@@ -10,20 +12,43 @@ interface MediaLibraryProps {
   uploading: boolean;
   onUpload: (files: FileList) => Promise<boolean | undefined>;
   onDelete: (id: string) => void;
+  onRefresh?: () => void;
 }
 
-export default function MediaLibrary({ media, uploading, onUpload, onDelete }: MediaLibraryProps) {
+export default function MediaLibrary({ media, uploading, onUpload, onDelete, onRefresh }: MediaLibraryProps) {
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [editingQR, setEditingQR] = useState<string | null>(null);
+  const [qrInputs, setQrInputs] = useState<Record<string, string>>({});
 
   const handleFiles = async (files: FileList) => {
     const ok = await onUpload(files);
-    if (ok) toast({ title: "Upload concluído com sucesso!" });
+    if (ok) toast({ title: "✅ Upload concluído com sucesso!" });
     else toast({ title: "Erro no upload", variant: "destructive" });
   };
 
   const getFormat = (name: string) => name.split('.').pop()?.toUpperCase() || 'ARQUIVO';
+
+  const handleSaveQR = async (mediaId: string) => {
+    const url = qrInputs[mediaId] || "";
+    try {
+      await (supabase as any)
+        .from("media_library")
+        .update({ qr_link: url })
+        .eq("id", mediaId);
+      toast({ title: "✅ QR Code salvo!", description: url || "Link removido." });
+      onRefresh?.();
+    } catch {
+      toast({ title: "Erro ao salvar QR Code", variant: "destructive" });
+    }
+    setEditingQR(null);
+  };
+
+  const startEditQR = (item: MediaItem) => {
+    setEditingQR(item.id);
+    setQrInputs((prev) => ({ ...prev, [item.id]: (item as any).qr_link || "" }));
+  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -33,6 +58,9 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete }: M
           <p className="text-muted-foreground mt-1">
             Faça upload e gerencie os vídeos e imagens que serão exibidos na TV.
           </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">💡 Dica: Cada mídia pode ter um QR Code único que aparece na tela enquanto ela está passando.</p>
         </div>
       </div>
 
@@ -63,7 +91,7 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete }: M
             {uploading ? "Enviando arquivos..." : "Arraste seus vídeos e fotos para cá"}
           </p>
           <p className="text-sm text-muted-foreground">
-            ou clique para procurar no seu computador. Suporte para formato MP4, JPG e PNG (Máximo 50MB por arquivo).
+            ou clique para procurar no seu computador. Suporte para MP4, JPG e PNG (Máximo 50MB por arquivo).
           </p>
         </div>
         <input 
@@ -98,7 +126,6 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete }: M
                     <img src={item.url_arquivo} alt={item.nome} className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   )}
                   
-                  {/* Gradiente de proteção */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
                   {/* Badges do topo */}
@@ -107,12 +134,24 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete }: M
                       {item.tipo === "video" ? <Film className="h-3 w-3 text-indigo-500" /> : <ImageIcon className="h-3 w-3 text-emerald-500" />}
                       {item.tipo}
                     </span>
+                    {/* Badge QR se tiver link configurado */}
+                    {(item as any).qr_link && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/90 px-2 py-1 text-[10px] font-semibold uppercase backdrop-blur-md text-white shadow-sm">
+                        <QrCode className="h-2.5 w-2.5" /> QR
+                      </span>
+                    )}
                   </div>
 
                   {/* Actions Layer */}
                   <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 scale-95 group-hover:scale-100 bg-black/20 backdrop-blur-[2px]">
-                     <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" title="Visualizar">
-                        <Eye className="w-4 h-4" />
+                     <Button
+                       size="icon"
+                       variant="secondary"
+                       className="h-10 w-10 rounded-full shadow-lg"
+                       title="Configurar QR Code"
+                       onClick={(e) => { e.stopPropagation(); startEditQR(item); }}
+                     >
+                        <QrCode className="w-4 h-4" />
                      </Button>
                      <Button 
                        size="icon" 
@@ -126,14 +165,48 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete }: M
                   </div>
                 </div>
 
-                <CardContent className="p-4 bg-background">
-                  <p className="text-sm font-medium truncate mb-1" title={item.nome}>{item.nome}</p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
-                    <span className="bg-muted px-2 py-0.5 rounded">{getFormat(item.nome)}</span>
-                    <span className="flex items-center gap-1">
-                      {item.duracao}s
-                    </span>
+                <CardContent className="p-4 bg-background space-y-3">
+                  <div>
+                    <p className="text-sm font-medium truncate mb-1" title={item.nome}>{item.nome}</p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+                      <span className="bg-muted px-2 py-0.5 rounded">{getFormat(item.nome)}</span>
+                      <span>{item.duracao}s</span>
+                    </div>
                   </div>
+
+                  {/* QR Link editor */}
+                  {editingQR === item.id ? (
+                    <div className="flex gap-1.5 items-center">
+                      <Input
+                        value={qrInputs[item.id] || ""}
+                        onChange={(e) => setQrInputs((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                        placeholder="https://link-do-produto.com"
+                        className="h-8 text-xs flex-1"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveQR(item.id);
+                          if (e.key === "Escape") setEditingQR(null);
+                        }}
+                      />
+                      <Button size="icon" className="h-8 w-8 bg-emerald-600 hover:bg-emerald-700 shrink-0" onClick={() => handleSaveQR(item.id)}>
+                        <Check className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => setEditingQR(null)}>
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => startEditQR(item)}
+                      className="w-full flex items-center gap-2 text-left rounded-lg border border-border/50 px-3 py-2 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group/qr"
+                    >
+                      <QrCode className="w-3.5 h-3.5 text-muted-foreground group-hover/qr:text-indigo-400 shrink-0" />
+                      <span className="text-[11px] text-muted-foreground truncate flex-1">
+                        {(item as any).qr_link ? (item as any).qr_link.replace(/^https?:\/\//, "") : "Adicionar link QR Code..."}
+                      </span>
+                      <Edit2 className="w-3 h-3 text-muted-foreground/50 group-hover/qr:text-indigo-400 shrink-0" />
+                    </button>
+                  )}
                 </CardContent>
               </Card>
             ))}

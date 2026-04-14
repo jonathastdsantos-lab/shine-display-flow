@@ -6,6 +6,8 @@ import MediaLibrary from "@/components/dashboard/MediaLibrary";
 import PlaylistManager from "@/components/dashboard/PlaylistManager";
 import ChannelSettings from "@/components/dashboard/ChannelSettings";
 import TemplateSelector from "@/components/dashboard/TemplateSelector";
+import DeviceMonitor from "@/components/dashboard/DeviceMonitor";
+import ReportsPanel from "@/components/dashboard/ReportsPanel";
 import DeveloperArea from "@/components/developer/DeveloperArea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +37,13 @@ export default function Dashboard() {
             <Routes>
               <Route index element={<Navigate to="media" replace />} />
               <Route path="media" element={
-                <MediaLibrary media={data.media} uploading={data.uploading} onUpload={data.handleUpload} onDelete={data.deleteMedia} />
+                <MediaLibrary
+                  media={data.media}
+                  uploading={data.uploading}
+                  onUpload={data.handleUpload}
+                  onDelete={data.deleteMedia}
+                  onRefresh={data.fetchData}
+                />
               } />
               <Route path="playlists" element={
                 <PlaylistManager
@@ -55,6 +63,8 @@ export default function Dashboard() {
               <Route path="templates" element={
                 <TemplateSelector profile={data.profile} onSave={data.saveProfile} />
               } />
+              <Route path="devices" element={<DeviceMonitor />} />
+              <Route path="reports" element={<ReportsPanel />} />
               <Route path="developer/*" element={
                 user?.email === "jonathastdsantos@gmail.com" 
                   ? <DeveloperArea /> 
