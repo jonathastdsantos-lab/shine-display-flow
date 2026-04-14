@@ -40,10 +40,12 @@ export function ClientManager() {
   const [clients, setClients] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<any | null>(null);
-  
+  const [isLoading, setIsLoading] = useState(false);
+
   // Create Client State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [newClientData, setNewClientData] = useState({ name: "", email: "", password: "", plan: "Basic" });
+  const [newClientData, setNewClientData] = useState({ name: "", email: "", password: "", plan: "Basic", template: "corporativo" });
+  const [creating, setCreating] = useState(false);
   const [selectedLayout, setSelectedLayout] = useState("full");
   
   // Custom Broadcaster States
@@ -54,27 +56,29 @@ export function ClientManager() {
   const [adPreviewFileUrl, setAdPreviewFileUrl] = useState<string | null>(null);
   const [adPreviewIsVideo, setAdPreviewIsVideo] = useState(false);
 
-  useEffect(() => {
-    async function getProfiles() {
-      const { data, error } = await supabase.from('profiles').select('*');
-      if (data && data.length > 0) {
-        const mapped = data.map(p => ({
-          id: p.user_id,
-          name: p.nome_empresa || 'Empresa Em Implantação',
-          email: 'Email Seguro (Bloqueado)', // Mock email since auth.users isn't readable
-          status: 'active',
-          plan: 'Enterprise',
-          devices: 1,
-          type: p.template === 'corporativo' ? 'Corporativo' : 'Varejo'
-        }));
-        setClients(mapped);
-      } else {
-        // Fallback for visual demonstration
-        setClients(INITIAL_CLIENTS);
-      }
+  const loadClients = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase.from('profiles').select('*');
+    if (data && data.length > 0) {
+      const mapped = data.map(p => ({
+        id: p.user_id,
+        name: (p as any).nome_empresa || 'Empresa em Implantação',
+        email: (p as any).email_contact || '—',
+        status: 'active',
+        plan: (p as any).plan || 'Basic',
+        devices: 1,
+        template: (p as any).template || 'corporativo',
+        type: (p as any).template === 'corporativo' ? 'Corporativo' : (p as any).template === 'varejo' ? 'Varejo' : 'Geral',
+        last_seen: (p as any).last_seen || null,
+      }));
+      setClients(mapped);
+    } else {
+      setClients(INITIAL_CLIENTS);
     }
-    getProfiles();
-  }, []);
+    setIsLoading(false);
+  };
+
+  useEffect(() => { loadClients(); }, []);
 
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -90,33 +94,54 @@ export function ClientManager() {
   };
 
   const handleCreateClient = async () => {
-    if(!newClientData.name || !newClientData.email || !newClientData.password) {
-      toast.error("Preencha todos os campos obrigatórios.");
+    if (!newClientData.name || !newClientData.email || !newClientData.password) {
+      toast.error("Preencha nome, e-mail e senha temporária.");
       return;
     }
-    
-    // Alerta vital de segurança
-    toast.info("Enviando requisição segura...");
-    
-    // Simulando atraso do backend
-    setTimeout(() => {
-      const newClient = {
-        id: Math.random(),
-        name: newClientData.name,
-        email: newClientData.email,
-        status: "warning", // pending activation
-        plan: newClientData.plan,
-        devices: 0,
-        type: "Geral"
-      };
-      
-      setClients([newClient, ...clients]);
-      setNewClientData({ name: "", email: "", password: "", plan: "Basic" });
+    if (newClientData.password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    setCreating(true);
+    toast.info("Criando conta no Supabase...");
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+
+      const res = await supabase.functions.invoke("create-client", {
+        body: {
+          name: newClientData.name,
+          email: newClientData.email,
+          password: newClientData.password,
+          plan: newClientData.plan,
+          template: newClientData.template,
+        },
+      });
+
+      if (res.error || (res.data && res.data.error)) {
+        const errMsg = res.data?.error || res.error?.message || "Erro desconhecido.";
+        toast.error(`Falha ao criar cliente: ${errMsg}`);
+        return;
+      }
+
+      toast.success(`✅ Cliente "${newClientData.name}" criado com sucesso!`, { duration: 6000 });
+      toast.success(`📧 Login: ${newClientData.email} | 🔑 Senha definida com acesso imediato.`, { duration: 8000 });
+
+      setNewClientData({ name: "", email: "", password: "", plan: "Basic", template: "corporativo" });
       setIsCreateOpen(false);
-      
-      toast.success("Cliente provisionado com sucesso!");
-      toast.warning("Aviso de Segurança: O disparo da senha por e-mail dependerá da aprovação via Supabase Edge Functions.", { duration: 8000 });
-    }, 1000);
+      await loadClients(); // Recarrega a lista real do Supabase
+    } catch (err: any) {
+      toast.error(`Erro inesperado: ${err.message}`);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -190,65 +215,113 @@ export function ClientManager() {
       </ScrollArea>
 
       {/* MODAL CRIAR CLIENTE */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!creating) setIsCreateOpen(open); }}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">Cadastrar Novo Cliente</DialogTitle>
             <DialogDescription>
-              Crie uma conta para o estabelecimento e defina as credenciais de primeiro acesso.
+              A conta será criada diretamente no Supabase Auth com e-mail confirmado e acesso imediato.
             </DialogDescription>
           </DialogHeader>
+
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="nome">Nome da Empresa</Label>
-              <Input 
-                id="nome" 
-                placeholder="Ex: Padaria Do Lado" 
+              <Label htmlFor="nome">Nome da Empresa *</Label>
+              <Input
+                id="nome"
+                placeholder="Ex: Padaria Do Lado"
                 value={newClientData.name}
-                onChange={e => setNewClientData({...newClientData, name: e.target.value})}
+                onChange={e => setNewClientData({ ...newClientData, name: e.target.value })}
+                disabled={creating}
               />
             </div>
+
             <div className="grid gap-2">
-              <Label htmlFor="email">Email Administrativo</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="contato@empresa.com" 
+              <Label htmlFor="email">E-mail de Acesso *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="contato@empresa.com"
                 value={newClientData.email}
-                onChange={e => setNewClientData({...newClientData, email: e.target.value})}
+                onChange={e => setNewClientData({ ...newClientData, email: e.target.value })}
+                disabled={creating}
               />
             </div>
+
             <div className="grid gap-2">
-              <Label htmlFor="password">Senha Temporária</Label>
-              <Input 
-                id="password" 
-                type="password" 
+              <Label htmlFor="password">Senha Temporária * (mín. 6 caracteres)</Label>
+              <Input
+                id="password"
+                type="text"
+                placeholder="Ex: Signage@2026"
                 value={newClientData.password}
-                onChange={e => setNewClientData({...newClientData, password: e.target.value})}
+                onChange={e => setNewClientData({ ...newClientData, password: e.target.value })}
+                disabled={creating}
               />
+              <p className="text-xs text-muted-foreground">A senha é definida diretamente — o cliente pode usar imediatamente para fazer login.</p>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="plan">Plano do Cliente</Label>
-              <Select 
-                value={newClientData.plan} 
-                onValueChange={val => setNewClientData({...newClientData, plan: val})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Basic">Basic (Até 2 telas)</SelectItem>
-                  <SelectItem value="Pro">Pro (Até 5 telas)</SelectItem>
-                  <SelectItem value="Premium">Premium (Até 15 telas)</SelectItem>
-                  <SelectItem value="Enterprise">Enterprise (Ilimitado)</SelectItem>
-                </SelectContent>
-              </Select>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Plano</Label>
+                <Select
+                  value={newClientData.plan}
+                  onValueChange={val => setNewClientData({ ...newClientData, plan: val })}
+                  disabled={creating}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Basic">Basic (2 telas)</SelectItem>
+                    <SelectItem value="Pro">Pro (5 telas)</SelectItem>
+                    <SelectItem value="Premium">Premium (15 telas)</SelectItem>
+                    <SelectItem value="Enterprise">Enterprise (Ilimitado)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Template Inicial</Label>
+                <Select
+                  value={newClientData.template}
+                  onValueChange={val => setNewClientData({ ...newClientData, template: val })}
+                  disabled={creating}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="corporativo">🏢 Corporativo</SelectItem>
+                    <SelectItem value="varejo">🛒 Varejo</SelectItem>
+                    <SelectItem value="lbar">🥐 L-Bar</SelectItem>
+                    <SelectItem value="split">🏋️ Split 60/40</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Info box */}
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
+              <span className="text-emerald-400 text-lg mt-0.5">✅</span>
+              <div>
+                <p className="font-semibold text-emerald-300">Criação via Admin API</p>
+                <p className="text-muted-foreground text-xs mt-0.5">
+                  O usuário será criado com e-mail confirmado automaticamente via <code className="bg-black/20 px-1 rounded">supabase.auth.admin.createUser</code>. O cliente pode fazer login imediatamente em <strong>/login</strong>.
+                </p>
+              </div>
             </div>
           </div>
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleCreateClient}>
-              Registrar Cliente
+
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setIsCreateOpen(false)} disabled={creating}>Cancelar</Button>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[160px]"
+              onClick={handleCreateClient}
+              disabled={creating}
+            >
+              {creating ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  Criando conta...
+                </span>
+              ) : "Registrar Cliente"}
             </Button>
           </div>
         </DialogContent>
