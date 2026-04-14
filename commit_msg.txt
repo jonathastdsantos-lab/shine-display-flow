@@ -1,7 +1,6 @@
-feat: busca dinamica de todas as cidades do Brasil via API
+refactor: exibicao de municipios e UF no autocomplete de cidades
 
-- [NEW] Edge Function 'search-cities': Integra com a API de Geocoding do OpenWeatherMap.
-- [MODIFY] CityAutocomplete.tsx: Removida lista estatica. Agora busca qualquer cidade do Brasil.
-- Implementada logica de Debounce (500ms) para otimizar chamadas a API.
-- Exibicao de Estado/Provincia nos resultados para evitar ambiguidades.
-- Feedback de carregamento visual durante a pesquisa.
+- Atualizada Edge Function 'search-cities' para mapear nomes de estados para siglas (UF).
+- Adicionada Badge 'Município' na lista de sugestoes para maior clareza.
+- Exibicao padronizada como 'Estado de UF' (ex: Estado de SP).
+- Melhoria no visual da lista de resultados do Autocomplete.

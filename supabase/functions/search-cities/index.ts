@@ -27,6 +27,16 @@ serve(async (req) => {
       });
     }
 
+    const stateMap: Record<string, string> = {
+      "Acre": "AC", "Alagoas": "AL", "Amapá": "AP", "Amazonas": "AM", "Bahia": "BA",
+      "Ceará": "CE", "Distrito Federal": "DF", "Espírito Santo": "ES", "Goiás": "GO",
+      "Maranhão": "MA", "Mato Grosso": "MT", "Mato Grosso do Sul": "MS", "Minas Gerais": "MG",
+      "Pará": "PA", "Paraíba": "PB", "Paraná": "PR", "Pernambuco": "PE", "Piauí": "PI",
+      "Rio de Janeiro": "RJ", "Rio Grande do Norte": "RN", "Rio Grande do Sul": "RS",
+      "Rondônia": "RO", "Roraima": "RR", "Santa Catarina": "SC", "São Paulo": "SP",
+      "Sergipe": "SE", "Tocantins": "TO"
+    };
+
     // Busca cidades no Brasil (country: BR)
     const url = `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)},BR&limit=10&appid=${apiKey}`;
     console.log("🔍 Buscando cidades:", url);
@@ -42,13 +52,16 @@ serve(async (req) => {
     }
 
     // Formata o resultado para "Cidade, Estado"
-    const suggestions = data.map((item: any) => ({
-      name: item.name,
-      state: item.state || "",
-      fullName: item.state ? `${item.name}, ${item.state}` : item.name,
-      lat: item.lat,
-      lon: item.lon
-    }));
+    const suggestions = data.map((item: any) => {
+      const uf = stateMap[item.state] || item.state || "BR";
+      return {
+        name: item.name,
+        state: uf,
+        fullName: `${item.name}, ${uf}`,
+        lat: item.lat,
+        lon: item.lon
+      };
+    });
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

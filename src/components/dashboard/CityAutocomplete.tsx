@@ -108,17 +108,22 @@ export function CityAutocomplete({ value, onChange }: CityAutocompleteProps) {
                     onChange(city.fullName);
                     setOpen(false);
                   }}
-                  className="py-3 px-4"
+                  className="py-3 px-4 flex items-center justify-between cursor-pointer hover:bg-primary/5"
                 >
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-medium">{city.name}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">
-                      {city.state || "Brasil"}
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">{city.name}</span>
+                      <Badge variant="outline" className="text-[9px] py-0 h-4 border-primary/20 bg-primary/5 text-primary">
+                        Município
+                      </Badge>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                      <MapPin className="w-2.5 h-2.5" /> Estado de {city.state}
                     </span>
                   </div>
                   <Check
                     className={cn(
-                      "ml-auto h-4 w-4",
+                      "h-4 w-4 text-primary",
                       value === city.fullName ? "opacity-100" : "opacity-0"
                     )}
                   />
