@@ -1,6 +1,4 @@
-refactor: exibicao de municipios e UF no autocomplete de cidades
+fix: tela branca no assistente de IA (falta de import)
 
-- Atualizada Edge Function 'search-cities' para mapear nomes de estados para siglas (UF).
-- Adicionada Badge 'Município' na lista de sugestoes para maior clareza.
-- Exibicao padronizada como 'Estado de UF' (ex: Estado de SP).
-- Melhoria no visual da lista de resultados do Autocomplete.
+- Adicionada importacao de 'cn' de @/lib/utils no AINewsAssistant.tsx
+- Corrigido o erro de ReferenceError que causava o crash do componente ao gerar sugestoes.
