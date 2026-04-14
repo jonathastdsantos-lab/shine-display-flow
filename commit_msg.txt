@@ -1,6 +1,7 @@
-feat: funcionalidade de busca e previa de conteudo na IA de noticias
+feat: busca dinamica de todas as cidades do Brasil via API
 
-- Adicionada lupa de pesquisa proximo a cada sugestao da IA.
-- Implementada visualizacao de manchetes reais (simuladas) para cada categoria.
-- Adicionado ScrollArea para navegacao suave nas noticias sugeridas.
-- Feedback visual de carregamento ao "pesquisar" o conteudo.
+- [NEW] Edge Function 'search-cities': Integra com a API de Geocoding do OpenWeatherMap.
+- [MODIFY] CityAutocomplete.tsx: Removida lista estatica. Agora busca qualquer cidade do Brasil.
+- Implementada logica de Debounce (500ms) para otimizar chamadas a API.
+- Exibicao de Estado/Provincia nos resultados para evitar ambiguidades.
+- Feedback de carregamento visual durante a pesquisa.
