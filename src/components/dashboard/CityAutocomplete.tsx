@@ -2,6 +2,7 @@ import * as React from "react";
 import { Check, ChevronsUpDown, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Command,
   CommandEmpty,
@@ -15,7 +16,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { supabase } from "@/integrations/supabase/client";
 
 interface CitySuggestion {
   name: string;
@@ -34,7 +34,7 @@ export function CityAutocomplete({ value, onChange }: CityAutocompleteProps) {
   const [suggestions, setSuggestions] = React.useState<CitySuggestion[]>([]);
   const [loading, setLoading] = React.useState(false);
 
-  // Debounce logic for searching
+  // Busca na API pública do IBGE (sem chave, todos os municípios do Brasil)
   React.useEffect(() => {
     if (query.length < 3) {
       setSuggestions([]);
@@ -44,18 +44,33 @@ export function CityAutocomplete({ value, onChange }: CityAutocompleteProps) {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke("search-cities", {
-          body: { query },
-        });
+        // API pública do IBGE de localidades
+        const res = await fetch(
+          `https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome`
+        );
+        const data: Array<{ nome: string; microrregiao: { mesorregiao: { UF: { sigla: string } } } }> = await res.json();
 
-        if (error) throw error;
-        setSuggestions(data || []);
+        // Filtra pelo query (busca local no resultado)
+        const normalized = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const filtered = data
+          .filter(m => {
+            const name = m.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return name.startsWith(normalized);
+          })
+          .slice(0, 15)
+          .map(m => ({
+            name: m.nome,
+            state: m.microrregiao.mesorregiao.UF.sigla,
+            fullName: `${m.nome}, ${m.microrregiao.mesorregiao.UF.sigla}`
+          }));
+
+        setSuggestions(filtered);
       } catch (err) {
-        console.error("Erro ao buscar cidades:", err);
+        console.error("Erro ao buscar cidades via IBGE:", err);
       } finally {
         setLoading(false);
       }
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [query]);

@@ -1,4 +1,6 @@
-fix: tela branca no assistente de IA (falta de import)
+fix: busca de cidades migrada da Edge Function para API publica do IBGE
 
-- Adicionada importacao de 'cn' de @/lib/utils no AINewsAssistant.tsx
-- Corrigido o erro de ReferenceError que causava o crash do componente ao gerar sugestoes.
+- Removida dependencia da Edge Function 'search-cities' (que precisava de deploy manual).
+- Integrada a API publica do IBGE (servicodados.ibge.gov.br) com todos os 5570 municipios.
+- Busca funciona sem chave de API e sem configuracao adicional.
+- Filtro local com normalizacao de acentos para busca mais precisa.
