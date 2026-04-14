@@ -1,9 +1,7 @@
-feat: mural social instagram integrado ao ChannelSettings
+feat: IA gera conteudo real por ramo para o ticker (noticias, dicas, sugestoes)
 
-- [NEW] Card de conexao com Instagram em Config. do Canal.
-- Estados visuais: Desconectado (formulario) e Conectado (preview do perfil).
-- Input de @usuario com botao de gradiente rosa/laranja (identidade Instagram).
-- Preview de 3 posts simulados ao conectar.
-- Botao de desconexao e aviso de privacidade.
-- Campo instagram_handle adicionado ao ClientProfile.
-- Remocao de codigo duplicado no ChannelSettings.tsx.
+- Reescrita completa do AINewsAssistant.tsx.
+- IA agora gera frases de ticker reais separadas por tabs: Noticias, Dicas e Sugestoes.
+- Selecao individual por checkbox com preview de itens marcados.
+- Botao 'Enviar ao Ticker' monta o conteudo selecionado e insere no campo diretamente.
+- Base de conteudo expandida: padaria, academia, clinica, salao, varejo, escola, restaurante, geral.
