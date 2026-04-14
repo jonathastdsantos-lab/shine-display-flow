@@ -21,6 +21,7 @@ export interface ClientProfile {
   config_noticias: string;
   nome_empresa: string;
   template: string;
+  instagram_handle: string;
 }
 
 export function useDashboardData() {
@@ -32,6 +33,7 @@ export function useDashboardData() {
     config_noticias: "technology",
     nome_empresa: "",
     template: "corporativo",
+    instagram_handle: "",
   });
   const [uploading, setUploading] = useState(false);
 

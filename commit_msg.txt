@@ -1,6 +1,9 @@
-fix: busca de cidades migrada da Edge Function para API publica do IBGE
+feat: mural social instagram integrado ao ChannelSettings
 
-- Removida dependencia da Edge Function 'search-cities' (que precisava de deploy manual).
-- Integrada a API publica do IBGE (servicodados.ibge.gov.br) com todos os 5570 municipios.
-- Busca funciona sem chave de API e sem configuracao adicional.
-- Filtro local com normalizacao de acentos para busca mais precisa.
+- [NEW] Card de conexao com Instagram em Config. do Canal.
+- Estados visuais: Desconectado (formulario) e Conectado (preview do perfil).
+- Input de @usuario com botao de gradiente rosa/laranja (identidade Instagram).
+- Preview de 3 posts simulados ao conectar.
+- Botao de desconexao e aviso de privacidade.
+- Campo instagram_handle adicionado ao ClientProfile.
+- Remocao de codigo duplicado no ChannelSettings.tsx.
