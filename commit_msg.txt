@@ -1,6 +1,6 @@
-fix: melhoria no upload de midia e tratamento de erros no Storage
+debug: adicionar logs de busca de midia e correcao de RLS
 
-- Atualizado handleUpload para capturar e detalhar erros do Supabase Storage
-- Adicionada verificacao de erro na insercao do banco (media_library)
-- Melhorada a verbosidade do log para diagnostico no console do navegador
-- Corrigido fluxo de retorno para que o componente MediaLibrary receba a excecao correta
+- Adicionado logging detalhado no fetchData do useDashboardData.ts
+- Exibe ID do usuario e contagem de midias encontradas no console
+- Captura e loga mensagens de erro do Supabase (RLS, schema, etc.)
+- Preparacao para o commit de correcao de politicas de seguranca

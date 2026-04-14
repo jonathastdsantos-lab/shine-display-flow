@@ -37,12 +37,23 @@ export function useDashboardData() {
 
   const fetchData = useCallback(async () => {
     if (!user) return;
+    
+    console.log("🔄 Buscando dados para o usuário:", user.id);
+    
     const [mediaRes, playlistRes, profileRes] = await Promise.all([
       supabase.from("media_library").select("*").eq("client_id", user.id),
       supabase.from("playlists").select("*").eq("client_id", user.id),
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
     ]);
-    if (mediaRes.data) setMedia(mediaRes.data as any);
+
+    if (mediaRes.error) console.error("❌ Erro ao buscar mídias:", mediaRes.error.message, mediaRes.error.details);
+    if (playlistRes.error) console.error("❌ Erro ao buscar playlists:", playlistRes.error.message);
+    if (profileRes.error) console.error("❌ Erro ao buscar perfil:", profileRes.error.message);
+
+    if (mediaRes.data) {
+      console.log("✅ Mídias encontradas:", mediaRes.data.length);
+      setMedia(mediaRes.data as any);
+    }
     if (playlistRes.data) setPlaylists(playlistRes.data as any);
     if (profileRes.data) setProfile(profileRes.data as any);
   }, [user]);
