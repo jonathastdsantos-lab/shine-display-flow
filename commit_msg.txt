@@ -1,6 +1,6 @@
-fix: auto-confirmacao de email no registro publico via RPC
+fix: melhoria no upload de midia e tratamento de erros no Storage
 
-- Implementada funcao register_client_public no Supabase (bypass email confirm)
-- Atualizado AuthContext.tsx para usar a nova funcao RPC no signUp
-- Adicionado login automatico logo apos o registro bem-sucedido
-- Remove a necessidade do cliente esperar o e-mail de confirmacao
+- Atualizado handleUpload para capturar e detalhar erros do Supabase Storage
+- Adicionada verificacao de erro na insercao do banco (media_library)
+- Melhorada a verbosidade do log para diagnostico no console do navegador
+- Corrigido fluxo de retorno para que o componente MediaLibrary receba a excecao correta

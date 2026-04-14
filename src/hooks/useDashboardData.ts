@@ -56,21 +56,42 @@ export function useDashboardData() {
       for (const file of Array.from(files)) {
         const tipo = file.type.startsWith("video") ? "video" : "imagem";
         const path = `${user.id}/${Date.now()}-${file.name}`;
-        const { error: uploadErr } = await supabase.storage.from("media").upload(path, file);
-        if (uploadErr) throw uploadErr;
+        
+        // Upload para o Storage
+        const { error: uploadErr } = await supabase.storage.from("media").upload(path, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+        if (uploadErr) {
+          console.error("Erro no Storage:", uploadErr);
+          throw new Error(`Erro no Storage: ${uploadErr.message}`);
+        }
+
+        // Obter URL pública
         const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
-        await supabase.from("media_library").insert({
+
+        // Salvar referência no Banco de Dados
+        const { error: dbError } = await supabase.from("media_library").insert({
           client_id: user.id,
           url_arquivo: publicUrl,
           tipo,
           nome: file.name,
           duracao: tipo === "imagem" ? 10 : 30,
         });
+
+        if (dbError) {
+          console.error("Erro no Banco (media_library):", dbError);
+          throw new Error(`Erro no Banco: ${dbError.message}`);
+        }
       }
       fetchData();
       return true;
-    } catch {
-      return false;
+    } catch (error: any) {
+      console.error("Falha detalhada no upload:", error);
+      // Aqui poderíamos emitir um toast, mas o handleUpload é consumido pelo componente
+      // Vamos lançar o erro para que o componente MediaLibrary mostre o toast correto
+      throw error;
     } finally {
       setUploading(false);
     }
