@@ -1,5 +1,7 @@
-fix: trocar Edge Function por PostgreSQL RPC (create_client_user via SQL)
+feat: adicionar funcoes de Admin (excluir e trocar senha) no ClientManager
 
-- ClientManager: usa supabase.rpc("create_client_user") ao inves de Edge Function
-- Nao requer deploy de Edge Function no Supabase
-- SQL da funcao pode ser executado direto no SQL Editor do Lovable
+- Implementada aba de Administracao no drawer de detalhes do cliente
+- Adicionada funcao para redefinir senha via RPC (update_client_password)
+- Adicionada funcao para excluir cliente permanentemente via RPC (delete_client_user)
+- Melhorada a seguranca das funcoes restritas ao email master
+- Removido arquivo de mensagem de commit anterior

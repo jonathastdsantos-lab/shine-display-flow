@@ -93,6 +93,53 @@ export function ClientManager() {
     toast.success(`Cenário de configuração salvo para ${selectedClient?.name}`);
   };
 
+  const handleDeleteClient = async (id: string, name: string) => {
+    if (!confirm(`TEM CERTEZA? Isso excluirá permanentemente o cliente "${name}" e todos os seus arquivos.`)) return;
+    
+    setCreating(true);
+    try {
+      const { data, error } = await supabase.rpc("delete_client_user", { p_user_id: id });
+      const result = data as any;
+      
+      if (error || !result?.success) {
+        toast.error(`Erro ao excluir: ${result?.error || error?.message}`);
+      } else {
+        toast.success("Cliente removido com sucesso!");
+        setSelectedClient(null);
+        await loadClients();
+      }
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleUpdatePassword = async (id: string) => {
+    const newPass = prompt("Digite a nova senha para este cliente (mín. 6 caracteres):");
+    if (!newPass) return;
+    if (newPass.length < 6) return toast.error("Senha muito curta.");
+
+    setCreating(true);
+    try {
+      const { data, error } = await supabase.rpc("update_client_password", { 
+        p_user_id: id, 
+        p_new_password: newPass 
+      });
+      const result = data as any;
+      
+      if (error || !result?.success) {
+        toast.error(`Erro: ${result?.error || error?.message}`);
+      } else {
+        toast.success("A senha do cliente foi alterada com sucesso!");
+      }
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const handleCreateClient = async () => {
     if (!newClientData.name || !newClientData.email || !newClientData.password) {
       toast.error("Preencha nome, e-mail e senha temporária.");
@@ -362,6 +409,9 @@ export function ClientManager() {
                 </TabsTrigger>
                 <TabsTrigger value="ai" className="px-0 py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none bg-transparent text-amber-600 data-[state=active]:text-amber-600 data-[state=active]:border-amber-500">
                   <Wand2 className="w-4 h-4 mr-2" /> Assistente IA
+                </TabsTrigger>
+                <TabsTrigger value="admin" className="px-0 py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-red-500 rounded-none bg-transparent text-red-500">
+                  <ShieldCheck className="w-4 h-4 mr-2" /> Administração
                 </TabsTrigger>
               </TabsList>
               
@@ -699,6 +749,49 @@ export function ClientManager() {
 
                 </TabsContent>
 
+                {/* ABA 4: ADMINISTRAÇÃO (PERIGOSA) */}
+                <TabsContent value="admin" className="mt-0 space-y-6 outline-none">
+                  <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-xl space-y-4">
+                    <h3 className="text-lg font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+                       <ShieldCheck className="w-5 h-5" /> Zona de Gestão Master
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Estas ações afetam diretamente a autenticação e persistência do cliente no sistema.
+                    </p>
+
+                    <div className="pt-4 grid gap-3">
+                      <div className="p-4 border border-red-500/10 rounded-lg bg-card/50 flex flex-col gap-3">
+                        <div>
+                          <Label className="text-base font-bold">Alterar Senha de Acesso</Label>
+                          <p className="text-xs text-muted-foreground">Define uma nova senha para o cliente imediatamente. Útil para recuperação manual.</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-red-500/20 hover:bg-red-500/5"
+                          onClick={() => handleUpdatePassword(selectedClient.id)}
+                          disabled={creating}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" /> Redefinir Senha do Cliente
+                        </Button>
+                      </div>
+
+                      <div className="p-4 border border-red-500/30 rounded-lg bg-red-500/5 flex flex-col gap-3">
+                        <div>
+                          <Label className="text-base font-bold text-red-600">Excluir Estabelecimento</Label>
+                          <p className="text-xs text-muted-foreground">Remove o usuário da autenticação, limpa o profile e todas as configurações de tela. Esta ação é IRREVERSÍVEL.</p>
+                        </div>
+                        <Button 
+                          variant="destructive" 
+                          className="w-full"
+                          onClick={() => handleDeleteClient(selectedClient.id, selectedClient.name)}
+                          disabled={creating}
+                        >
+                          <Plus className="w-4 h-4 mr-2 rotate-45" /> Excluir Cliente Permanentemente
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
               </ScrollArea>
             </Tabs>
           </div>
