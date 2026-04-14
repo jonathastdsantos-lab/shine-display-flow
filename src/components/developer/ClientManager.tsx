@@ -115,28 +115,33 @@ export function ClientManager() {
         return;
       }
 
-      const res = await supabase.functions.invoke("create-client", {
-        body: {
-          name: newClientData.name,
-          email: newClientData.email,
-          password: newClientData.password,
-          plan: newClientData.plan,
-          template: newClientData.template,
-        },
+      // Chama a PostgreSQL Function via RPC (sem necessidade de Edge Function)
+      const { data: rpcData, error: rpcError } = await supabase.rpc("create_client_user", {
+        p_email:    newClientData.email,
+        p_password: newClientData.password,
+        p_name:     newClientData.name,
+        p_template: newClientData.template,
+        p_plan:     newClientData.plan,
       });
 
-      if (res.error || (res.data && res.data.error)) {
-        const errMsg = res.data?.error || res.error?.message || "Erro desconhecido.";
-        toast.error(`Falha ao criar cliente: ${errMsg}`);
+      if (rpcError) {
+        toast.error(`Falha ao criar cliente: ${rpcError.message}`);
+        return;
+      }
+
+      const result = rpcData as { success: boolean; error?: string; message?: string; user_id?: string };
+
+      if (!result?.success) {
+        toast.error(`Falha: ${result?.error || "Erro desconhecido."}`);
         return;
       }
 
       toast.success(`✅ Cliente "${newClientData.name}" criado com sucesso!`, { duration: 6000 });
-      toast.success(`📧 Login: ${newClientData.email} | 🔑 Senha definida com acesso imediato.`, { duration: 8000 });
+      toast.success(`📧 Login: ${newClientData.email} | 🔑 Acesso imediato disponível.`, { duration: 8000 });
 
       setNewClientData({ name: "", email: "", password: "", plan: "Basic", template: "corporativo" });
       setIsCreateOpen(false);
-      await loadClients(); // Recarrega a lista real do Supabase
+      await loadClients();
     } catch (err: any) {
       toast.error(`Erro inesperado: ${err.message}`);
     } finally {

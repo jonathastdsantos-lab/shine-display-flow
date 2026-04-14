@@ -1,18 +1,5 @@
-fix: substituir cadastro de clientes mock por chamada real a Edge Function
+fix: trocar Edge Function por PostgreSQL RPC (create_client_user via SQL)
 
-- Criar supabase/functions/create-client/index.ts
-  - Usa supabase.auth.admin.createUser (service_role)
-  - email_confirm: true → acesso imediato sem confirmação de e-mail
-  - Cria profile na tabela profiles automaticamente
-  - Verifica que o chamador é o developer master
-  - Retorna erros legíveis (duplicata, campos faltando etc.)
-
-- ClientManager.tsx: remover simulação setTimeout
-  - Chama supabase.functions.invoke("create-client")
-  - Spinner de loading durante criação
-  - Toast com e-mail e senha ao finalizar
-  - Reload real da lista de clientes após criar
-  - Modal bloqueado durante criação (prevent close)
-  - Campo template inicial na criação
-  - Senha em texto visível (campo text, não password)
-  - Aviso "Aviso de Segurança: Edge Functions" removido
+- ClientManager: usa supabase.rpc("create_client_user") ao inves de Edge Function
+- Nao requer deploy de Edge Function no Supabase
+- SQL da funcao pode ser executado direto no SQL Editor do Lovable
