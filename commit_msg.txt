@@ -1,13 +1,10 @@
-feat: tabs dinamicas por ramo no assistente de IA do ticker
+fix: correcao do save de perfil e diagnostic de erros
 
-- Subcategorias agora sao especificas do negocio:
-  * Salao: Autocuidado | Cuidados com Cabelo | Tendencias | Promocoes
-  * Academia: Treino | Nutricao | Motivacao | Aulas
-  * Padaria: Paes & Massas | Nutricao & Saude | Doces | Promocoes
-  * Clinica: Prevencao | Bem-Estar | Especialidades | Agendamento
-  * Varejo: Ofertas | Novidades | Dicas de Compra
-  * Escola: Dicas de Estudo | ENEM & Vestibular | Cursos & Turmas
-  * Restaurante: Cardapio | Nutricao | Delivery & Reservas
-  * Geral: Informacoes | Dicas | Engajamento
-- Conteudo real de ticker gerado para cada categoria e subcategoria.
-- Selecao individual com checkbox e aplicacao direta ao campo do ticker.
+- saveProfile agora sanitiza os updates para enviar apenas campos validos ao banco.
+- Adicionados logs de sucesso e erro no console para facilitar diagnostico.
+- ChannelSettings agora exibe toast de erro se o Supabase retornar falha.
+- Corrigido problema silencioso que impedia o salvamento das configuracoes.
+
+ACAO NECESSARIA:
+Execute no SQL Editor do Supabase:
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS instagram_handle TEXT DEFAULT '';

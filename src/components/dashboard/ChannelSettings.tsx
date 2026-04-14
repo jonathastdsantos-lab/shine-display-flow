@@ -23,12 +23,20 @@ export default function ChannelSettings({ profile, setProfile, onSave }: Channel
   const [igConnecting, setIgConnecting] = React.useState(false);
 
   const handleSave = async () => {
-    await onSave({ 
-      config_clima: profile.config_clima, 
-      config_noticias: profile.config_noticias,
-      instagram_handle: igConnected ? igHandle : "",
-    });
-    toast({ title: "Configurações salvas!" });
+    try {
+      await onSave({ 
+        config_clima: profile.config_clima, 
+        config_noticias: profile.config_noticias,
+        instagram_handle: igConnected ? igHandle : "",
+      });
+      toast({ title: "✅ Configurações salvas com sucesso!" });
+    } catch (err: any) {
+      toast({ 
+        title: "❌ Erro ao salvar", 
+        description: err.message || "Verifique o console para mais detalhes.",
+        variant: "destructive" 
+      });
+    }
   };
 
   const handleConnectInstagram = async () => {

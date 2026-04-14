@@ -166,7 +166,27 @@ export function useDashboardData() {
 
   const saveProfile = async (updates: Partial<ClientProfile>) => {
     if (!user) return;
-    await supabase.from("profiles").update(updates).eq("user_id", user.id);
+    
+    // Remove any keys that don't exist in the DB schema
+    const allowedKeys = ["config_clima", "config_noticias", "nome_empresa", "template", "instagram_handle"];
+    const sanitized: Record<string, any> = {};
+    for (const key of allowedKeys) {
+      if (key in updates) sanitized[key] = (updates as any)[key];
+    }
+    
+    console.log("💾 Salvando perfil:", sanitized);
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update(sanitized)
+      .eq("user_id", user.id);
+    
+    if (error) {
+      console.error("❌ Erro ao salvar perfil:", error.message, error.details);
+      throw new Error(`Falha ao salvar: ${error.message}`);
+    }
+    
+    console.log("✅ Perfil salvo com sucesso!");
     setProfile((prev) => ({ ...prev, ...updates }));
   };
 
