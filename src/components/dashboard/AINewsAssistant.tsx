@@ -1,153 +1,298 @@
 import * as React from "react";
-import { Wand2, Sparkles, Plus, Check, Trash2, Tv2 } from "lucide-react";
+import { Wand2, Sparkles, Check, Trash2, Tv2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
-// Base de conteúdo por ramo — será gerado como frases de ticker reais
-const CONTENT_BASE: Record<string, { noticias: string[]; dicas: string[]; sugestoes: string[] }> = {
-  padaria: {
-    noticias: [
-      "Pesquisa aponta que 72% dos brasileiros preferem pão artesanal ao industrial",
-      "Mercado de panificação cresce 12% no Brasil e gera mais de 800 mil empregos",
-      "Novas técnicas de fermentação natural chegam às padarias brasileiras",
-    ],
-    dicas: [
-      "💡 Dica: Pão integral tem mais fibras e ajuda no controle do colesterol",
-      "💡 Dica: Congelar o pão em fatias preserva o sabor por até 3 meses",
-      "💡 Dica: Prefira pães com menos de 5 ingredientes na lista — são mais naturais",
-    ],
-    sugestoes: [
-      "🥐 Experimente nosso pão de fermentação natural — feito com carinho todo dia!",
-      "☕ Café + croissant fresquinho: a combinação perfeita para começar bem o dia",
-      "🎂 Encomende seu bolo personalizado com antecedência e garanta a melhor surpresa!",
+// Cada ramo tem subcategorias específicas com conteúdo real para o ticker
+const CONTENT_BASE: Record<string, { subcategories: { label: string; emoji: string; items: string[] }[] }> = {
+  salao: {
+    subcategories: [
+      {
+        label: "Autocuidado", emoji: "✨",
+        items: [
+          "✨ Dica de autocuidado: use protetor solar diariamente, mesmo em dias nublados",
+          "🧴 Hidratação da pele: beba ao menos 2L de água por dia para um brilho natural",
+          "✨ Rotina de skincare: limpeza, tônico e hidratante são os 3 passos essenciais",
+          "💅 Autocuidado começa por dentro — alimentação equilibrada reflete na sua pele e cabelos",
+        ],
+      },
+      {
+        label: "Cuidados com Cabelo", emoji: "💇",
+        items: [
+          "💇 Use protetor térmico sempre que usar chapinha ou babyliss — proteja seus fios!",
+          "🚿 Lave o cabelo com água fria ou morna — água quente resseca e danifica os fios",
+          "💆 Hidratação profunda quinzenal é essencial para cabelos quimicamente tratados",
+          "✂️ Apare as pontas a cada 3 meses para manter o cabelo saudável e livre de pontas duplas",
+          "🛁 Máscara capilar nutritiva: deixe agir por 20 minutos para resultado profissional",
+        ],
+      },
+      {
+        label: "Tendências", emoji: "🔥",
+        items: [
+          "🔥 Tendência 2026: franja curtinha está em alta e valoriza qualquer formato de rosto",
+          "🎨 Coloração glossy: brilho intenso e duração prolongada são os hits do momento",
+          "💡 Babylon layers: o corte que dá volume, movimento e rejuvenesce de forma natural",
+          "🌈 Balayage californiano continua sendo o favorito para quem quer um visual descolado",
+          "✨ Botox capilar sem formol: tratamento que está conquistando salões de todo o Brasil",
+        ],
+      },
+      {
+        label: "Promoções", emoji: "💸",
+        items: [
+          "💸 Corte + Hidratação: combo especial com preço exclusivo — agende pelo WhatsApp!",
+          "🎁 Pacote mensal de manicure e pedicure com 20% de desconto para clientes fidelidade",
+          "⭐ Indica um amigo e ganhe 15% de desconto no próximo serviço — aproveite!",
+          "📅 Terças culturais: coloração com 25% OFF — vagas limitadas, reserve já!",
+        ],
+      },
     ],
   },
   academia: {
-    noticias: [
-      "OMS recomenda pelo menos 150 minutos de atividade física moderada por semana",
-      "Brasil é o 2º país com mais academias no mundo, segundo pesquisa internacional",
-      "Exercício físico regular reduz em 35% o risco de doenças cardiovasculares",
+    subcategories: [
+      {
+        label: "Treino", emoji: "🏋️",
+        items: [
+          "🏋️ Aquecimento de 10 minutos antes do treino reduz lesões em até 60%",
+          "💪 Descanse 48h antes de treinar o mesmo grupo muscular para melhor recuperação",
+          "🔥 Treino HIIT de 20 minutos queima mais calorias que 1h de cardio moderado",
+          "🏃 Corrida em inclinação: queima até 50% mais calorias e fortalece glúteos e panturrilhas",
+        ],
+      },
+      {
+        label: "Nutrição", emoji: "🥗",
+        items: [
+          "🥗 Proteínas pós-treino: consuma dentro de 30 minutos para melhor recuperação muscular",
+          "💧 Hidratação é essencial: beba 400ml de água antes do treino intenso",
+          "🍌 Banana antes do treino fornece energia rápida e previne cãibras musculares",
+          "🥚 Ovo é uma proteína completa e econômica — excelente aliado do ganho de massa",
+        ],
+      },
+      {
+        label: "Motivação", emoji: "🔥",
+        items: [
+          "🔥 'O único treino ruim é aquele que você não fez' — mantenha a consistência!",
+          "🌟 Transformações reais acontecem com pelo menos 3 meses de treino regular",
+          "💪 Cada rep, cada série, cada gota de suor te aproxima do seu objetivo — não desista!",
+          "🏆 Você não compete com ninguém — compete com a versão de ontem de você mesmo",
+        ],
+      },
+      {
+        label: "Aulas", emoji: "📅",
+        items: [
+          "📅 Hidroginástica às terças e quintas — ótima para articulações e condicionamento",
+          "🧘 Yoga matinal às 7h: reserve sua vaga e comece o dia com equilíbrio e foco",
+          "🥊 Novas turmas de muay thai abertas — experimente a primeira aula gratuitamente!",
+          "💃 Aula de zumba toda sexta às 18h30 — venha dançar e se divertir while queima calorias",
+        ],
+      },
     ],
-    dicas: [
-      "💡 Dica: Hidrate-se bem antes, durante e após o treino para melhor desempenho",
-      "💡 Dica: Intervalos de descanso entre séries são tão importantes quanto o esforço",
-      "💡 Dica: Treino em jejum pode ser eficaz, mas consulte sempre um nutricionista",
-    ],
-    sugestoes: [
-      "🏋️ Aula de musculação: vaga disponível! Fale com um de nossos instrutores agora",
-      "🧘 Yoga e pilates às terças e quintas — venha relaxar e fortalecer o corpo",
-      "🥗 Nosso plano nutricional personalizado ajuda você a alcançar seus objetivos mais rápido!",
+  },
+  padaria: {
+    subcategories: [
+      {
+        label: "Pães & Massas", emoji: "🥖",
+        items: [
+          "🥖 Sabias que o pão de fermentação natural tem índice glicêmico mais baixo?",
+          "🌾 Pão integral: rico em fibras, ajuda na digestão e mantém a saciedade por mais tempo",
+          "🥐 Croissant autêntico: feito com manteiga de qualidade e massa folhada traditional",
+          "🍞 Nosso pão francês é assado fresquinho a cada 3 horas — sempre crocante!",
+        ],
+      },
+      {
+        label: "Nutrição & Saúde", emoji: "🥗",
+        items: [
+          "💡 Substitua o pão branco pelo integral e reduza o açúcar no sangue progressivamente",
+          "🌿 Linhaça, chia e aveia: superalimentos que podem ser adicionados nos seus pães favoritos",
+          "🥗 Café da manhã completo: pão + proteína + fruta = energia para o dia todo",
+          "💧 Hidrate-se bem pela manhã antes do café — seu corpo agradece!",
+        ],
+      },
+      {
+        label: "Doces & Confeitaria", emoji: "🎂",
+        items: [
+          "🎂 Bolo personalizado: aceite encomendas com até 3 dias de antecedência",
+          "🍰 Cheesecake do dia: cremoso, com calda de frutas vermelhas — experiência incrível!",
+          "🍫 Brigadeiro gourmet em 12 sabores — embalagem especial disponível para presentes",
+          "🧁 Cupcakes temáticos para festas e eventos — orçamento sem compromisso!",
+        ],
+      },
+      {
+        label: "Promoções", emoji: "💸",
+        items: [
+          "💸 Combo família: 10 pães + manteiga + suco por preço especial toda segunda-feira!",
+          "🎁 Cartão fidelidade: a cada 10 cafés, ganhe 1 grátis — carimbe o seu hoje!",
+          "⭐ Mini-tortas do dia com preço reduzido a partir das 17h — aproveite!",
+        ],
+      },
     ],
   },
   clinica: {
-    noticias: [
-      "Ministério da Saúde amplia cobertura de exames preventivos pelo SUS",
-      "Diagnóstico precoce aumenta em 9x as chances de cura do câncer de mama",
-      "Telemedicina cresce 80% no Brasil e facilita acesso a especialistas",
-    ],
-    dicas: [
-      "💡 Dica: Check-up anual é essencial — não espere sintomas para consultar um médico",
-      "💡 Dica: Beba ao menos 2 litros de água por dia para manter o sistema saudável",
-      "💡 Dica: Sono de qualidade é fundamental para a saúde imunológica",
-    ],
-    sugestoes: [
-      "🩺 Agende sua consulta de rotina — prevenir é sempre o melhor remédio!",
-      "📋 Realize seus exames laboratoriais aqui com resultado rápido e seguro",
-      "👨‍⚕️ Nossa equipe médica está pronta para cuidar de você e da sua família",
-    ],
-  },
-  salao: {
-    noticias: [
-      "Beleza e autocuidado: setor cresce 18% no Brasil nos últimos dois anos",
-      "Tendências de corte e coloração para o segundo semestre de 2026",
-      "Tratamentos capilares naturais ganham espaço nas prateleiras dos salões",
-    ],
-    dicas: [
-      "💡 Dica: Use protetor térmico antes de usar chapinha ou babyliss para proteger os fios",
-      "💡 Dica: Finalizadores a base de óleo dão brilho extra sem pesar o cabelo",
-      "💡 Dica: Hidratação profunda quinzenal é essencial para cabelos quimicamente tratados",
-    ],
-    sugestoes: [
-      "✂️ Corte + Escova + Hidratação: nosso combo mais amado está disponível!",
-      "💅 Manicure e pedicure com esmaltes premium — agende pelo WhatsApp agora!",
-      "💇 Coloração e mechas com produtos de alta durabilidade — venha se transformar!",
+    subcategories: [
+      {
+        label: "Prevenção", emoji: "🩺",
+        items: [
+          "🩺 Check-up anual: detectar doenças cedo aumenta em 9x as chances de cura",
+          "💉 Vacinação em dia é a maneira mais eficiente de prevenir doenças graves",
+          "🩸 Exames de sangue semestrais revelam riscos silenciosos que não dão sintomas",
+          "🫁 Espirometria: avalie a saúde dos pulmões — indicada para tabagistas e asmáticos",
+        ],
+      },
+      {
+        label: "Bem-Estar", emoji: "💚",
+        items: [
+          "💤 Sono de qualidade (7-9h) fortalece o sistema imunológico e melhora o humor",
+          "🧘 Meditação diária de apenas 10 minutos reduz o cortisol em até 25%",
+          "💧 Hidratação adequada melhora concentração, energia e saúde da pele",
+          "🌿 Estresse crônico aumenta o risco de hipertensão — cuide da sua saúde mental",
+        ],
+      },
+      {
+        label: "Especialidades", emoji: "🔬",
+        items: [
+          "🔬 Consulta com cardiologista: recomendada anualmente para maiores de 40 anos",
+          "🦷 Saúde bucal está relacionada à saúde cardiovascular — não negligencie o dentista",
+          "👁️ Exame de vista anual: identifica miopia, astigmatismo e outros problemas precocemente",
+          "🏥 Dermatologia: mapeamento de pintas detecta sinais precoces de câncer de pele",
+        ],
+      },
+      {
+        label: "Agendamento", emoji: "📋",
+        items: [
+          "📋 Agende sua consulta online em menos de 2 minutos — disponível 24h!",
+          "⏰ Horários flexíveis: atendimento de segunda a sábado, inclusive pela manhã",
+          "📱 Resultado de exames: acesse pelo portal do paciente sem sair de casa",
+          "🚁 Emergência? Nossa equipe de plantão está disponível pelos nossos canais",
+        ],
+      },
     ],
   },
   varejo: {
-    noticias: [
-      "Vendas do e-commerce brasileiro crescem 27% no primeiro trimestre de 2026",
-      "Consumidores priorizam experiência de compra acima do preço, aponta pesquisa",
-      "Black Friday gera expectativa de recorde de vendas para o comércio nacional",
-    ],
-    dicas: [
-      "💡 Dica: Compare preços online antes de comprar — economize até 40%",
-      "💡 Dica: Confira sempre a política de troca e devolução antes de finalizar a compra",
-      "💡 Dica: Cashback e programas de fidelidade podem gerar ótima economia no longo prazo",
-    ],
-    sugestoes: [
-      "🔥 Promoção relâmpago: produtos com até 50% OFF — só hoje!",
-      "🛒 Aqui você encontra as melhores marcas com preços que cabem no seu bolso",
-      "🎁 Presente para alguém especial? Temos embalagem gift gratuita nas compras acima de R$100",
+    subcategories: [
+      {
+        label: "Ofertas", emoji: "🔥",
+        items: [
+          "🔥 Liquidação de temporada: até 60% OFF em produtos selecionados — só esta semana!",
+          "🏷️ Compre 2 e leve 3: promoção especial em toda a linha de acessórios",
+          "💳 Parcelamos em até 12x sem juros no cartão — compre com tranquilidade!",
+          "📦 Frete grátis para compras acima de R$150 — aproveite e complete seu carrinho",
+        ],
+      },
+      {
+        label: "Novidades", emoji: "✨",
+        items: [
+          "✨ Nova coleção chegou: os primeiros a ver são nossos clientes VIP — cadastre-se!",
+          "🆕 Linha exclusiva de produtos importados disponível apenas aqui — estoque limitado",
+          "🎨 Lançamento: produtos em edição limitada com embalagem especial colecionável",
+          "📲 App de compras: cliente app tem desconto extra de 10% em todas as compras",
+        ],
+      },
+      {
+        label: "Dicas de Compra", emoji: "💡",
+        items: [
+          "💡 Compare preços antes de comprar: aqui você sempre encontra o melhor custo-benefício",
+          "🔍 Confira a garantia antes de levar — todos os nossos produtos têm nota fiscal",
+          "💡 Programa de fidelidade: pontos acumulados viram desconto automático",
+          "🎁 Presente especial? Temos embalagem gift gratuita em compras acima de R$100",
+        ],
+      },
     ],
   },
   escola: {
-    noticias: [
-      "ENEM 2026: inscrições abertas — prazo encerra em maio, fique atento!",
-      "Pesquisa indica que leitura diária melhora raciocínio em 45% nos estudantes",
-      "Universidades públicas ampliam vagas para cursos de tecnologia e saúde",
-    ],
-    dicas: [
-      "💡 Dica: Dividir o estudo em blocos de 25 minutos com pausas aumenta a retenção",
-      "💡 Dica: Fazer mapas mentais ajuda a memorizar conteúdos complexos com mais facilidade",
-      "💡 Dica: Estudar em grupo melhora a compreensão e torna o aprendizado mais dinâmico",
-    ],
-    sugestoes: [
-      "📚 Turmas de reforço escolar: matemática, português e ciências — vagas abertas!",
-      "🎓 Prepare-se para o vestibular com nossos cursos preparatórios especializados",
-      "🧠 Nossas aulas são interativas e adaptadas para cada ritmo de aprendizado",
+    subcategories: [
+      {
+        label: "Dicas de Estudo", emoji: "📚",
+        items: [
+          "📚 Técnica Pomodoro: 25 min de foco + 5 min de pausa = aprendizado mais eficiente",
+          "🧠 Fazer resumos à mão melhora a retenção do conteúdo em até 40%",
+          "📖 Leia ao menos 15 minutos por dia — amplia vocabulário e raciocínio crítico",
+          "💡 Estude no horário em que você se sente mais alerta — manhã ou noite?",
+        ],
+      },
+      {
+        label: "ENEM & Vestibular", emoji: "🎓",
+        items: [
+          "🎓 ENEM 2026: comece estudando Redação — vale 20% da nota total!",
+          "📐 Matemática ENEM: foque em estatística, funções e geometria — as mais cobradas",
+          "📝 Leia textos de atualidades diariamente — alimenta a argumentação na redação",
+          "🕐 Simule as provas com o cronômetro para dominar o tempo no dia da prova real",
+        ],
+      },
+      {
+        label: "Cursos & Turmas", emoji: "🏫",
+        items: [
+          "🏫 Turmas de reforço: matemática, português e ciências — vagas abertas para 2026!",
+          "💻 Curso de informática básica: formação em 3 meses com certificado reconhecido",
+          "🎨 Oficinas de arte e criatividade: inscrições abertas para crianças de 8 a 14 anos",
+          "🌐 Inglês para iniciantes: turmas noturnas com professor nativo — poucas vagas!",
+        ],
+      },
     ],
   },
   restaurante: {
-    noticias: [
-      "Gastronomia brasileira é eleita patrimônio cultural imaterial da UNESCO",
-      "Delivery de comida cresce 35% e impulsiona setor de alimentação no Brasil",
-      "Novas tendências: pratos plant-based conquistam cardápios de restaurantes nacionais",
-    ],
-    dicas: [
-      "💡 Dica: Alimentos frescos e da estação têm mais nutrientes e custam menos",
-      "💡 Dica: Refeições coloridas indicam variedade de nutrientes essenciais",
-      "💡 Dica: Mastigar devagar melhora a digestão e aumenta a sensação de saciedade",
-    ],
-    sugestoes: [
-      "🍽️ Prato executivo do dia com entrada + principal + sobremesa por preço especial!",
-      "🥩 Churrasco especial aos finais de semana — reserve sua mesa com antecedência",
-      "🚗 Delivery disponível pelo app — peça agora e receba em até 40 minutos!",
+    subcategories: [
+      {
+        label: "Cardápio", emoji: "🍽️",
+        items: [
+          "🍽️ Prato executivo de hoje: file ao molho madeira + arroz + feijão + salada por R$35",
+          "🥗 Opção vegetariana: risoto de cogumelos com rúcula e parmesão — muito pedida!",
+          "🍖 Churrasco especial aos domingos: buffet completo com open saladas por preço fixo",
+          "🍰 Sobremesa do dia: pudim artesanal feito pelo chefe — peça antes que acabe!",
+        ],
+      },
+      {
+        label: "Nutrição", emoji: "🌿",
+        items: [
+          "🌿 Nossa salada fresquinha é colhida de produtores locais — mais nutrientes, mais sabor",
+          "💧 Hidratação durante a refeição: prefira água sem gás ou suco natural",
+          "🐟 Peixe grelhado: proteína magra rica em ômega-3 para uma refeição saudável",
+          "🥙 Wraps integrais: opção leve, saborosa e equilibrada para o almoço do dia a dia",
+        ],
+      },
+      {
+        label: "Delivery & Reservas", emoji: "🚗",
+        items: [
+          "🚗 Delivery disponível pelo app: pedido mínimo de R$30 e entrega em até 45 min",
+          "📅 Reserve sua mesa para fins de semana — lotamos rapidinho, não perca!",
+          "🎂 Comemorações especiais: decoração de mesa e bolo inclusas — consulte condições",
+          "🛵 Cupom de desconto: primeira entrega grátis usando o código BEMESTAR2026",
+        ],
+      },
     ],
   },
   geral: {
-    noticias: [
-      "Brasil registra crescimento de 2,8% no PIB no primeiro trimestre de 2026",
-      "Tecnologia verde: empresas brasileiras lideram inovações sustentáveis na América Latina",
-      "Pesquisa aponta aumento de 20% no turismo interno durante os feriados de 2026",
-    ],
-    dicas: [
-      "💡 Dica: Planeje sua semana com antecedência para aumentar produtividade e bem-estar",
-      "💡 Dica: Invista em aprendizado contínuo — cursos online gratuitos estão disponíveis",
-      "💡 Dica: Economize energia: eletrodomésticos no modo standby consomem até 12% da conta",
-    ],
-    sugestoes: [
-      "✨ Acompanhe nossos stories e novidades — siga nas redes sociais!",
-      "📲 Cadastre-se em nossa lista VIP e receba ofertas exclusivas em primeira mão",
-      "⭐ Adorou o atendimento? Deixe sua avaliação online e ajude outros clientes!",
+    subcategories: [
+      {
+        label: "Informações", emoji: "📰",
+        items: [
+          "📰 Brasil registra crescimento de 2,8% no PIB — economia em recuperação constante",
+          "🌱 Consumo consciente cresce: 65% dos brasileiros preferem marcas sustentáveis",
+          "📲 5G já cobre 70% das cidades brasileiras e muda a forma de trabalhar e consumir",
+        ],
+      },
+      {
+        label: "Dicas Gerais", emoji: "💡",
+        items: [
+          "💡 Organize sua semana aos domingos: pequenas metas diárias constroem grandes resultados",
+          "💡 Lembre-se: economia começa nos hábitos — desligue o que não está usando",
+          "💡 Invista em aprendizado contínuo — cursos online gratuitos transformam carreiras",
+        ],
+      },
+      {
+        label: "Engajamento", emoji: "🎯",
+        items: [
+          "⭐ Gostou do atendimento? Deixe sua avaliação online e ajude outras pessoas!",
+          "📲 Siga nossas redes sociais e fique por dentro das novidades e promoções exclusivas",
+          "🎁 Programa de fidelidade: cada visita acumula pontos e vira desconto — cadastre-se!",
+        ],
+      },
     ],
   },
 };
 
-type ContentItem = { text: string; type: "noticia" | "dica" | "sugestao"; selected: boolean };
+type ContentItem = { text: string; cat: string; selected: boolean };
 
 interface AINewsAssistantProps {
   onSuggest: (content: string) => void;
@@ -157,39 +302,36 @@ export function AINewsAssistant({ onSuggest }: AINewsAssistantProps) {
   const [input, setInput] = React.useState("");
   const [isThinking, setIsThinking] = React.useState(false);
   const [items, setItems] = React.useState<ContentItem[]>([]);
-  const [activeTab, setActiveTab] = React.useState<"noticia" | "dica" | "sugestao">("noticia");
-
-  const tabs: { key: "noticia" | "dica" | "sugestao"; label: string; emoji: string }[] = [
-    { key: "noticia", label: "Notícias", emoji: "📰" },
-    { key: "dica", label: "Dicas", emoji: "💡" },
-    { key: "sugestao", label: "Sugestões", emoji: "🎯" },
-  ];
+  const [activeTab, setActiveTab] = React.useState<string>("");
+  const [tabs, setTabs] = React.useState<{ label: string; emoji: string }[]>([]);
 
   const handleGenerate = () => {
     if (!input.trim()) return;
     setIsThinking(true);
     setItems([]);
+    setActiveTab("");
 
     setTimeout(() => {
       const lower = input.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      let match = "geral";
-
-      for (const key of Object.keys(CONTENT_BASE)) {
+      let matchKey = "geral";
+      const keys = Object.keys(CONTENT_BASE);
+      for (const key of keys) {
         const normalizedKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (lower.includes(normalizedKey)) {
-          match = key;
+          matchKey = key;
           break;
         }
       }
 
-      const base = CONTENT_BASE[match];
-      const generated: ContentItem[] = [
-        ...base.noticias.map(t => ({ text: t, type: "noticia" as const, selected: false })),
-        ...base.dicas.map(t => ({ text: t, type: "dica" as const, selected: false })),
-        ...base.sugestoes.map(t => ({ text: t, type: "sugestao" as const, selected: false })),
-      ];
+      const base = CONTENT_BASE[matchKey];
+      const newTabs = base.subcategories.map(s => ({ label: s.label, emoji: s.emoji }));
+      const newItems: ContentItem[] = base.subcategories.flatMap(sub =>
+        sub.items.map(text => ({ text, cat: sub.label, selected: false }))
+      );
 
-      setItems(generated);
+      setTabs(newTabs);
+      setItems(newItems);
+      setActiveTab(newTabs[0]?.label || "");
       setIsThinking(false);
     }, 900);
   };
@@ -199,14 +341,16 @@ export function AINewsAssistant({ onSuggest }: AINewsAssistantProps) {
   };
 
   const selectedItems = items.filter(i => i.selected);
-  const visibleItems = items.filter(i => i.type === activeTab);
+  const visibleItems = items.filter(i => i.cat === activeTab);
 
   const handleApplySelected = () => {
     if (selectedItems.length === 0) return;
-    const joined = selectedItems.map(i => i.text).join(" ● ");
+    const joined = selectedItems.map(i => i.text).join("   ●   ");
     onSuggest(joined);
     setItems([]);
     setInput("");
+    setTabs([]);
+    setActiveTab("");
   };
 
   return (
@@ -219,7 +363,7 @@ export function AINewsAssistant({ onSuggest }: AINewsAssistantProps) {
         <div>
           <h4 className="text-sm font-bold">Assistente de Conteúdo IA</h4>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Gera notícias, dicas e sugestões reais para o ticker do seu player.
+            Gera conteúdo específico do seu ramo de negócio para o ticker do player.
           </p>
         </div>
       </div>
@@ -228,7 +372,7 @@ export function AINewsAssistant({ onSuggest }: AINewsAssistantProps) {
         {/* Input */}
         <div className="flex gap-2">
           <Input
-            placeholder="Ramo do negócio (ex: Padaria, Clínica, Salão...)"
+            placeholder="Ex: Salão de cabelo, Padaria, Clínica, Academia..."
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleGenerate()}
@@ -249,18 +393,18 @@ export function AINewsAssistant({ onSuggest }: AINewsAssistantProps) {
           </Button>
         </div>
 
-        {/* Content Tabs + Items */}
-        {items.length > 0 && (
+        {/* Dynamic Tabs + Items */}
+        {tabs.length > 0 && items.length > 0 && (
           <div className="space-y-3 pt-1 border-t border-primary/10">
-            {/* Tabs */}
-            <div className="flex gap-1">
+            {/* Custom Tabs by Business Type */}
+            <div className="flex flex-wrap gap-1.5">
               {tabs.map(t => (
                 <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
+                  key={t.label}
+                  onClick={() => setActiveTab(t.label)}
                   className={cn(
                     "text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all",
-                    activeTab === t.key
+                    activeTab === t.label
                       ? "bg-primary text-white shadow-sm"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
                   )}
@@ -303,29 +447,29 @@ export function AINewsAssistant({ onSuggest }: AINewsAssistantProps) {
 
             {/* Apply Bar */}
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-[11px] text-muted-foreground truncate">
                   {selectedItems.length > 0 ? (
-                    <span className="text-primary font-bold">{selectedItems.length} selecionado(s)</span>
+                    <span className="text-primary font-bold">{selectedItems.length} item(s) selecionado(s)</span>
                   ) : (
-                    "Selecione os itens desejados"
+                    "Selecione os itens para o ticker"
                   )}
                 </span>
                 {selectedItems.length > 0 && (
                   <button
                     onClick={() => setItems(prev => prev.map(i => ({ ...i, selected: false })))}
-                    className="text-[10px] text-muted-foreground underline hover:text-foreground"
+                    className="text-[10px] text-muted-foreground underline hover:text-foreground shrink-0"
                   >
                     Limpar
                   </button>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <Button
                   size="sm"
                   variant="outline"
                   className="h-8 gap-1.5 text-xs"
-                  onClick={() => { setItems([]); setInput(""); }}
+                  onClick={() => { setItems([]); setInput(""); setTabs([]); setActiveTab(""); }}
                 >
                   <Trash2 className="h-3 w-3" /> Descartar
                 </Button>

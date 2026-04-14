@@ -1,7 +1,13 @@
-feat: IA gera conteudo real por ramo para o ticker (noticias, dicas, sugestoes)
+feat: tabs dinamicas por ramo no assistente de IA do ticker
 
-- Reescrita completa do AINewsAssistant.tsx.
-- IA agora gera frases de ticker reais separadas por tabs: Noticias, Dicas e Sugestoes.
-- Selecao individual por checkbox com preview de itens marcados.
-- Botao 'Enviar ao Ticker' monta o conteudo selecionado e insere no campo diretamente.
-- Base de conteudo expandida: padaria, academia, clinica, salao, varejo, escola, restaurante, geral.
+- Subcategorias agora sao especificas do negocio:
+  * Salao: Autocuidado | Cuidados com Cabelo | Tendencias | Promocoes
+  * Academia: Treino | Nutricao | Motivacao | Aulas
+  * Padaria: Paes & Massas | Nutricao & Saude | Doces | Promocoes
+  * Clinica: Prevencao | Bem-Estar | Especialidades | Agendamento
+  * Varejo: Ofertas | Novidades | Dicas de Compra
+  * Escola: Dicas de Estudo | ENEM & Vestibular | Cursos & Turmas
+  * Restaurante: Cardapio | Nutricao | Delivery & Reservas
+  * Geral: Informacoes | Dicas | Engajamento
+- Conteudo real de ticker gerado para cada categoria e subcategoria.
+- Selecao individual com checkbox e aplicacao direta ao campo do ticker.
