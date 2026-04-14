@@ -66,7 +66,17 @@ export function useDashboardData() {
     try {
       for (const file of Array.from(files)) {
         const tipo = file.type.startsWith("video") ? "video" : "imagem";
-        const path = `${user.id}/${Date.now()}-${file.name}`;
+        
+        // Limpa o nome do arquivo: remove acentos, espaços e caracteres especiais
+        const cleanName = file.name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+          .replace(/[^\w.-]/g, "_")        // Substitui espaços e símbolos por '_'
+          .toLowerCase();
+
+        const path = `${user.id}/${Date.now()}-${cleanName}`;
+        
+        console.log("📤 Iniciando upload Higienizado:", path);
         
         // Upload para o Storage
         const { error: uploadErr } = await supabase.storage.from("media").upload(path, file, {

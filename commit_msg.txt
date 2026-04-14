@@ -1,6 +1,6 @@
-debug: adicionar logs de busca de midia e correcao de RLS
+fix: higienizacao de nomes de arquivos para evitar erro Invalid Key no Storage
 
-- Adicionado logging detalhado no fetchData do useDashboardData.ts
-- Exibe ID do usuario e contagem de midias encontradas no console
-- Captura e loga mensagens de erro do Supabase (RLS, schema, etc.)
-- Preparacao para o commit de correcao de politicas de seguranca
+- Implementada normalizacao NFD para remover acentos e caracteres especiais
+- Substituicao de espacos e simbolos por sublinhados (_)
+- Conversao de nomes de arquivos para minusculo para padronizacao no Storage
+- Corrigido o erro 'Invalid key' causado por caracteres nao permitidos no Supabase Storage
