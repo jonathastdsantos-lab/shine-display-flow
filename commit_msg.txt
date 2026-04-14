@@ -1,7 +1,6 @@
-feat: adicionar funcoes de Admin (excluir e trocar senha) no ClientManager
+fix: auto-confirmacao de email no registro publico via RPC
 
-- Implementada aba de Administracao no drawer de detalhes do cliente
-- Adicionada funcao para redefinir senha via RPC (update_client_password)
-- Adicionada funcao para excluir cliente permanentemente via RPC (delete_client_user)
-- Melhorada a seguranca das funcoes restritas ao email master
-- Removido arquivo de mensagem de commit anterior
+- Implementada funcao register_client_public no Supabase (bypass email confirm)
+- Atualizado AuthContext.tsx para usar a nova funcao RPC no signUp
+- Adicionado login automatico logo apos o registro bem-sucedido
+- Remove a necessidade do cliente esperar o e-mail de confirmacao

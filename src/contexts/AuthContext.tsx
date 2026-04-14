@@ -40,12 +40,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, nomeEmpresa: string) => {
-    const { error } = await supabase.auth.signUp({
+    // 1. Chama a função RPC para criar o usuário já confirmado
+    const { data, error: rpcError } = await supabase.rpc("register_client_public", {
+      p_email: email,
+      p_password: password,
+      p_name: nomeEmpresa
+    });
+
+    if (rpcError) throw rpcError;
+
+    // 2. Com o usuário criado, fazemos o login automático
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
-      options: { data: { nome_empresa: nomeEmpresa } },
     });
-    if (error) throw error;
+
+    if (signInError) throw signInError;
   };
 
   const signOut = async () => {
