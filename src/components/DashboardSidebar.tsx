@@ -1,5 +1,4 @@
 import {
-  Monitor,
   Image,
   ListVideo,
   Settings,
@@ -54,9 +53,17 @@ export function DashboardSidebar() {
         {/* Grupo principal */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 py-4">
-            <div className="flex items-center gap-2">
-              <Monitor className="h-5 w-5 text-sidebar-primary" />
-              {!collapsed && <span className="font-display text-sm font-bold">SignageOS</span>}
+            <div className="flex items-center gap-2.5">
+              <div className={`flex items-center justify-center rounded-lg bg-gradient-to-br from-teal-700 to-amber-500 shadow-sm ${collapsed ? "h-7 w-7" : "h-8 w-8"} shrink-0`}>
+                <Tv2 className="h-4 w-4 text-white" />
+              </div>
+              {!collapsed && (
+                <span className="font-bold text-sm leading-none">
+                  <span className="text-foreground">digital</span>
+                  <span className="text-teal-500">signage</span>
+                  <span className="text-foreground">os</span>
+                </span>
+              )}
             </div>
           </SidebarGroupLabel>
           <SidebarGroupContent>

@@ -1,10 +1,6 @@
-fix: correcao do save de perfil e diagnostic de erros
+feat: identidade visual DigitalSignageOS aplicada na plataforma
 
-- saveProfile agora sanitiza os updates para enviar apenas campos validos ao banco.
-- Adicionados logs de sucesso e erro no console para facilitar diagnostico.
-- ChannelSettings agora exibe toast de erro se o Supabase retornar falha.
-- Corrigido problema silencioso que impedia o salvamento das configuracoes.
-
-ACAO NECESSARIA:
-Execute no SQL Editor do Supabase:
-  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS instagram_handle TEXT DEFAULT '';
+- Login: logo gradiente teal/amber, nome colorido com tagline 'Plataforma de Publicidade & Propaganda'.
+- Sidebar: icone minimalista + nome 'digitalsignageos' em estilo consistente com a marca.
+- index.html: titulo, lang, meta description e og:tags atualizadas com o branding oficial.
+- Background decorativo com blobs suaves na pagina de login.
