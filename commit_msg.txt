@@ -1,7 +1,6 @@
-feat: autocomplete de cidades e assistente de IA para noticias
+feat: funcionalidade de busca e previa de conteudo na IA de noticias
 
-- [NEW] CityAutocomplete.tsx: Autocomplete baseado no Shadcn com lista de cidades brasileiras.
-- [NEW] AINewsAssistant.tsx: Sugestoes inteligentes de palavras-chave baseadas no ramo do negocio.
-- [MODIFY] ChannelSettings.tsx: Interface redesenhada para modo premium e integracao dos novos widgets.
-- Implementada logica de aplicacao rapida de sugestoes de IA.
-- Melhora na UX das configuracoes do canal.
+- Adicionada lupa de pesquisa proximo a cada sugestao da IA.
+- Implementada visualizacao de manchetes reais (simuladas) para cada categoria.
+- Adicionado ScrollArea para navegacao suave nas noticias sugeridas.
+- Feedback visual de carregamento ao "pesquisar" o conteudo.
