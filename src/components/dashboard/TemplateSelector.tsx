@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Store, Building2, Check, Wand2, CloudSun, TrendingUp, Rss, Clock, Instagram, QrCode, Camera,
+  Store, Building2, Check, Wand2,
   LayoutPanelLeft, Columns2
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ClientProfile } from "@/hooks/useDashboardData";
 import ScenarioWizard from "./ScenarioWizard";
+import WidgetStore from "./WidgetStore";
+import type { WidgetConfig } from "./WidgetStore";
 
 interface TemplateSelectorProps {
   profile: ClientProfile;
@@ -124,14 +125,6 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
     toast({ title: "✅ Template atualizado!", description: `Template "${templateId}" aplicado ao seu canal.` });
   };
 
-  const toggleWidget = async (type: string, enabled: boolean) => {
-    let updates: Partial<ClientProfile> = {};
-    if (type === 'weather') updates = { config_clima: enabled ? "São Paulo" : "" };
-    if (type === 'news') updates = { config_noticias: enabled ? "technology" : "" };
-    await onSave(updates);
-    toast({ title: `Widget ${enabled ? "ativado" : "desativado"}!`, description: "A tela irá refletir a mudança no próximo loop." });
-  };
-
   const handleAISuggestion = () => {
     setIsGenerating(true);
     setTimeout(() => {
@@ -142,6 +135,10 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
         description: "Detectamos seu perfil B2B. Ativamos Widgets de Notícias Tech e Mercado Financeiro nas laterais!" 
       });
     }, 2500);
+  };
+
+  const handleWidgetSave = async (wc: WidgetConfig, extras: { instagram_handle?: string }) => {
+    await onSave({ widget_config: wc, ...extras });
   };
 
   return (
