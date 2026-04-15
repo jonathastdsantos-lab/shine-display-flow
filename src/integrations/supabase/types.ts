@@ -21,6 +21,7 @@ export type Database = {
           duracao: number
           id: string
           nome: string
+          qr_link: string | null
           tipo: string
           url_arquivo: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           duracao?: number
           id?: string
           nome?: string
+          qr_link?: string | null
           tipo: string
           url_arquivo: string
         }
@@ -39,10 +41,49 @@ export type Database = {
           duracao?: number
           id?: string
           nome?: string
+          qr_link?: string | null
           tipo?: string
           url_arquivo?: string
         }
         Relationships: []
+      }
+      play_logs: {
+        Row: {
+          duration_sec: number | null
+          id: string
+          media_id: string
+          media_name: string | null
+          media_type: string | null
+          played_at: string | null
+          player_id: string
+        }
+        Insert: {
+          duration_sec?: number | null
+          id?: string
+          media_id: string
+          media_name?: string | null
+          media_type?: string | null
+          played_at?: string | null
+          player_id: string
+        }
+        Update: {
+          duration_sec?: number | null
+          id?: string
+          media_id?: string
+          media_name?: string | null
+          media_type?: string | null
+          played_at?: string | null
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "play_logs_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       playlists: {
         Row: {
@@ -77,6 +118,8 @@ export type Database = {
           config_noticias: string | null
           created_at: string
           id: string
+          instagram_handle: string | null
+          last_seen: string | null
           logo_url: string | null
           nome_empresa: string
           template: string
@@ -88,6 +131,8 @@ export type Database = {
           config_noticias?: string | null
           created_at?: string
           id?: string
+          instagram_handle?: string | null
+          last_seen?: string | null
           logo_url?: string | null
           nome_empresa?: string
           template?: string
@@ -99,6 +144,8 @@ export type Database = {
           config_noticias?: string | null
           created_at?: string
           id?: string
+          instagram_handle?: string | null
+          last_seen?: string | null
           logo_url?: string | null
           nome_empresa?: string
           template?: string
@@ -112,7 +159,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_client_user: {
+        Args: {
+          p_email: string
+          p_name: string
+          p_password: string
+          p_plan?: string
+          p_template?: string
+        }
+        Returns: Json
+      }
+      delete_client_user: { Args: { p_user_id: string }; Returns: Json }
+      register_client_public: {
+        Args: { p_email: string; p_name: string; p_password: string }
+        Returns: Json
+      }
+      update_client_password: {
+        Args: { p_new_password: string; p_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
