@@ -59,9 +59,9 @@ export function DashboardSidebar() {
               </div>
               {!collapsed && (
                 <span className="font-bold text-sm leading-none">
-                  <span className="text-foreground">digital</span>
-                  <span className="text-teal-500">signage</span>
-                  <span className="text-foreground">os</span>
+                  <span className="text-emerald-500">Digital</span>
+                  <span className="text-teal-500">Signage</span>
+                  <span className="text-cyan-500">OS</span>
                 </span>
               )}
             </div>
