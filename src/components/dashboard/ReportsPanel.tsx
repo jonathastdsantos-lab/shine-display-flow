@@ -7,12 +7,119 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
 import {
-  BarChart2, Play, Clock, QrCode, TrendingUp, Film, ImageIcon,
-  RefreshCw, Calendar, Eye
+  BarChart2, Play, Clock, TrendingUp, Film, ImageIcon,
+  RefreshCw, Calendar, Eye, Monitor, LayoutGrid, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Zone } from "@/utils/AILayoutAssistant";
+
+// ── Zone color map for mini-preview ──
+const ZONE_COLORS: Record<string, string> = {
+  media: "#6366f1", clock: "#7c3aed", weather: "#0284c7", news: "#d97706",
+  finance: "#059669", social: "#db2777", qr: "#64748b", camera: "#dc2626",
+  text: "#ea580c", content_feed: "#ca8a04",
+};
+
+// ── Mini Preview of current layout ──
+function LayoutMiniPreview({ profile }: { profile: any }) {
+  const layoutConfig = profile?.layout_config as any;
+  const isCustom = layoutConfig?.is_custom && Array.isArray(layoutConfig?.zones) && layoutConfig.zones.length > 0;
+  const template = profile?.template || "corporativo";
+
+  const templateColors: Record<string, { label: string; color: string }> = {
+    corporativo: { label: "Corporativo", color: "#6366f1" },
+    varejo:      { label: "Varejo",      color: "#ec4899" },
+    lbar:        { label: "L-Bar",       color: "#f59e0b" },
+    split:       { label: "Split",       color: "#10b981" },
+  };
+
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Monitor className="w-4 h-4 text-indigo-400" />
+          Preview do Layout Ativo
+          {isCustom
+            ? <Badge className="ml-2 bg-indigo-500/15 text-indigo-400 border-indigo-500/30 text-[10px]">✏️ Personalizado</Badge>
+            : <Badge variant="outline" className="ml-2 text-[10px]">{templateColors[template]?.label || template}</Badge>
+          }
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* 16:9 canvas preview */}
+        <div className="relative w-full rounded-xl overflow-hidden border border-border/50 bg-zinc-950"
+          style={{ paddingBottom: "56.25%" }}>
+          <div className="absolute inset-0">
+            {isCustom ? (
+              <>
+                {/* Grid background */}
+                <div className="absolute inset-0 opacity-20"
+                  style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)", backgroundSize: "10% 10%" }} />
+
+                {/* Zones */}
+                {(layoutConfig.zones as Zone[]).map((zone, i) => (
+                  <div key={zone.id || i}
+                    style={{
+                      position: "absolute",
+                      left: `${zone.x}%`, top: `${zone.y}%`,
+                      width: `${zone.width}%`, height: `${zone.height}%`,
+                      backgroundColor: (ZONE_COLORS[zone.type] || "#6366f1") + "55",
+                      border: `1px solid ${ZONE_COLORS[zone.type] || "#6366f1"}88`,
+                      borderRadius: zone.borderRadius ? `${zone.borderRadius}px` : "2px",
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center",
+                      overflow: "hidden",
+                    }}>
+                    <p className="text-white text-[8px] font-bold text-center leading-tight px-1 drop-shadow">
+                      {zone.label}
+                    </p>
+                    {zone.width > 15 && zone.height > 10 && (
+                      <p className="text-white/30 text-[6px] font-mono mt-0.5">
+                        {Math.round(zone.width)}×{Math.round(zone.height)}%
+                      </p>
+                    )}
+                  </div>
+                ))}
+
+                {/* Overlay info */}
+                <div className="absolute bottom-1 right-1.5 text-[7px] font-mono text-white/20">
+                  {layoutConfig.zones.length} zonas · 16:9
+                </div>
+              </>
+            ) : (
+              /* Template placeholder */
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <LayoutGrid className="w-8 h-8 text-white/20" />
+                <p className="text-white/30 text-xs font-medium">
+                  Template: {templateColors[template]?.label || template}
+                </p>
+                <p className="text-white/15 text-[10px]">
+                  Vá em Templates para criar um layout personalizado
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Zone legend */}
+        {isCustom && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {(layoutConfig.zones as Zone[]).map((zone: Zone, i: number) => (
+              <div key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white/60 border border-white/10"
+                style={{ backgroundColor: (ZONE_COLORS[zone.type] || "#6366f1") + "22" }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ZONE_COLORS[zone.type] || "#6366f1" }} />
+                {zone.label}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 interface PlayLog {
   id: string;
@@ -56,7 +163,7 @@ const generateMockData = (): PlayLog[] => {
   return logs.sort((a, b) => new Date(b.played_at).getTime() - new Date(a.played_at).getTime());
 };
 
-export default function ReportsPanel() {
+export default function ReportsPanel({ profile }: { profile?: any }) {
   const { user } = useAuth();
   const [logs, setLogs] = useState<PlayLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -162,6 +269,9 @@ export default function ReportsPanel() {
           </p>
         </div>
       )}
+
+      {/* Live Layout Preview */}
+      {profile && <LayoutMiniPreview profile={profile} />}
 
       {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

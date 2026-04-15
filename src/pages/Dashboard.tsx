@@ -64,7 +64,7 @@ export default function Dashboard() {
                 <TemplateSelector profile={data.profile} onSave={data.saveProfile} />
               } />
               <Route path="devices" element={<DeviceMonitor />} />
-              <Route path="reports" element={<ReportsPanel />} />
+              <Route path="reports" element={<ReportsPanel profile={data.profile} />} />
               <Route path="developer/*" element={
                 user?.email === "jonathastdsantos@gmail.com" 
                   ? <DeveloperArea /> 
