@@ -8,7 +8,8 @@ import {
   Monitor, Wifi, WifiOff, RefreshCw, Clock, MapPin,
   Tv2, Signal, Activity, Copy, ExternalLink, Settings2,
   Zap, ShieldCheck, AlertCircle, Plus, Check, Info,
-  Film, Image as ImageIcon, GripVertical, Trash2, CheckCircle2
+  Film, Image as ImageIcon, GripVertical, Trash2, CheckCircle2,
+  LayoutList
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";

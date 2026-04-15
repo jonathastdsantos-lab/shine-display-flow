@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
 import {
-  BarChart2, Play, Clock, TrendingUp, Film, ImageIcon,
+  BarChart2, Play, Clock, TrendingUp, Film, Image as ImageIcon,
   RefreshCw, Calendar, Eye, Monitor, LayoutGrid, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
