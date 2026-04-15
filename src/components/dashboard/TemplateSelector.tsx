@@ -182,7 +182,8 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
           is_custom: true,
           zones,
         },
-        template: "custom",
+        // NOTE: não enviamos template:"custom" pois o banco tem um CHECK constraint
+        // O Player verifica layout_config.is_custom antes de verificar o template
       });
       toast({ title: "🎨 Layout personalizado salvo!", description: "Seu layout customizado foi aplicado ao canal." });
       setIsEditorOpen(false);
