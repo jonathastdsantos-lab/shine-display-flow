@@ -55,7 +55,7 @@ function isWidgetEnabled(wc: any, key: string): boolean {
 }
 
 // Sidebar compartilhada do modo Corporativo / L-Bar
-function PlayerSidebar({ city, currentQrLink, wc }: { city: string; currentQrLink?: string; wc?: any }) {
+function PlayerSidebar({ city, currentQrLink, wc, igHandle }: { city: string; currentQrLink?: string; wc?: any; igHandle?: string }) {
   const qrDefaultUrl = wc?.qr?.default_url || "";
   const qrUrl = currentQrLink || qrDefaultUrl;
 
@@ -86,7 +86,7 @@ function PlayerSidebar({ city, currentQrLink, wc }: { city: string; currentQrLin
           {isWidgetEnabled(wc, "social") && (
             <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <SocialWidget />
+              <SocialWidget instagramHandle={igHandle} />
             </div>
           )}
           {isWidgetEnabled(wc, "qr") && (
@@ -96,7 +96,7 @@ function PlayerSidebar({ city, currentQrLink, wc }: { city: string; currentQrLin
           )}
           {isWidgetEnabled(wc, "camera") && (
             <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
-              <CameraWidget />
+              <CameraWidget url={wc?.camera?.url || ""} label={wc?.camera?.label || "Câmera 01"} compact />
             </div>
           )}
         </div>
@@ -138,6 +138,7 @@ export default function Player() {
   const [newsCategory, setNewsCategory] = useState("technology");
   const [widgetConfig, setWidgetConfig] = useState<any>(null);
   const [layoutConfig, setLayoutConfig] = useState<any>(null);
+  const [igHandle, setIgHandle] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Estado de intervenção remota do Master
@@ -192,6 +193,7 @@ export default function Player() {
         setNewsCategory(profile.config_noticias || "technology");
         setWidgetConfig((profile as any).widget_config || null);
         setLayoutConfig((profile as any).layout_config || null);
+        setIgHandle((profile as any).instagram_handle || "");
       }
 
       let mediaIds: string[] | null = null;
@@ -548,7 +550,7 @@ export default function Player() {
 
         {/* Zona 2: Sidebar Widgets */}
         <div style={{ width: layoutConfig?.sidebar_width ? `${layoutConfig.sidebar_width}px` : '300px' }}>
-          <PlayerSidebar city={city} currentQrLink={currentQrLink} wc={widgetConfig} />
+          <PlayerSidebar city={city} currentQrLink={currentQrLink} wc={widgetConfig} igHandle={igHandle} />
         </div>
       </div>
 
