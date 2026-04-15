@@ -312,9 +312,11 @@ export default function Player() {
           </div>
         </div>
         
-        <div className="z-20 relative shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-           <NewsTicker headlines={headlines} />
-        </div>
+        {isWidgetEnabled(widgetConfig, "news") && (
+          <div className="z-20 relative shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+             <NewsTicker headlines={headlines} />
+          </div>
+        )}
       </div>
     );
   }
