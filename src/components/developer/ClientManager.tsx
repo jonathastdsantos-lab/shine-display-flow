@@ -59,25 +59,50 @@ export function ClientManager() {
 
   const loadClients = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase.from('profiles').select('*');
-    if (data && data.length > 0) {
-      const mapped = data.map(p => ({
-        id: p.user_id,
-        name: (p as any).nome_empresa || 'Empresa em Implantação',
-        email: (p as any).email_contact || '—',
-        status: 'active',
-        plan: (p as any).plan || 'Basic',
-        devices: 1,
-        template: (p as any).template || 'corporativo',
-        type: (p as any).template === 'corporativo' ? 'Corporativo' : (p as any).template === 'varejo' ? 'Varejo' : 'Geral',
-        last_seen: (p as any).last_seen || null,
-      }));
+    // Buscamos perfis e playlists para contar as telas reais
+    const [profilesRes, playlistsRes] = await Promise.all([
+      supabase.from('profiles').select('*'),
+      supabase.from('playlists').select('client_id')
+    ]);
+
+    if (profilesRes.data) {
+      const mapped = profilesRes.data.map(p => {
+        const clientScreens = playlistsRes.data?.filter(pl => pl.client_id === p.user_id) || [];
+        return {
+          id: p.user_id,
+          name: (p as any).nome_empresa || 'Empresa em Implantação',
+          email: (p as any).email_contact || '—',
+          status: 'active',
+          plan: (p as any).plan || 'Basic',
+          devices: clientScreens.length,
+          screen_limit: (p as any).screen_limit || 1,
+          template: (p as any).template || 'corporativo',
+          type: (p as any).template === 'corporativo' ? 'Corporativo' : (p as any).template === 'varejo' ? 'Varejo' : 'Geral',
+          last_seen: (p as any).last_seen || null,
+        };
+      });
       setClients(mapped);
     } else {
       setClients(INITIAL_CLIENTS);
     }
     setIsLoading(false);
   };
+
+  const [clientPlaylists, setClientPlaylists] = useState<any[]>([]);
+  const loadClientPlaylists = async (clientId: string) => {
+    const { data } = await supabase
+      .from('playlists')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+    if (data) setClientPlaylists(data);
+  };
+
+  useEffect(() => {
+    if (selectedClient) {
+      loadClientPlaylists(selectedClient.id);
+    }
+  }, [selectedClient]);
 
   useEffect(() => { loadClients(); }, []);
 
@@ -92,6 +117,65 @@ export function ClientManager() {
 
   const handleSaveScenario = () => {
     toast.success(`Cenário de configuração salvo para ${selectedClient?.name}`);
+  };
+
+  const handleUpdateQuota = async (id: string, newLimit: number) => {
+    setCreating(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ screen_limit: newLimit })
+        .eq("user_id", id);
+      
+      if (error) throw error;
+      toast.success("Limite de telas atualizado!");
+      setSelectedClient({ ...selectedClient, screen_limit: newLimit });
+      await loadClients();
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleRemoteAddScreen = async () => {
+    if (!selectedClient) return;
+    const name = prompt("Nome da nova tela:");
+    if (!name) return;
+
+    setCreating(true);
+    try {
+      const { error } = await supabase.from("playlists").insert({
+        client_id: selectedClient.id,
+        nome_da_tela: name,
+        ordem_arquivos: [],
+      });
+      if (error) throw error;
+      toast.success("Nova tela adicionada ao cliente!");
+      await loadClientPlaylists(selectedClient.id);
+      await loadClients();
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleRemoteDeleteScreen = async (id: string, name: string) => {
+    if (!confirm(`Excluir permanentemente a tela "${name}"?`)) return;
+
+    setCreating(true);
+    try {
+      const { error } = await supabase.from("playlists").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Tela removida!");
+      await loadClientPlaylists(selectedClient.id);
+      await loadClients();
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const handleDeleteClient = async (id: string, name: string) => {
@@ -241,7 +325,7 @@ export function ClientManager() {
               <div className="flex items-center gap-6 w-full sm:w-auto">
                 <div className="flex flex-col items-start sm:items-end text-sm">
                   <span className="text-muted-foreground flex items-center gap-1">
-                    <Smartphone className="h-3 w-3" /> {client.devices} Telas conectadas
+                    <Smartphone className="h-3 w-3" /> {client.devices} / {client.screen_limit} Telas
                   </span>
                   <span className="flex items-center gap-1 font-medium">
                     <ShieldCheck className="h-3 w-3 text-emerald-500" /> Plano {client.plan}
@@ -405,6 +489,9 @@ export function ClientManager() {
                 <TabsTrigger value="configs" className="px-0 py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none bg-transparent">
                   <Settings2 className="w-4 h-4 mr-2" /> Configurações Base
                 </TabsTrigger>
+                <TabsTrigger value="screens" className="px-0 py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none bg-transparent">
+                  <MonitorIcon className="w-4 h-4 mr-2" /> Gestão de Telas
+                </TabsTrigger>
                 <TabsTrigger value="editor" className="px-0 py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none bg-transparent">
                   <LayoutGrid className="w-4 h-4 mr-2" /> Editor Remoto
                 </TabsTrigger>
@@ -432,8 +519,19 @@ export function ClientManager() {
                       </p>
                     </Card>
                     <Card className="p-4">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Plano Atual</p>
-                      <p className="text-lg font-bold text-indigo-500">{selectedClient?.plan}</p>
+                      <div className="flex justify-between items-center mb-1">
+                        <p className="text-sm font-medium text-muted-foreground">Cota de Telas</p>
+                        <Badge variant="outline" className="text-[10px]">{selectedClient?.plan}</Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number" 
+                          className="h-8 w-20 font-bold text-lg" 
+                          defaultValue={selectedClient?.screen_limit}
+                          onBlur={(e) => handleUpdateQuota(selectedClient.id, parseInt(e.target.value))}
+                        />
+                        <span className="text-sm text-muted-foreground">telas liberadas</span>
+                      </div>
                     </Card>
                   </div>
 
@@ -478,6 +576,72 @@ export function ClientManager() {
                   
                   <div className="pt-6 flex justify-end">
                     <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleSaveScenario}>Salvar Variáveis</Button>
+                  </div>
+                </TabsContent>
+
+                {/* ABA NOVA: GESTÃO DE TELAS MASTER */}
+                <TabsContent value="screens" className="mt-0 space-y-6 outline-none">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold">Telas do Estabelecimento</h3>
+                      <p className="text-sm text-muted-foreground">Adicione ou remova hardware remotamente.</p>
+                    </div>
+                    <Button size="sm" onClick={handleRemoteAddScreen} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                      <Plus className="w-4 h-4" /> Adicionar Tela
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {clientPlaylists.length === 0 ? (
+                      <div className="text-center py-12 border-2 border-dashed rounded-xl border-muted">
+                        <MonitorIcon className="w-8 h-8 mx-auto text-muted-foreground mb-2 opacity-50" />
+                        <p className="text-sm text-muted-foreground">Nenhuma tela cadastrada para este cliente.</p>
+                      </div>
+                    ) : (
+                      clientPlaylists.map(pl => (
+                        <Card key={pl.id} className="p-4 flex items-center justify-between hover:border-indigo-500/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                              <MonitorIcon className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-sm">{pl.nome_da_tela}</p>
+                              <code className="text-[10px] text-muted-foreground bg-muted px-1 rounded truncate block max-w-[150px]">{pl.id}</code>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-muted-foreground hover:text-indigo-500"
+                              onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')}
+                              title="Ver Link do Player"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-red-500 hover:bg-red-500/10"
+                              onClick={() => handleRemoteDeleteScreen(pl.id, pl.nome_da_tela)}
+                              title="Excluir Tela"
+                            >
+                              <Plus className="h-4 w-4 rotate-45" />
+                            </Button>
+                          </div>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl space-y-2">
+                    <p className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                       <ShieldCheck className="w-3 h-3" /> Política de Cota Master
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Como administrador, você pode exceder o limite visual do plano caso necessário, mas recomendamos ajustar a <strong>Cota de Telas</strong> na aba Configurações para que o cliente possa gerenciar suas próprias telas dentro do limite contratado.
+                    </p>
                   </div>
                 </TabsContent>
 
