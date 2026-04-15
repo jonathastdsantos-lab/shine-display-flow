@@ -137,7 +137,11 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
     }, 2500);
   };
 
-  const handleWidgetSave = async (wc: WidgetConfig, extras: { instagram_handle?: string }) => {
+  const handleWidgetSave = async (wc: WidgetConfig, extras: { 
+    instagram_handle?: string;
+    config_clima?: string;
+    config_noticias?: string;
+  }) => {
     await onSave({ widget_config: wc, ...extras });
   };
 

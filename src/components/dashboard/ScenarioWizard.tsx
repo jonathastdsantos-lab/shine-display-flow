@@ -1,8 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Sparkles, ChevronRight } from "lucide-react";
+import { Check, Sparkles, ChevronRight, Settings2 } from "lucide-react";
 import type { ClientProfile } from "@/hooks/useDashboardData";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ScenarioWizardProps {
   profile: ClientProfile;
@@ -147,17 +158,42 @@ const scenarios: Scenario[] = [
 export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps) {
   const { toast } = useToast();
   const [applying, setApplying] = useState<string | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
+  const [config, setConfig] = useState({
+    city: profile.config_clima || "São Paulo",
+    news: profile.config_noticias || "technology",
+    instagram: profile.instagram_handle || "",
+  });
 
-  const handleApply = async (scenario: Scenario) => {
-    setApplying(scenario.id);
-    await onSave(scenario.config);
-    setTimeout(() => {
-      setApplying(null);
-      toast({
-        title: `✅ Cenário "${scenario.label}" aplicado!`,
-        description: `Template ${scenario.template} + widgets ${scenario.widgets.join(", ")} configurados. O player refletirá as mudanças no próximo loop.`,
-      });
-    }, 1200);
+  const handleApply = async () => {
+    if (!selectedScenario) return;
+    
+    setApplying(selectedScenario.id);
+    
+    const finalConfig: Partial<ClientProfile> = {
+      ...selectedScenario.config,
+      config_clima: selectedScenario.widgets.includes("weather") ? config.city : selectedScenario.config.config_clima,
+      config_noticias: selectedScenario.widgets.includes("news") || selectedScenario.widgets.includes("ticker") ? config.news : selectedScenario.config.config_noticias,
+      instagram_handle: selectedScenario.widgets.includes("social") ? config.instagram : profile.instagram_handle,
+    };
+
+    await onSave(finalConfig);
+    
+    setApplying(null);
+    setSelectedScenario(null);
+    toast({
+      title: `✅ Cenário "${selectedScenario.label}" aplicado!`,
+      description: `Configurações personalizadas foram salvas com sucesso.`,
+    });
+  };
+
+  const openConfig = (scenario: Scenario) => {
+    setSelectedScenario(scenario);
+    setConfig({
+      city: profile.config_clima || "São Paulo",
+      news: profile.config_noticias || "technology",
+      instagram: profile.instagram_handle || "",
+    });
   };
 
   return (
@@ -169,7 +205,7 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
         <div>
           <p className="font-bold text-sm text-indigo-300">Configuração Inteligente por Segmento</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Selecione o tipo do seu negócio. O sistema aplica automaticamente template, widgets e configurações otimizadas.
+            Selecione o tipo do seu negócio. Escolha o que exibir e personalize as informações.
           </p>
         </div>
       </div>
@@ -183,7 +219,7 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
           return (
             <div
               key={scenario.id}
-              onClick={() => !isApplying && handleApply(scenario)}
+              onClick={() => !isApplying && openConfig(scenario)}
               className={`relative flex flex-col rounded-2xl border-2 cursor-pointer transition-all duration-300 overflow-hidden group
                 ${isActive
                   ? "border-indigo-500 shadow-lg shadow-indigo-500/20"
@@ -236,6 +272,7 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
                 {/* CTA */}
                 <Button
                   size="sm"
+                  variant="ghost"
                   className={`w-full mt-auto gap-2 transition-all ${
                     isActive
                       ? "bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -247,11 +284,11 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
                     <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                   ) : isActive ? (
                     <>
-                      <Check className="w-4 h-4" /> Cenário Ativo
+                      <Settings2 className="w-4 h-4" /> Configurar
                     </>
                   ) : (
                     <>
-                      Aplicar Cenário <ChevronRight className="w-4 h-4" />
+                      Customizar e Aplicar <ChevronRight className="w-4 h-4" />
                     </>
                   )}
                 </Button>
@@ -260,6 +297,80 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
           );
         })}
       </div>
+
+      {/* Configuration Modal */}
+      <Dialog open={!!selectedScenario} onOpenChange={(open) => !open && setSelectedScenario(null)}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-border shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span>{selectedScenario?.emoji}</span>
+              Configurar Cenário: {selectedScenario?.label}
+            </DialogTitle>
+            <DialogDescription>
+              Personalize o que será exibido na tela para este cenário.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-6 py-4">
+            {selectedScenario?.widgets.includes("weather") && (
+              <div className="space-y-2">
+                <Label htmlFor="city">📍 Cidade para o Clima</Label>
+                <Input
+                  id="city"
+                  value={config.city}
+                  onChange={(e) => setConfig({ ...config, city: e.target.value })}
+                  placeholder="Ex: São Paulo"
+                  className="bg-muted/50 border-border"
+                />
+              </div>
+            )}
+
+            {(selectedScenario?.widgets.includes("news") || selectedScenario?.widgets.includes("ticker")) && (
+              <div className="space-y-2">
+                <Label htmlFor="news">📰 Categoria de Notícias</Label>
+                <Select
+                  value={config.news}
+                  onValueChange={(value) => setConfig({ ...config, news: value })}
+                >
+                  <SelectTrigger className="bg-muted/50 border-border">
+                    <SelectValue placeholder="Selecione a categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="technology">Tecnologia</SelectItem>
+                    <SelectItem value="business">Negócios</SelectItem>
+                    <SelectItem value="sports">Esportes</SelectItem>
+                    <SelectItem value="general">Geral</SelectItem>
+                    <SelectItem value="health">Saúde</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {selectedScenario?.widgets.includes("social") && (
+              <div className="space-y-2">
+                <Label htmlFor="instagram">📸 Usuário do Instagram</Label>
+                <Input
+                  id="instagram"
+                  value={config.instagram}
+                  onChange={(e) => setConfig({ ...config, instagram: e.target.value })}
+                  placeholder="Ex: @seunegocio"
+                  className="bg-muted/50 border-border"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+              onClick={handleApply}
+              disabled={applying !== null}
+            >
+              {applying ? "Aplicando..." : "Salvar e Aplicar Cenário ✨"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
