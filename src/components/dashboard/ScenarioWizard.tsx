@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Sparkles, ChevronRight, Settings2 } from "lucide-react";
+import { Check, Sparkles, ChevronRight, Settings2, Loader2 } from "lucide-react";
 import type { ClientProfile } from "@/hooks/useDashboardData";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -28,135 +29,17 @@ interface Scenario {
   template: string;
   color: string;
   gradient: string;
-  shadowColor: string;
+  shadow_color: string;
   tags: string[];
   config: Partial<ClientProfile>;
   widgets: string[];
   preview: { zones: { label: string; size: string; color: string }[] };
 }
 
-const scenarios: Scenario[] = [
-  {
-    id: "mercado",
-    emoji: "🛒",
-    label: "Supermercado / Varejo",
-    description: "Destaque ofertas do dia, QR Code de cashback e preço em foco total. Máximo impacto visual nas gôndolas.",
-    template: "varejo",
-    color: "text-emerald-400",
-    gradient: "from-emerald-500/20 to-teal-500/10",
-    shadowColor: "shadow-emerald-500/20",
-    tags: ["QR Ofertas", "Ticker de Preços", "Tela Cheia"],
-    config: { template: "varejo", config_clima: "", config_noticias: "" },
-    widgets: ["qrcode", "ticker"],
-    preview: {
-      zones: [
-        { label: "Oferta em Destaque", size: "flex-1", color: "bg-emerald-500/20" },
-        { label: "Ticker de Preços", size: "h-8", color: "bg-emerald-600/30" },
-      ],
-    },
-  },
-  {
-    id: "salao",
-    emoji: "💇",
-    label: "Salão de Beleza / Spa",
-    description: "Feed do Instagram em destaque, QR para agendamento online e música ambiente com visual elegante.",
-    template: "corporativo",
-    color: "text-pink-400",
-    gradient: "from-pink-500/20 to-rose-500/10",
-    shadowColor: "shadow-pink-500/20",
-    tags: ["Instagram ao Vivo", "QR Agendamento", "Sidebar Widgets"],
-    config: { template: "corporativo", config_clima: "São Paulo", config_noticias: "" },
-    widgets: ["social", "qrcode", "clock"],
-    preview: {
-      zones: [
-        { label: "Vídeo / Lookbook", size: "flex-1", color: "bg-pink-500/20" },
-        { label: "Instagram + QR", size: "w-24", color: "bg-pink-600/30" },
-      ],
-    },
-  },
-  {
-    id: "padaria",
-    emoji: "🥐",
-    label: "Padaria / Café",
-    description: "Menu do dia em destaque, clima local e notícias leves no rodapé. Perfeito para o horário do café da manhã.",
-    template: "lbar",
-    color: "text-amber-400",
-    gradient: "from-amber-500/20 to-orange-500/10",
-    shadowColor: "shadow-amber-500/20",
-    tags: ["Menu do Dia", "Clima Local", "L-Bar Elegante"],
-    config: { template: "lbar", config_clima: "São Paulo", config_noticias: "business" },
-    widgets: ["weather", "ticker", "clock"],
-    preview: {
-      zones: [
-        { label: "Cardápio / Foto", size: "flex-1", color: "bg-amber-500/20" },
-        { label: "Clima + Hora", size: "w-20", color: "bg-amber-600/30" },
-        { label: "Noticias Locais", size: "h-8", color: "bg-orange-600/30" },
-      ],
-    },
-  },
-  {
-    id: "clinica",
-    emoji: "🏥",
-    label: "Clínica / Consultório / Lobby",
-    description: "Ambiente de espera tranquilo com relógio proeminente, clima, notícias de saúde e vídeos institucionais.",
-    template: "corporativo",
-    color: "text-sky-400",
-    gradient: "from-sky-500/20 to-blue-500/10",
-    shadowColor: "shadow-sky-500/20",
-    tags: ["Modo Espera", "Clima e Relógio", "Notícias Health"],
-    config: { template: "corporativo", config_clima: "São Paulo", config_noticias: "technology" },
-    widgets: ["clock", "weather", "news"],
-    preview: {
-      zones: [
-        { label: "Conteúdo Institucional", size: "flex-1", color: "bg-sky-500/20" },
-        { label: "Relógio + Clima", size: "w-24", color: "bg-sky-600/30" },
-      ],
-    },
-  },
-  {
-    id: "academia",
-    emoji: "🏋️",
-    label: "Academia / CrossFit",
-    description: "Mural de motivação com feed social, timer de aula e notícias esportivas no ticker inferior.",
-    template: "split",
-    color: "text-orange-400",
-    gradient: "from-orange-500/20 to-red-500/10",
-    shadowColor: "shadow-orange-500/20",
-    tags: ["Mural Social", "Timer de Treino", "Notícias Esportes"],
-    config: { template: "split", config_clima: "", config_noticias: "sports" },
-    widgets: ["social", "clock", "news"],
-    preview: {
-      zones: [
-        { label: "Motivação / Vídeo", size: "flex-[3]", color: "bg-orange-500/20" },
-        { label: "Social + Timer", size: "flex-[2]", color: "bg-red-500/20" },
-        { label: "Noticias Esportes", size: "h-8", color: "bg-orange-600/30" },
-      ],
-    },
-  },
-  {
-    id: "corporativo",
-    emoji: "🏢",
-    label: "Corporativo / Condomínio",
-    description: "Layout premium com zonas inteligentes, cotações financeiras, notícias e relógio. Ideal para portarias e recepções.",
-    template: "corporativo",
-    color: "text-indigo-400",
-    gradient: "from-indigo-500/20 to-violet-500/10",
-    shadowColor: "shadow-indigo-500/20",
-    tags: ["Cotações Finance", "Notícias Tech", "Layout Premium"],
-    config: { template: "corporativo", config_clima: "São Paulo", config_noticias: "technology" },
-    widgets: ["clock", "weather", "finance", "news"],
-    preview: {
-      zones: [
-        { label: "Conteúdo Principal", size: "flex-[2]", color: "bg-indigo-500/20" },
-        { label: "Widgets Sidebar", size: "flex-1", color: "bg-violet-500/20" },
-        { label: "Ticker Corporativo", size: "h-8", color: "bg-indigo-600/30" },
-      ],
-    },
-  },
-];
-
 export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps) {
   const { toast } = useToast();
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState<string | null>(null);
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
   const [config, setConfig] = useState({
@@ -164,6 +47,33 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
     news: profile.config_noticias || "technology",
     instagram: profile.instagram_handle || "",
   });
+
+  const loadScenarios = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("scenarios")
+        .select("*")
+        .or(`client_id.eq.${profile.user_id},is_global.eq.true`)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setScenarios(data || []);
+    } catch (err: any) {
+      console.error("Erro ao carregar cenários:", err);
+      toast({
+        title: "Erro ao carregar cenários",
+        description: "Não foi possível carregar as opções de configuração.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadScenarios();
+  }, [profile.user_id]);
 
   const handleApply = async () => {
     if (!selectedScenario) return;
@@ -211,9 +121,17 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {scenarios.map((scenario) => {
-          const isActive = profile.template === scenario.template &&
-            (scenario.id === "corporativo" ? profile.config_noticias === "technology" : true);
+        {loading ? (
+          <div className="col-span-full flex flex-col items-center justify-center py-20 animate-pulse">
+            <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
+            <p className="text-muted-foreground font-medium">Carregando cenários inteligentes...</p>
+          </div>
+        ) : scenarios.length === 0 ? (
+          <div className="col-span-full py-10 text-center border-2 border-dashed border-border/50 rounded-2xl">
+            <p className="text-muted-foreground italic">Nenhum cenário customizado disponível para sua conta.</p>
+          </div>
+        ) : scenarios.map((scenario) => {
+          const isActive = profile.template === scenario.template;
           const isApplying = applying === scenario.id;
 
           return (
@@ -224,7 +142,7 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
                 ${isActive
                   ? "border-indigo-500 shadow-lg shadow-indigo-500/20"
                   : "border-border/40 hover:border-white/20 hover:shadow-xl hover:-translate-y-0.5"
-                }`}
+                } ${scenario.shadow_color}`}
             >
               {/* Gradient background */}
               <div className={`absolute inset-0 bg-gradient-to-br ${scenario.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />

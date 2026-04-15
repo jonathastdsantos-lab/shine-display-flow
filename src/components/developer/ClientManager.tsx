@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { ScenarioManager } from "./ScenarioManager";
 
 // Dados mockados para protótipo
 const INITIAL_CLIENTS = [
@@ -410,6 +411,9 @@ export function ClientManager() {
                 <TabsTrigger value="ai" className="px-0 py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none bg-transparent text-amber-600 data-[state=active]:text-amber-600 data-[state=active]:border-amber-500">
                   <Wand2 className="w-4 h-4 mr-2" /> Assistente IA
                 </TabsTrigger>
+                <TabsTrigger value="scenarios" className="px-0 py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none bg-transparent">
+                  <Sparkles className="w-4 h-4 mr-2" /> Cenários
+                </TabsTrigger>
                 <TabsTrigger value="admin" className="px-0 py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-red-500 rounded-none bg-transparent text-red-500">
                   <ShieldCheck className="w-4 h-4 mr-2" /> Administração
                 </TabsTrigger>
@@ -747,6 +751,11 @@ export function ClientManager() {
                     </div>
                   </div>
 
+                </TabsContent>
+
+                {/* ABA 4: CENÁRIOS CUSTOMIZADOS */}
+                <TabsContent value="scenarios" className="mt-0 outline-none">
+                  <ScenarioManager clientId={selectedClient?.id} />
                 </TabsContent>
 
                 {/* ABA 4: ADMINISTRAÇÃO (PERIGOSA) */}
