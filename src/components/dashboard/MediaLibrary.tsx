@@ -2,10 +2,12 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Edit2, QrCode, Check, X } from "lucide-react";
+import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Edit2, QrCode, Check, X, Crop } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { MediaItem } from "@/hooks/useDashboardData";
+import { useAuth } from "@/contexts/AuthContext";
+import ImageCropModal from "./ImageCropModal";
 
 interface MediaLibraryProps {
   media: MediaItem[];
@@ -17,10 +19,12 @@ interface MediaLibraryProps {
 
 export default function MediaLibrary({ media, uploading, onUpload, onDelete, onRefresh }: MediaLibraryProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [editingQR, setEditingQR] = useState<string | null>(null);
   const [qrInputs, setQrInputs] = useState<Record<string, string>>({});
+  const [cropItem, setCropItem] = useState<MediaItem | null>(null);
 
   const handleFiles = async (files: FileList) => {
     const ok = await onUpload(files);
@@ -48,6 +52,35 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
   const startEditQR = (item: MediaItem) => {
     setEditingQR(item.id);
     setQrInputs((prev) => ({ ...prev, [item.id]: (item as any).qr_link || "" }));
+  };
+
+  const handleCropSave = async (blob: Blob) => {
+    if (!cropItem || !user) return;
+    try {
+      const cleanName = cropItem.nome
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w.-]/g, "_")
+        .toLowerCase()
+        .replace(/\.[^.]+$/, ".jpg");
+      const path = `${user.id}/${Date.now()}-cropped-${cleanName}`;
+
+      const { error: uploadErr } = await supabase.storage.from("media").upload(path, blob, {
+        cacheControl: "3600",
+        contentType: "image/jpeg",
+      });
+      if (uploadErr) throw uploadErr;
+
+      const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+
+      await supabase.from("media_library").update({ url_arquivo: publicUrl }).eq("id", cropItem.id);
+
+      toast({ title: "✅ Imagem recortada e salva!" });
+      onRefresh?.();
+    } catch (err: any) {
+      console.error("Erro ao salvar recorte:", err);
+      toast({ title: "Erro ao salvar recorte", description: err.message, variant: "destructive" });
+    }
   };
 
   return (
@@ -144,6 +177,17 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
 
                   {/* Actions Layer */}
                   <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 scale-95 group-hover:scale-100 bg-black/20 backdrop-blur-[2px]">
+                     {item.tipo === "imagem" && (
+                       <Button
+                         size="icon"
+                         variant="secondary"
+                         className="h-10 w-10 rounded-full shadow-lg"
+                         title="Recortar imagem"
+                         onClick={(e) => { e.stopPropagation(); setCropItem(item); }}
+                       >
+                          <Crop className="w-4 h-4" />
+                       </Button>
+                     )}
                      <Button
                        size="icon"
                        variant="secondary"
@@ -223,6 +267,16 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
           </div>
         )}
       </div>
+
+      {cropItem && (
+        <ImageCropModal
+          open={!!cropItem}
+          onClose={() => setCropItem(null)}
+          imageUrl={cropItem.url_arquivo}
+          imageName={cropItem.nome}
+          onSave={handleCropSave}
+        />
+      )}
     </div>
   );
 }
