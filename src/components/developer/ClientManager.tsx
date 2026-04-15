@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Settings2, ShieldCheck, Power, RefreshCw, Smartphone, Monitor as MonitorIcon, Plus, LayoutTemplate, LayoutGrid, Wand2, ArrowRight, Play, CheckCircle2, Image as ImageIcon, Upload, Film, DollarSign, Clock, MonitorPlay } from "lucide-react";
+import { Search, Settings2, ShieldCheck, Power, RefreshCw, Smartphone, Monitor as MonitorIcon, Plus, LayoutTemplate, LayoutGrid, Wand2, ArrowRight, Play, CheckCircle2, Image as ImageIcon, Upload, Film, DollarSign, Clock, MonitorPlay, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
