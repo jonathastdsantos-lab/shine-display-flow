@@ -207,7 +207,7 @@ export default function PlaylistManager({
                 {media.length > 0 && (
                   <div className="border-t bg-card p-4">
                     <p className="text-sm font-semibold text-foreground mb-3">Seu Acervo (Clique para inserir)</p>
-                    <ScrollArea className="h-auto max-h-32">
+                    <div className="h-auto max-h-32 overflow-y-auto">
                       <div className="flex flex-wrap gap-2 pb-2">
                         {media.map((m) => (
                           <Button 
@@ -222,7 +222,7 @@ export default function PlaylistManager({
                           </Button>
                         ))}
                       </div>
-                    </ScrollArea>
+                    </div>
                   </div>
                 )}
               </CardContent>

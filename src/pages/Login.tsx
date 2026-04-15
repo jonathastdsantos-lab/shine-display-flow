@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { LogIn, UserPlus, Tv2 } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
+import logo from "@/assets/logo.jpg";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
@@ -46,15 +47,8 @@ export default function Login() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo & Brand */}
         <div className="text-center space-y-4">
-          <div className="mx-auto w-20 h-20">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-800 via-teal-600 to-amber-500 flex items-center justify-center shadow-2xl shadow-teal-500/25">
-              <div className="relative">
-                <Tv2 className="h-8 w-8 text-white" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                </div>
-              </div>
-            </div>
+          <div className="mx-auto w-24 h-24">
+            <img src={logo} alt="DigitalSignageOS Logo" className="w-24 h-24 rounded-2xl shadow-2xl shadow-teal-500/25 object-contain" />
           </div>
 
           <div>
