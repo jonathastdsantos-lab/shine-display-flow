@@ -2,10 +2,12 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Edit2, QrCode, Check, X } from "lucide-react";
+import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Edit2, QrCode, Check, X, Crop } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { MediaItem } from "@/hooks/useDashboardData";
+import { useAuth } from "@/contexts/AuthContext";
+import ImageCropModal from "./ImageCropModal";
 
 interface MediaLibraryProps {
   media: MediaItem[];
