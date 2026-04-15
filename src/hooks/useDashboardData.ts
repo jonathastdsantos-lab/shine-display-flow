@@ -14,6 +14,13 @@ export interface Playlist {
   id: string;
   nome_da_tela: string;
   ordem_arquivos: string[];
+  template?: string;
+  layout_config?: any;
+  widget_config?: any;
+  config_clima?: string;
+  config_noticias?: string;
+  instagram_handle?: string;
+  last_sync_at?: string;
 }
 
 export interface ClientProfile {
@@ -25,6 +32,7 @@ export interface ClientProfile {
   widget_config: any;
   layout_config?: any;
   user_id?: string;
+  screen_limit?: number;
 }
 
 export function useDashboardData() {
@@ -40,6 +48,15 @@ export function useDashboardData() {
     widget_config: null,
   });
   const [uploading, setUploading] = useState(false);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(() => {
+    return localStorage.getItem("selectedPlaylistId");
+  });
+
+  useEffect(() => {
+    if (selectedPlaylistId) {
+      localStorage.setItem("selectedPlaylistId", selectedPlaylistId);
+    }
+  }, [selectedPlaylistId]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -197,12 +214,51 @@ export function useDashboardData() {
     await fetchData();
   };
 
+  const savePlaylistConfig = async (playlistId: string, updates: Partial<Playlist>) => {
+    const { error } = await supabase
+      .from("playlists")
+      .update(updates as any)
+      .eq("id", playlistId);
+
+    if (error) {
+      console.error("❌ Erro ao salvar config da tela:", error.message);
+      throw error;
+    }
+
+    setPlaylists((prev) =>
+      prev.map((p) => (p.id === playlistId ? { ...p, ...updates } : p))
+    );
+  };
+
+  const triggerSync = async (playlistIds?: string[]) => {
+    const timestamp = new Date().toISOString();
+    const targetIds = playlistIds || playlists.map(p => p.id);
+    
+    if (targetIds.length === 0) return;
+
+    const { error } = await supabase
+      .from("playlists")
+      .update({ last_sync_at: timestamp } as any)
+      .in("id", targetIds);
+
+    if (error) {
+      console.error("❌ Erro ao disparar sincronização:", error.message);
+      throw error;
+    }
+
+    setPlaylists((prev) =>
+      prev.map((p) => targetIds.includes(p.id) ? { ...p, last_sync_at: timestamp } : p)
+    );
+  };
+
   return {
     user,
     media,
     playlists,
     profile,
     uploading,
+    selectedPlaylistId,
+    setSelectedPlaylistId,
     setProfile,
     handleUpload,
     deleteMedia,
@@ -212,6 +268,8 @@ export function useDashboardData() {
     reorderPlaylist,
     deletePlaylist,
     saveProfile,
+    savePlaylistConfig,
+    triggerSync,
     fetchData,
     getMediaName: (id: string) => media.find((m) => m.id === id)?.nome || "Desconhecido",
   };

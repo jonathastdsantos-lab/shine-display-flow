@@ -134,10 +134,9 @@ function MediaZone({ current, fading, videoRef }: {
 }
 
 export default function Player() {
-  const { id_cliente } = useParams<{ id_cliente: string }>();
-  const [searchParams] = useSearchParams();
-  const playlistId = searchParams.get("playlist");
+  const { playlist_id } = useParams<{ playlist_id: string }>();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fading, setFading] = useState(false);
   const [city, setCity] = useState("São Paulo");
@@ -153,67 +152,64 @@ export default function Player() {
 
   // Heartbeat – envia sinalização ao Supabase a cada 60s
   useEffect(() => {
-    if (!id_cliente) return;
+    if (!clientId) return;
     const sendHeartbeat = async () => {
       try {
         await supabase
           .from("profiles")
           .update({ last_seen: new Date().toISOString() } as any)
-          .eq("user_id", id_cliente);
-      } catch { /* silently ignore if column doesn't exist yet */ }
+          .eq("user_id", clientId);
+      } catch { /* silently ignore */ }
     };
-    sendHeartbeat(); // Envia imediatamente ao carregar
+    sendHeartbeat();
     const hbInterval = setInterval(sendHeartbeat, 60000);
     return () => clearInterval(hbInterval);
-  }, [id_cliente]);
+  }, [clientId]);
 
   // Proof of Play – loga toda vez que uma mídia terminar
   const logPlay = useCallback(async (mediaItem: MediaItem) => {
-    if (!id_cliente || !mediaItem) return;
+    if (!clientId || !mediaItem) return;
     try {
       await (supabase as any)
         .from("play_logs")
         .insert({
-          player_id: id_cliente,
+          player_id: playlist_id,
           media_id: mediaItem.id,
           media_name: mediaItem.url_arquivo.split("/").pop() || "unknown",
           media_type: mediaItem.tipo,
           played_at: new Date().toISOString(),
           duration_sec: mediaItem.duracao || 10,
         });
-    } catch { /* silently ignore if table doesn't exist yet */ }
-  }, [id_cliente]);
+    } catch { /* silently ignore */ }
+  }, [clientId, playlist_id]);
 
-  useEffect(() => {
-    if (!id_cliente) return;
+  const fetchData = useCallback(async () => {
+    if (!playlist_id) return;
 
-    const fetchData = async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("config_clima, config_noticias, template, widget_config, layout_config, instagram_handle")
-        .eq("user_id", id_cliente)
-        .single();
-        
-      if (profile) {
-        setCity(profile.config_clima || "São Paulo");
-        setTemplate((profile as any).template || "corporativo");
-        setNewsCategory(profile.config_noticias || "technology");
-        setWidgetConfig((profile as any).widget_config || null);
-        setLayoutConfig((profile as any).layout_config || null);
-        setIgHandle((profile as any).instagram_handle || "");
-      }
+    // 1. Buscar as configurações da tela (Playlist)
+    const { data: playlist } = await supabase
+      .from("playlists")
+      .select("*")
+      .eq("id", playlist_id)
+      .single();
+      
+    if (playlist) {
+      setClientId(playlist.client_id);
+      setCity((playlist as any).config_clima || "São Paulo");
+      setTemplate((playlist as any).template || "corporativo");
+      setNewsCategory((playlist as any).config_noticias || "technology");
+      setWidgetConfig((playlist as any).widget_config || null);
+      setLayoutConfig((playlist as any).layout_config || null);
+      setIgHandle((playlist as any).instagram_handle || "");
 
-      let mediaIds: string[] | null = null;
-      if (playlistId) {
-        const { data: playlist } = await supabase
-          .from("playlists").select("ordem_arquivos").eq("id", playlistId).single();
-        if (playlist) mediaIds = playlist.ordem_arquivos as string[];
-      }
-
+      // 2. Buscar mídias da biblioteca do cliente
       const { data: allMedia } = await supabase
-        .from("media_library").select("*").eq("client_id", id_cliente);
+        .from("media_library")
+        .select("*")
+        .eq("client_id", playlist.client_id);
 
       if (allMedia) {
+        const mediaIds = playlist.ordem_arquivos as string[];
         if (mediaIds && mediaIds.length > 0) {
           const ordered = mediaIds
             .map((mid) => allMedia.find((m: any) => m.id === mid))
@@ -223,8 +219,36 @@ export default function Player() {
           setMediaItems(allMedia as any);
         }
       }
-    };
+    }
+  }, [playlist_id]);
 
+  // Realtime Sync Listener
+  useEffect(() => {
+    if (!playlist_id) return;
+
+    const channel = supabase
+      .channel(`sync-${playlist_id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'playlists',
+          filter: `id=eq.${playlist_id}`
+        },
+        (payload) => {
+          console.log("⚡ Sinal de Sincronização Recebido:", payload);
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [playlist_id, fetchData]);
+
+  useEffect(() => {
     fetchData();
     document.documentElement.requestFullscreen?.().catch(() => {});
 

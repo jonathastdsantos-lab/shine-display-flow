@@ -1,13 +1,7 @@
-import {
-  Image,
-  ListVideo,
-  Settings,
-  LayoutTemplate,
-  Eye,
-  LogOut,
-  Terminal,
   BarChart2,
   Tv2,
+  Zap,
+  CheckCircle2
 } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import { NavLink } from "@/components/NavLink";
@@ -39,12 +33,41 @@ const analyticsItems = [
   { title: "Relatórios", url: "/dashboard/reports", icon: BarChart2 },
 ];
 
-export function DashboardSidebar() {
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+
+interface DashboardSidebarProps {
+  onSync?: () => Promise<void>;
+}
+
+export function DashboardSidebar({ onSync }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const [syncing, setSyncing] = useState(false);
+  
+  const handleSyncAll = async () => {
+    if (!onSync) return;
+    try {
+      setSyncing(true);
+      await onSync();
+      toast({
+        title: "Telas Sincronizadas! 🚀",
+        description: "Todas as suas telas ativas receberam o sinal de atualização.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro na Sincronização",
+        description: "Não foi possível enviar o sinal para as telas.",
+      });
+    } finally {
+      setTimeout(() => setSyncing(false), 2000);
+    }
+  };
   
   const isMaster = user?.email === "jonathastdsantos@gmail.com";
 
@@ -143,6 +166,26 @@ export function DashboardSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
+        {onSync && (
+          <Button
+            variant="default"
+            size="sm"
+            className={`w-full justify-start gap-2 bg-amber-500 hover:bg-amber-600 border-none transition-all duration-300 shadow-lg shadow-amber-500/20 mb-2 ${syncing ? 'scale-[0.98] brightness-90' : 'hover:scale-[1.02]'}`}
+            onClick={handleSyncAll}
+            disabled={syncing}
+          >
+            {syncing ? (
+              <CheckCircle2 className="h-4 w-4 animate-in zoom-in duration-300" />
+            ) : (
+              <Zap className="h-4 w-4" />
+            )}
+            {!collapsed && (
+              <span className="font-bold tracking-tight">
+                {syncing ? "Sincronizado!" : "Sincronizar Telas"}
+              </span>
+            )}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"

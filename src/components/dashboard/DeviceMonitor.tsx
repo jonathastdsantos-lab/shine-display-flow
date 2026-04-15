@@ -1,22 +1,24 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Monitor, Wifi, WifiOff, RefreshCw, Clock, MapPin,
-  Tv2, Signal, Activity, Copy, ExternalLink
+  Tv2, Signal, Activity, Copy, ExternalLink, Settings2,
+  Zap, ShieldCheck, AlertCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import type { Playlist, ClientProfile } from "@/hooks/useDashboardData";
 
-interface DeviceInfo {
-  id: string;
-  nome_empresa: string;
-  template: string;
-  last_seen: string | null;
-  config_clima: string;
+interface DeviceMonitorProps {
+  playlists: Playlist[];
+  profile: ClientProfile;
+  selectedPlaylistId: string | null;
+  setSelectedPlaylistId: (id: string | null) => void;
+  onSync: (ids?: string[]) => Promise<void>;
 }
 
 function getStatusInfo(lastSeen: string | null): {
@@ -39,54 +41,59 @@ function getStatusInfo(lastSeen: string | null): {
     : { online: false, label: "Inativo", color: "text-red-400", bgColor: "bg-red-500/10", ago };
 }
 
-export default function DeviceMonitor() {
-  const { user } = useAuth();
+export default function DeviceMonitor({ 
+  playlists, profile, selectedPlaylistId, setSelectedPlaylistId, onSync 
+}: DeviceMonitorProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [device, setDevice] = useState<DeviceInfo | null>(null);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<Record<string, string | null>>({});
 
-  const fetchDevice = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("user_id, nome_empresa, template, last_seen, config_clima")
-      .eq("user_id", user.id)
-      .single();
-    if (data) {
-      setDevice({
-        id: (data as any).user_id,
-        nome_empresa: (data as any).nome_empresa || "Meu Dispositivo",
-        template: (data as any).template || "corporativo",
-        last_seen: (data as any).last_seen || null,
-        config_clima: (data as any).config_clima || "",
-      });
-    }
-    setLoading(false);
-  };
+  const screenLimit = profile.screen_limit || 1;
+  const usagePercentage = Math.min(100, (playlists.length / screenLimit) * 100);
 
+  // Fetch heartbeats for all screens (using a mock or separate query if needed)
+  // For now we'll simulate heartbeats from the profiles table as a baseline
   useEffect(() => {
-    fetchDevice();
-    // Polling a cada 30s para atualizar status
-    const interval = setInterval(fetchDevice, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
+    const checkStatuses = async () => {
+      // In a real multi-screen system, each screen would have its own last_seen
+      // Currently we only have one last_seen in the profiles table
+      // We'll use that for all screens as a placeholder until we add screen-level heartbeats
+      setStatuses(playlists.reduce((acc, p) => ({ ...acc, [p.id]: (profile as any).last_seen }), {}));
+    };
+    checkStatuses();
+  }, [playlists, profile]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchDevice();
-    setTimeout(() => setRefreshing(false), 600);
+  const handleSyncSelected = async () => {
+    if (selectedIds.length === 0) return;
+    try {
+      setRefreshing(true);
+      await onSync(selectedIds);
+      toast({
+        title: "Sincronização Enviada! ⚡",
+        description: `${selectedIds.length} telas receberam o sinal de atualização.`,
+      });
+      setSelectedIds([]);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao sincronizar",
+        description: "Não foi possível enviar o sinal para as telas selecionadas.",
+      });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  const handleCopyLink = () => {
-    const url = `${window.location.origin}/player/${user?.id}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: "Link do Player copiado!", description: url });
+  const handleConfigure = (id: string) => {
+    setSelectedPlaylistId(id);
+    navigate("/dashboard/settings");
+    toast({
+      title: "Tela Selecionada",
+      description: `Agora você está editando as configurações da tela individual.`,
+    });
   };
-
-  const playerUrl = `${window.location.origin}/player/${user?.id}`;
-  const status = getStatusInfo(device?.last_seen || null);
 
   const templateLabels: Record<string, string> = {
     varejo: "Varejo – Tela Cheia",
@@ -95,163 +102,165 @@ export default function DeviceMonitor() {
     split: "Split 60/40",
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h2 className="font-display text-3xl font-bold tracking-tight">Meus Dispositivos</h2>
           <p className="text-muted-foreground mt-1 text-base">
-            Monitore o status online dos seus players em tempo real (atualiza a cada 30s).
+            Gerencie e monitore suas telas individuais em tempo real.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
-          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-          Atualizar
-        </Button>
+        <div className="flex gap-2">
+          {selectedIds.length > 0 && (
+            <Button onClick={handleSyncSelected} className="gap-2 bg-amber-500 hover:bg-amber-600 animate-in fade-in zoom-in duration-300">
+              <Zap className={`w-4 h-4 ${refreshing ? "animate-pulse" : ""}`} />
+              Sincronizar Selecionados ({selectedIds.length})
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="gap-2">
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+            Atualizar Status
+          </Button>
+        </div>
       </div>
 
-      {/* Status Card Principal */}
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 rounded-2xl bg-muted/30 animate-pulse" />
-          ))}
-        </div>
-      ) : device ? (
-        <>
-          {/* Stat Cards */}
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Card className={`border-2 ${status.online ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/20 bg-red-500/5"}`}>
-              <CardContent className="p-5 flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${status.bgColor}`}>
-                  {status.online ? (
-                    <Wifi className={`w-6 h-6 ${status.color}`} />
-                  ) : (
-                    <WifiOff className={`w-6 h-6 ${status.color}`} />
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${status.online ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`} />
-                    <p className={`font-bold text-lg ${status.color}`}>{status.label}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> Visto {status.ago}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-              <CardContent className="p-5 flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-indigo-500/10">
-                  <Tv2 className="w-6 h-6 text-indigo-400" />
-                </div>
-                <div>
-                  <p className="font-bold text-sm text-foreground">{device.nome_empresa || "Sem Nome"}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {templateLabels[device.template] || device.template}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-              <CardContent className="p-5 flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-violet-500/10">
-                  <Signal className="w-6 h-6 text-violet-400" />
-                </div>
-                <div>
-                  <p className="font-bold text-sm">
-                    {device.config_clima ? `📍 ${device.config_clima}` : "Sem localização"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Localização configurada</p>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Quota Section */}
+      <Card className="border-border/60 bg-card/50 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                <h3 className="font-bold text-lg">Cota de Telas do Plano</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Você está utilizando <span className="text-foreground font-bold">{playlists.length}</span> de <span className="text-foreground font-bold">{screenLimit}</span> telas disponíveis.
+              </p>
+            </div>
+            <div className="flex-1 max-w-md w-full">
+              <div className="flex justify-between text-xs mb-2 font-bold tracking-tight uppercase text-muted-foreground/70">
+                <span>Uso de Banda</span>
+                <span>{playlists.length}/{screenLimit}</span>
+              </div>
+              <div className="h-3 bg-muted rounded-full overflow-hidden border border-border/50">
+                <div 
+                  className={`h-full transition-all duration-1000 ease-out ${usagePercentage > 90 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                  style={{ width: `${usagePercentage}%` }}
+                />
+              </div>
+            </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Device Detail Card */}
-          <Card className="border-border/50">
-            <CardHeader className="border-b pb-4 bg-muted/10">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Monitor className="w-5 h-5 text-indigo-400" />
-                Detalhes do Player
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-muted/30 border border-border/50">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-3 h-3 rounded-full shrink-0 ${status.online ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`} />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate">{device.nome_empresa}</p>
-                    <p className="text-xs text-muted-foreground font-mono truncate">{playerUrl}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button size="sm" variant="outline" onClick={handleCopyLink} className="gap-1.5">
-                    <Copy className="w-3.5 h-3.5" /> Copiar Link
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => window.open(playerUrl, '_blank')} className="gap-1.5">
-                    <ExternalLink className="w-3.5 h-3.5" /> Abrir Player
-                  </Button>
-                </div>
-              </div>
-
-              {/* Timeline de Heartbeats (visual) */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                  Atividade Recente (Heartbeat)
-                </p>
-                <div className="flex items-center gap-1.5">
-                  {Array.from({ length: 20 }).map((_, i) => {
-                    // Simula histórico: os últimos N dependem do status
-                    const isActive = status.online ? i >= 15 : i >= 8 && i <= 10;
-                    return (
-                      <div
-                        key={i}
-                        className={`h-6 flex-1 rounded-sm transition-all ${
-                          isActive
-                            ? "bg-emerald-500 shadow-sm shadow-emerald-500/50"
-                            : "bg-muted/40"
-                        }`}
-                        title={isActive ? "Heartbeat recebido" : "Sem sinal"}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-1.5 font-mono">
-                  <span>100 min atrás</span>
-                  <span>Agora</span>
-                </div>
-              </div>
-
-              {/* Instructions */}
-              <div className="rounded-xl bg-indigo-500/5 border border-indigo-500/20 p-4">
-                <div className="flex items-start gap-3">
-                  <Activity className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-indigo-300">Como funciona o Heartbeat?</p>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Quando o player está aberto no dispositivo (TV/Raspberry Pi), ele envia um sinal a cada 60 segundos.
-                      Se o sistema não receber sinal por mais de 3 minutos, o status muda para <span className="text-red-400 font-semibold">Inativo</span>.
-                      Abra o link do player no seu dispositivo para ativar o monitoramento.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed rounded-xl text-center">
-          <Monitor className="w-12 h-12 text-muted-foreground/30 mb-4" />
-          <p className="font-semibold text-lg">Nenhum dispositivo configurado</p>
-          <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-            Configure seu canal nas Configurações para começar o monitoramento.
-          </p>
+      {/* Individual Devices List */}
+      <div className="grid gap-4">
+        <div className="flex items-center gap-2 px-2">
+          <Monitor className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Dispositivos Ativos</h3>
         </div>
-      )}
+        
+        {playlists.map((pl) => {
+          const status = getStatusInfo(statuses[pl.id] || null);
+          const isSelected = selectedIds.includes(pl.id);
+          const isCurrentEditor = selectedPlaylistId === pl.id;
+
+          return (
+            <Card 
+              key={pl.id} 
+              className={`border-border/50 transition-all hover:border-indigo-500/40 relative overflow-hidden group ${isCurrentEditor ? 'ring-2 ring-indigo-500 border-indigo-500/50 bg-indigo-500/5' : ''}`}
+            >
+              {isCurrentEditor && (
+                <div className="absolute top-0 right-0 px-3 py-1 bg-indigo-500 text-[10px] font-black uppercase text-white rounded-bl-lg tracking-widest animate-in slide-in-from-top-full duration-300">
+                  Editando agora
+                </div>
+              )}
+              
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center gap-4 sm:gap-6">
+                  {/* Selection Checkbox */}
+                  <div className="flex items-center h-full">
+                    <Checkbox 
+                      checked={isSelected} 
+                      onCheckedChange={() => toggleSelect(pl.id)}
+                      className="w-5 h-5 border-border/80 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
+                    />
+                  </div>
+
+                  {/* Device Info */}
+                  <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={`p-3 rounded-2xl ${status.bgColor} shrink-0`}>
+                        <Tv2 className={`w-6 h-6 ${status.color}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-base truncate">{pl.nome_da_tela}</p>
+                          <Badge variant={status.online ? "secondary" : "outline"} className={`text-[10px] h-5 ${status.online ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'text-muted-foreground'}`}>
+                            {status.label}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 font-mono uppercase tracking-tighter">
+                          ID: {pl.id.split('-')[0]} • {templateLabels[pl.template || ''] || "Padrão"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quick Stats/Actions */}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="hidden sm:flex flex-col items-end mr-4">
+                         <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Último Sinal</p>
+                         <p className="text-xs font-medium text-foreground">{status.ago}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant={isCurrentEditor ? "default" : "outline"} 
+                          onClick={() => handleConfigure(pl.id)} 
+                          className={`gap-2 ${isCurrentEditor ? 'bg-indigo-500 hover:bg-indigo-600' : ''}`}
+                        >
+                          <Settings2 className="w-4 h-4" />
+                          Configurar
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400">
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+
+        {playlists.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-2xl bg-muted/20 text-center">
+            <Monitor className="w-12 h-12 text-muted-foreground/20 mb-4" />
+            <p className="font-bold text-lg text-foreground/70">Nenhuma tela cadastrada</p>
+            <p className="text-sm text-muted-foreground max-w-xs mt-1">
+              Vá em "Playlists" para criar sua primeira tela e começar a exibir conteúdo.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Heartbeat Tip */}
+      <div className="flex items-center gap-3 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 max-w-2xl">
+        <AlertCircle className="w-5 h-5 text-indigo-400 shrink-0" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          <span className="text-indigo-400 font-bold uppercase mr-1">Dica:</span>
+          Cada player envia um sinal ("Heartbeat") a cada 60 segundos. Se o status estiver <span className="text-red-400 font-semibold italic underline">Inativo</span>, verifique a conexão com a internet da sua TV ou dispositivo de reprodução.
+        </p>
+      </div>
     </div>
   );
 }

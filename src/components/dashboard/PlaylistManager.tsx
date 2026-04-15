@@ -161,7 +161,7 @@ export default function PlaylistManager({
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate(`/player/${user?.id}?playlist=${pl.id}`)}>
+                    <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate(`/player/${pl.id}`)}>
                       <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Preview na TV</span>
                     </Button>
                     <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-white transition-colors" onClick={() => onDelete(pl.id)}>

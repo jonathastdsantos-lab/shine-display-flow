@@ -93,6 +93,13 @@ export type Database = {
           nome_da_tela: string
           ordem_arquivos: string[] | null
           updated_at: string
+          config_clima: string | null
+          config_noticias: string | null
+          instagram_handle: string | null
+          layout_config: Json | null
+          template: string | null
+          widget_config: Json | null
+          last_sync_at: string | null
         }
         Insert: {
           client_id: string
@@ -101,6 +108,13 @@ export type Database = {
           nome_da_tela?: string
           ordem_arquivos?: string[] | null
           updated_at?: string
+          config_clima?: string | null
+          config_noticias?: string | null
+          instagram_handle?: string | null
+          layout_config?: Json | null
+          template?: string | null
+          widget_config?: Json | null
+          last_sync_at?: string | null
         }
         Update: {
           client_id?: string
@@ -109,6 +123,13 @@ export type Database = {
           nome_da_tela?: string
           ordem_arquivos?: string[] | null
           updated_at?: string
+          config_clima?: string | null
+          config_noticias?: string | null
+          instagram_handle?: string | null
+          layout_config?: Json | null
+          template?: string | null
+          widget_config?: Json | null
+          last_sync_at?: string | null
         }
         Relationships: []
       }
@@ -126,6 +147,7 @@ export type Database = {
           updated_at: string
           user_id: string
           widget_config: Json | null
+          screen_limit: number | null
         }
         Insert: {
           config_clima?: string | null
@@ -140,6 +162,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           widget_config?: Json | null
+          screen_limit?: number | null
         }
         Update: {
           config_clima?: string | null
@@ -154,6 +177,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           widget_config?: Json | null
+          screen_limit?: number | null
         }
         Relationships: []
       }
