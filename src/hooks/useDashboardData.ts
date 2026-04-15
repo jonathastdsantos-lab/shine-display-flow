@@ -22,6 +22,7 @@ export interface ClientProfile {
   nome_empresa: string;
   template: string;
   instagram_handle: string;
+  widget_config: any;
 }
 
 export function useDashboardData() {
@@ -34,6 +35,7 @@ export function useDashboardData() {
     nome_empresa: "",
     template: "corporativo",
     instagram_handle: "",
+    widget_config: null,
   });
   const [uploading, setUploading] = useState(false);
 
@@ -168,7 +170,7 @@ export function useDashboardData() {
     if (!user) return;
     
     // Remove any keys that don't exist in the DB schema
-    const allowedKeys = ["config_clima", "config_noticias", "nome_empresa", "template", "instagram_handle"];
+    const allowedKeys = ["config_clima", "config_noticias", "nome_empresa", "template", "instagram_handle", "widget_config"];
     const sanitized: Record<string, any> = {};
     for (const key of allowedKeys) {
       if (key in updates) sanitized[key] = (updates as any)[key];

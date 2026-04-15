@@ -125,6 +125,7 @@ export type Database = {
           template: string
           updated_at: string
           user_id: string
+          widget_config: Json | null
         }
         Insert: {
           config_clima?: string | null
@@ -138,6 +139,7 @@ export type Database = {
           template?: string
           updated_at?: string
           user_id: string
+          widget_config?: Json | null
         }
         Update: {
           config_clima?: string | null
@@ -151,6 +153,7 @@ export type Database = {
           template?: string
           updated_at?: string
           user_id?: string
+          widget_config?: Json | null
         }
         Relationships: []
       }

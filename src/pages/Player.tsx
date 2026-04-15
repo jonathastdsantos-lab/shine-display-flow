@@ -47,38 +47,57 @@ function RemoteAlertOverlay({ active, message, type }: { active: boolean, messag
   );
 }
 
+// Helper to check if widget is enabled
+function isWidgetEnabled(wc: any, key: string): boolean {
+  if (!wc) return true; // default: all enabled
+  return wc[key]?.enabled !== false;
+}
+
 // Sidebar compartilhada do modo Corporativo / L-Bar
-function PlayerSidebar({ city, currentQrLink }: { city: string; currentQrLink?: string }) {
+function PlayerSidebar({ city, currentQrLink, wc }: { city: string; currentQrLink?: string; wc?: any }) {
+  const qrDefaultUrl = wc?.qr?.default_url || "";
+  const qrUrl = currentQrLink || qrDefaultUrl;
+
   return (
     <div className="w-[300px] flex flex-col player-zone-sidebar bg-[#0A0D14] border-l border-white/5 z-20 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-600/5 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/2 pointer-events-none" />
-      <div className="p-4 bg-gradient-to-b from-white/5 to-transparent">
-        <ClockWidget />
-      </div>
+      {isWidgetEnabled(wc, "clock") && (
+        <div className="p-4 bg-gradient-to-b from-white/5 to-transparent">
+          <ClockWidget />
+        </div>
+      )}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
       <div className="flex-1 overflow-hidden relative">
         <div className="absolute inset-0 p-4 space-y-5 overflow-hidden">
-          {city && (
+          {isWidgetEnabled(wc, "weather") && city && (
             <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl p-2 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <WeatherWidget city={city} />
             </div>
           )}
-          <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <FinanceWidget />
-          </div>
-          <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <SocialWidget />
-          </div>
-          <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
-            <QRWidget url={currentQrLink} />
-          </div>
-          <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
-            <CameraWidget />
-          </div>
+          {isWidgetEnabled(wc, "finance") && (
+            <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <FinanceWidget />
+            </div>
+          )}
+          {isWidgetEnabled(wc, "social") && (
+            <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <SocialWidget />
+            </div>
+          )}
+          {isWidgetEnabled(wc, "qr") && (
+            <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
+              <QRWidget url={qrUrl} />
+            </div>
+          )}
+          {isWidgetEnabled(wc, "camera") && (
+            <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
+              <CameraWidget />
+            </div>
+          )}
         </div>
       </div>
       <div className="px-6 py-4 text-center border-t border-white/5 bg-black/20">
@@ -116,6 +135,7 @@ export default function Player() {
   const [city, setCity] = useState("São Paulo");
   const [template, setTemplate] = useState("corporativo");
   const [newsCategory, setNewsCategory] = useState("technology");
+  const [widgetConfig, setWidgetConfig] = useState<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Estado de intervenção remota do Master
@@ -160,7 +180,7 @@ export default function Player() {
     const fetchData = async () => {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("config_clima, config_noticias, template")
+        .select("config_clima, config_noticias, template, widget_config")
         .eq("user_id", id_cliente)
         .single();
         
@@ -168,6 +188,7 @@ export default function Player() {
         setCity(profile.config_clima || "São Paulo");
         setTemplate((profile as any).template || "corporativo");
         setNewsCategory(profile.config_noticias || "technology");
+        setWidgetConfig((profile as any).widget_config || null);
       }
 
       let mediaIds: string[] | null = null;
@@ -242,7 +263,7 @@ export default function Player() {
 
   const headlines = mockNews[newsCategory] || mockNews.technology;
   const current = mediaItems[currentIndex];
-  const currentQrLink = current?.qr_link;
+  const currentQrLink = current?.qr_link || widgetConfig?.qr?.default_url || undefined;
 
   if (mediaItems.length === 0) {
     return (
@@ -276,7 +297,7 @@ export default function Player() {
           </div>
 
           {/* QR Overlay dinâmico - flutua no canto quando há link */}
-          {currentQrLink && (
+          {isWidgetEnabled(widgetConfig, "qr") && currentQrLink && (
             <div className="absolute bottom-16 right-6 z-20 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 shadow-2xl animate-in fade-in duration-500">
               <QRWidget url={currentQrLink} compact />
             </div>
@@ -291,9 +312,11 @@ export default function Player() {
           </div>
         </div>
         
-        <div className="z-20 relative shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-           <NewsTicker headlines={headlines} />
-        </div>
+        {isWidgetEnabled(widgetConfig, "news") && (
+          <div className="z-20 relative shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+             <NewsTicker headlines={headlines} />
+          </div>
+        )}
       </div>
     );
   }
@@ -424,7 +447,7 @@ export default function Player() {
         </div>
 
         {/* Zona 2: Sidebar Widgets */}
-        <PlayerSidebar city={city} currentQrLink={currentQrLink} />
+        <PlayerSidebar city={city} currentQrLink={currentQrLink} wc={widgetConfig} />
       </div>
 
       {/* Zona 3: Footer Ticker */}

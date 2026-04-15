@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Store, Building2, Check, Wand2, CloudSun, TrendingUp, Rss, Clock, Instagram, QrCode, Camera,
+  Store, Building2, Check, Wand2,
   LayoutPanelLeft, Columns2
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ClientProfile } from "@/hooks/useDashboardData";
 import ScenarioWizard from "./ScenarioWizard";
+import WidgetStore from "./WidgetStore";
+import type { WidgetConfig } from "./WidgetStore";
 
 interface TemplateSelectorProps {
   profile: ClientProfile;
@@ -124,14 +125,6 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
     toast({ title: "✅ Template atualizado!", description: `Template "${templateId}" aplicado ao seu canal.` });
   };
 
-  const toggleWidget = async (type: string, enabled: boolean) => {
-    let updates: Partial<ClientProfile> = {};
-    if (type === 'weather') updates = { config_clima: enabled ? "São Paulo" : "" };
-    if (type === 'news') updates = { config_noticias: enabled ? "technology" : "" };
-    await onSave(updates);
-    toast({ title: `Widget ${enabled ? "ativado" : "desativado"}!`, description: "A tela irá refletir a mudança no próximo loop." });
-  };
-
   const handleAISuggestion = () => {
     setIsGenerating(true);
     setTimeout(() => {
@@ -142,6 +135,10 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
         description: "Detectamos seu perfil B2B. Ativamos Widgets de Notícias Tech e Mercado Financeiro nas laterais!" 
       });
     }, 2500);
+  };
+
+  const handleWidgetSave = async (wc: WidgetConfig, extras: { instagram_handle?: string }) => {
+    await onSave({ widget_config: wc, ...extras });
   };
 
   return (
@@ -252,135 +249,13 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
 
         {/* ── ABA: Widgets ── */}
         <TabsContent value="widgets" className="space-y-6">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            
-            <Card className="border-border/50">
-               <CardContent className="p-6">
-                 <div className="flex justify-between items-start mb-4">
-                   <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl">
-                     <CloudSun className="w-6 h-6" />
-                   </div>
-                   <Switch defaultChecked={!!profile.config_clima} onCheckedChange={(checked) => toggleWidget('weather', checked)} />
-                 </div>
-                 <h3 className="font-bold text-lg mb-1">Clima Global</h3>
-                 <p className="text-sm text-muted-foreground mb-4">
-                   Conecta com APIs meteorológicas para mostrar a previsão de até 3 dias da tela onde está instalado.
-                 </p>
-                 <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground truncate">
-                   {profile.config_clima ? `📍 Cidade: ${profile.config_clima}` : "⚠️ Configure nas Configurações do Canal"}
-                 </div>
-               </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-               <CardContent className="p-6">
-                 <div className="flex justify-between items-start mb-4">
-                   <div className="p-3 bg-red-500/10 text-red-500 rounded-xl">
-                     <Rss className="w-6 h-6" />
-                   </div>
-                   <Switch defaultChecked={!!profile.config_noticias} onCheckedChange={(checked) => toggleWidget('news', checked)} />
-                 </div>
-                 <h3 className="font-bold text-lg mb-1">Últimas Notícias</h3>
-                 <p className="text-sm text-muted-foreground mb-4">
-                   Alimenta seu rodapé (Ticker) com os portais de notícias mais acessados (G1, UOL, CNN).
-                 </p>
-                 <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground truncate">
-                   {profile.config_noticias ? `📰 Feed: ${profile.config_noticias}` : "⚠️ Configure nas Configurações do Canal"}
-                 </div>
-               </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-               <CardContent className="p-6">
-                 <div className="flex justify-between items-start mb-4">
-                   <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
-                     <TrendingUp className="w-6 h-6" />
-                   </div>
-                   <Switch defaultChecked />
-                 </div>
-                 <h3 className="font-bold text-lg mb-1">Cotações (Finance)</h3>
-                 <p className="text-sm text-muted-foreground mb-4">
-                   Tabela rotativa de câmbios de moedas na ponta da tela. Ótimo para casas de câmbio ou corporativo.
-                 </p>
-                 <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground truncate">
-                   ✅ Integração: BCB Market
-                 </div>
-               </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-               <CardContent className="p-6">
-                 <div className="flex justify-between items-start mb-4">
-                   <div className="p-3 bg-pink-500/10 text-pink-500 rounded-xl">
-                     <Instagram className="w-6 h-6" />
-                   </div>
-                   <Switch onCheckedChange={(checked) => toggleWidget('social', checked)} />
-                 </div>
-                 <h3 className="font-bold text-lg mb-1">Mural Social (Instagram)</h3>
-                 <p className="text-sm text-muted-foreground mb-4">
-                   Puxa as fotos mais recentes e os textos da sua hashtag ou conta para criar uma prova social na TV.
-                 </p>
-                 <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground truncate">
-                   Conta Conectada: Pendente...
-                 </div>
-               </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-               <CardContent className="p-6">
-                 <div className="flex justify-between items-start mb-4">
-                   <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-xl">
-                     <QrCode className="w-6 h-6" />
-                   </div>
-                   <Switch defaultChecked onCheckedChange={(checked) => toggleWidget('qrcode', checked)} />
-                 </div>
-                 <h3 className="font-bold text-lg mb-1">QR Code Dinâmico</h3>
-                 <p className="text-sm text-muted-foreground mb-4">
-                   O QR Code muda automaticamente conforme cada mídia é exibida. Configure o link em cada arquivo na Biblioteca.
-                 </p>
-                 <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground truncate">
-                   ✅ URL dinâmica por mídia ativa
-                 </div>
-               </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-               <CardContent className="p-6">
-                 <div className="flex justify-between items-start mb-4">
-                   <div className="p-3 bg-red-500/10 text-red-500 rounded-xl">
-                     <Camera className="w-6 h-6" />
-                   </div>
-                   <Switch onCheckedChange={(checked) => toggleWidget('cctv', checked)} />
-                 </div>
-                 <h3 className="font-bold text-lg mb-1">Câmera de Segurança (Ao Vivo)</h3>
-                 <p className="text-sm text-muted-foreground mb-4">
-                   Ideal para Espaço Kids ou Portarias. Espelha a imagem das suas câmeras de segurança direto na TV.
-                 </p>
-                 <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground truncate">
-                   Protocolo: RTSP/WebRTC Integrado
-                 </div>
-               </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-               <CardContent className="p-6">
-                 <div className="flex justify-between items-start mb-4">
-                   <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl">
-                     <Clock className="w-6 h-6" />
-                   </div>
-                   <Switch defaultChecked />
-                 </div>
-                 <h3 className="font-bold text-lg mb-1">Relógio Digital</h3>
-                 <p className="text-sm text-muted-foreground mb-4">
-                   Exibe o horário atual em tempo real na barra lateral. Essencial para ambientes de espera e portarias.
-                 </p>
-                 <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground truncate">
-                   ✅ Sempre ativo no modo Corporativo
-                 </div>
-               </CardContent>
-            </Card>
-
-          </div>
+          <WidgetStore
+            widgetConfig={profile.widget_config}
+            instagramHandle={profile.instagram_handle}
+            configClima={profile.config_clima}
+            configNoticias={profile.config_noticias}
+            onSave={handleWidgetSave}
+          />
         </TabsContent>
       </Tabs>
     </div>
