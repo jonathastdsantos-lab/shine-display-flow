@@ -154,6 +154,7 @@ export function useDashboardData() {
         client_id: user.id,
         nome_da_tela: name,
         ordem_arquivos: [],
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();

@@ -125,8 +125,13 @@ export default function DeviceMonitor({
         setNewScreenName("");
         toast({ title: "✅ Tela cadastrada com sucesso!" });
       }
-    } catch (error) {
-      toast({ title: "Erro ao cadastrar", variant: "destructive" });
+    } catch (error: any) {
+      console.error("❌ Erro ao cadastrar tela:", error);
+      toast({ 
+        title: "Erro ao cadastrar", 
+        description: error.message || "Ocorreu um erro inesperado no banco de dados.",
+        variant: "destructive" 
+      });
     } finally {
       setIsCreating(false);
     }
