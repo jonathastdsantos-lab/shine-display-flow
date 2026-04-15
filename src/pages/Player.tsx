@@ -263,7 +263,7 @@ export default function Player() {
 
   const headlines = mockNews[newsCategory] || mockNews.technology;
   const current = mediaItems[currentIndex];
-  const currentQrLink = current?.qr_link;
+  const currentQrLink = current?.qr_link || widgetConfig?.qr?.default_url || undefined;
 
   if (mediaItems.length === 0) {
     return (
@@ -297,7 +297,7 @@ export default function Player() {
           </div>
 
           {/* QR Overlay dinâmico - flutua no canto quando há link */}
-          {currentQrLink && (
+          {isWidgetEnabled(widgetConfig, "qr") && currentQrLink && (
             <div className="absolute bottom-16 right-6 z-20 bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 shadow-2xl animate-in fade-in duration-500">
               <QRWidget url={currentQrLink} compact />
             </div>
