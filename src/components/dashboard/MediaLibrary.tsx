@@ -54,6 +54,35 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
     setQrInputs((prev) => ({ ...prev, [item.id]: (item as any).qr_link || "" }));
   };
 
+  const handleCropSave = async (blob: Blob) => {
+    if (!cropItem || !user) return;
+    try {
+      const cleanName = cropItem.nome
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w.-]/g, "_")
+        .toLowerCase()
+        .replace(/\.[^.]+$/, ".jpg");
+      const path = `${user.id}/${Date.now()}-cropped-${cleanName}`;
+
+      const { error: uploadErr } = await supabase.storage.from("media").upload(path, blob, {
+        cacheControl: "3600",
+        contentType: "image/jpeg",
+      });
+      if (uploadErr) throw uploadErr;
+
+      const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+
+      await supabase.from("media_library").update({ url_arquivo: publicUrl }).eq("id", cropItem.id);
+
+      toast({ title: "✅ Imagem recortada e salva!" });
+      onRefresh?.();
+    } catch (err: any) {
+      console.error("Erro ao salvar recorte:", err);
+      toast({ title: "Erro ao salvar recorte", description: err.message, variant: "destructive" });
+    }
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
