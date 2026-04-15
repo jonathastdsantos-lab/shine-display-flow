@@ -49,6 +49,21 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
   });
 
   const loadScenarios = async () => {
+    if (!profile?.user_id) {
+      // Se não temos o ID do usuário ainda, buscamos apenas os globais para não quebrar a query
+      try {
+        const { data, error } = await supabase
+          .from("scenarios")
+          .select("*")
+          .eq("is_global", true)
+          .order("created_at", { ascending: false });
+        if (!error) setScenarios(data || []);
+      } catch (e) {
+        console.warn("Aguardando ID do usuário para busca completa...");
+      }
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -63,7 +78,7 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
       console.error("Erro ao carregar cenários:", err);
       toast({
         title: "Erro ao carregar cenários",
-        description: "Não foi possível carregar as opções de configuração.",
+        description: "Certifique-se que as tabelas do banco de dados foram criadas.",
         variant: "destructive"
       });
     } finally {

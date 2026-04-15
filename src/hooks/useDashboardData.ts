@@ -24,6 +24,7 @@ export interface ClientProfile {
   instagram_handle: string;
   widget_config: any;
   layout_config?: any;
+  user_id?: string;
 }
 
 export function useDashboardData() {
