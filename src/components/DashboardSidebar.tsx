@@ -7,6 +7,7 @@ import {
   LogOut,
   Terminal,
   BarChart2,
+  Tv2,
 } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import { NavLink } from "@/components/NavLink";
