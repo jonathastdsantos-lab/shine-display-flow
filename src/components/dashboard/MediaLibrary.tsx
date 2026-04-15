@@ -19,10 +19,12 @@ interface MediaLibraryProps {
 
 export default function MediaLibrary({ media, uploading, onUpload, onDelete, onRefresh }: MediaLibraryProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [editingQR, setEditingQR] = useState<string | null>(null);
   const [qrInputs, setQrInputs] = useState<Record<string, string>>({});
+  const [cropItem, setCropItem] = useState<MediaItem | null>(null);
 
   const handleFiles = async (files: FileList) => {
     const ok = await onUpload(files);
