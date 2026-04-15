@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface WeatherWidgetProps {
   city: string;
   compact?: boolean;
+  fontSize?: number;
 }
 
 interface WeatherData {
@@ -24,7 +25,7 @@ function getWeatherIcon(icon: string) {
   return Cloud;
 }
 
-export default function WeatherWidget({ city, compact = false }: WeatherWidgetProps) {
+export default function WeatherWidget({ city, compact = false, fontSize }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -74,7 +75,8 @@ export default function WeatherWidget({ city, compact = false }: WeatherWidgetPr
       <div className="flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-top-1 duration-500">
         <div className="flex items-center gap-1.5">
           <Icon className="h-4 w-4 text-sky-400 shrink-0 drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]" />
-          <p className="text-xl font-bold text-player-text font-display tabular-nums leading-none tracking-tighter">
+          <p className="font-bold text-player-text font-display tabular-nums leading-none tracking-tighter"
+             style={{ fontSize: fontSize ? `${fontSize}px` : undefined }}>
             {weather.temp}°
           </p>
         </div>
@@ -91,7 +93,10 @@ export default function WeatherWidget({ city, compact = false }: WeatherWidgetPr
         <div className="absolute inset-0 bg-sky-500/20 blur-2xl rounded-full" />
         <Icon className="h-12 w-12 text-sky-400 relative drop-shadow-lg" />
       </div>
-      <p className="text-4xl font-bold text-player-text font-display tracking-tight">{weather.temp}°</p>
+      <p className="font-bold text-player-text font-display tracking-tight"
+         style={{ fontSize: fontSize ? `${fontSize}px` : undefined }}>
+        {weather.temp}°
+      </p>
       <p className="text-sm font-black text-player-muted uppercase tracking-[0.15em] mt-1">{weather.condition}</p>
       <p className="text-[10px] text-player-muted/40 font-bold uppercase mt-1 tracking-widest">{weather.city}</p>
     </div>

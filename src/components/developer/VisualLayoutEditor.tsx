@@ -822,11 +822,33 @@ export function VisualLayoutEditor({
                     <>
                       {/* Weather config */}
                       {selectedZone.type === "weather" && (
+                        <>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Cidade</Label>
+                            <Input value={selectedZone.config?.city || ""}
+                              onChange={e => updateConfig(selectedZone.id, "city", e.target.value)}
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="São Paulo" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Tamanho da Temperatura</Label>
+                            <div className="flex gap-2 items-center">
+                              <Slider min={20} max={120} step={2} value={[selectedZone.config?.fontSize || 36]}
+                                onValueChange={([v]) => updateConfig(selectedZone.id, "fontSize", v)} className="flex-1" />
+                              <span className="text-[9px] text-white/40 font-mono w-8 text-right">{selectedZone.config?.fontSize || 36}px</span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Clock config */}
+                      {selectedZone.type === "clock" && (
                         <div className="space-y-1.5">
-                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">Cidade</Label>
-                          <Input value={selectedZone.config?.city || ""}
-                            onChange={e => updateConfig(selectedZone.id, "city", e.target.value)}
-                            className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="São Paulo" />
+                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">Tamanho da Hora</Label>
+                          <div className="flex gap-2 items-center">
+                            <Slider min={20} max={160} step={2} value={[selectedZone.config?.fontSize || 48]}
+                              onValueChange={([v]) => updateConfig(selectedZone.id, "fontSize", v)} className="flex-1" />
+                            <span className="text-[9px] text-white/40 font-mono w-8 text-right">{selectedZone.config?.fontSize || 48}px</span>
+                          </div>
                         </div>
                       )}
 
@@ -865,12 +887,22 @@ export function VisualLayoutEditor({
 
                       {/* QR config */}
                       {selectedZone.type === "qr" && (
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">URL do QR Code</Label>
-                          <Input value={selectedZone.config?.url || ""}
-                            onChange={e => updateConfig(selectedZone.id, "url", e.target.value)}
-                            className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="https://..." />
-                        </div>
+                        <>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">URL do QR Code</Label>
+                            <Input value={selectedZone.config?.url || ""}
+                              onChange={e => updateConfig(selectedZone.id, "url", e.target.value)}
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="https://..." />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Tamanho do QR (px)</Label>
+                            <div className="flex gap-2 items-center">
+                              <Slider min={40} max={400} step={10} value={[selectedZone.config?.size || 100]}
+                                onValueChange={([v]) => updateConfig(selectedZone.id, "size", v)} className="flex-1" />
+                              <span className="text-[9px] text-white/40 font-mono w-10 text-right">{selectedZone.config?.size || 100}px</span>
+                            </div>
+                          </div>
+                        </>
                       )}
 
                       {/* News config */}
@@ -927,6 +959,22 @@ export function VisualLayoutEditor({
                         </div>
                       )}
 
+                      {/* Media config */}
+                      {selectedZone.type === "media" && (
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">Ajuste da Imagem/Vídeo</Label>
+                          <div className="flex gap-1">
+                            {[{ v: "cover", label: "Preencher" }, { v: "contain", label: "Caber" }].map(({ v, label }) => (
+                              <button key={v} onClick={() => updateConfig(selectedZone.id, "fit", v)}
+                                className={`flex-1 py-1.5 text-[10px] font-bold rounded border transition-colors
+                                  ${(selectedZone.config?.fit || "cover") === v ? "bg-indigo-500/30 border-indigo-500/50 text-indigo-400" : "border-white/10 text-white/30 hover:text-white hover:bg-white/5"}`}>
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Social config */}
                       {selectedZone.type === "social" && (
                         <div className="space-y-1.5">
@@ -941,7 +989,7 @@ export function VisualLayoutEditor({
                       )}
 
                       {/* Default: no config needed */}
-                      {!["weather", "text", "qr", "news", "camera", "content_feed", "social"].includes(selectedZone.type) && (
+                      {!["weather", "text", "qr", "news", "camera", "content_feed", "social", "clock", "media"].includes(selectedZone.type) && (
                         <div className="text-center py-6 text-white/20">
                           <Square className="w-7 h-7 mx-auto mb-2 opacity-30" />
                           <p className="text-[10px]">Este widget não<br />tem configurações</p>

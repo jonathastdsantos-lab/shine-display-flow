@@ -6,9 +6,10 @@ import WeatherWidget from "./WeatherWidget";
 interface ClockWidgetProps {
   compact?: boolean;
   weatherCity?: string;
+  fontSize?: number;
 }
 
-export default function ClockWidget({ compact = false, weatherCity }: ClockWidgetProps) {
+export default function ClockWidget({ compact = false, weatherCity, fontSize }: ClockWidgetProps) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -19,7 +20,8 @@ export default function ClockWidget({ compact = false, weatherCity }: ClockWidge
   if (compact) {
     return (
       <div className="text-center px-2 py-3 flex flex-col items-center">
-        <p className="text-2xl font-bold font-display tabular-nums text-player-text tracking-tight">
+        <p className="font-bold font-display tabular-nums text-player-text tracking-tight leading-none"
+           style={{ fontSize: fontSize ? `${fontSize}px` : undefined }}>
           {format(now, "HH:mm")}
         </p>
         <p className="text-[10px] text-player-muted mt-0.5 uppercase font-bold tracking-widest">{format(now, "dd/MM", { locale: ptBR })}</p>
@@ -35,7 +37,8 @@ export default function ClockWidget({ compact = false, weatherCity }: ClockWidge
 
   return (
     <div className="text-center px-4 py-6 flex flex-col items-center">
-      <p className="text-5xl font-black font-display tabular-nums text-player-text tracking-tighter">
+      <p className="font-black font-display tabular-nums text-player-text tracking-tighter leading-none"
+         style={{ fontSize: fontSize ? `${fontSize}px` : undefined }}>
         {format(now, "HH:mm")}
       </p>
       <div className="mt-1 mb-2">

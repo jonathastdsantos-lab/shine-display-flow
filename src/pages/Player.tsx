@@ -368,25 +368,26 @@ export default function Player() {
 
       switch (zone.type) {
         case "media":
+          const objectFit = zone.config?.fit === "contain" ? "object-contain" : "object-cover";
           return (
             <div key={zone.id} style={style} className="bg-black">
               {current?.tipo === "video" ? (
-                <video ref={videoRef} key={current.id} src={current.url_arquivo} className="w-full h-full object-cover" muted autoPlay playsInline />
+                <video ref={videoRef} key={current.id} src={current.url_arquivo} className={`w-full h-full ${objectFit}`} muted autoPlay playsInline />
               ) : (
-                <img key={current?.id} src={current?.url_arquivo} alt="" className="w-full h-full object-contain bg-black" />
+                <img key={current?.id} src={current?.url_arquivo} alt="" className={`w-full h-full ${objectFit} bg-black`} />
               )}
             </div>
           );
         case "clock":
           return (
             <div key={zone.id} style={style} className="bg-[#0A0D14] flex items-center justify-center p-2">
-              <ClockWidget weatherCity={city} />
+              <ClockWidget weatherCity={city} fontSize={zone.config?.fontSize} />
             </div>
           );
         case "weather":
           return (
             <div key={zone.id} style={style} className="bg-[#0A0D14] p-2">
-              <WeatherWidget city={zone.config?.city || city} />
+              <WeatherWidget city={zone.config?.city || city} fontSize={zone.config?.fontSize} />
             </div>
           );
         case "news":
@@ -410,7 +411,7 @@ export default function Player() {
         case "qr":
           return (
             <div key={zone.id} style={style} className="bg-[#0A0D14] flex items-center justify-center p-3">
-              <QRWidget url={zone.config?.url || currentQrLink || ""} />
+              <QRWidget url={zone.config?.url || currentQrLink || ""} size={zone.config?.size} />
             </div>
           );
         case "camera":

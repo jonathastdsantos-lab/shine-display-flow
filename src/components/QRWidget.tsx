@@ -3,13 +3,14 @@ import { QRCodeSVG } from "qrcode.react";
 interface QRWidgetProps {
   url?: string;
   compact?: boolean;
+  size?: number;
 }
 
 const DEFAULT_URL = "https://signageos.app";
 
-export default function QRWidget({ url, compact = false }: QRWidgetProps) {
+export default function QRWidget({ url, compact = false, size }: QRWidgetProps) {
   const qrUrl = url || DEFAULT_URL;
-  const size = compact ? 64 : 100;
+  const qrSize = size || (compact ? 64 : 100);
 
   return (
     <div className={`flex flex-col items-center gap-2 ${compact ? "p-2" : "p-4"}`}>
@@ -18,7 +19,7 @@ export default function QRWidget({ url, compact = false }: QRWidgetProps) {
         <div className="relative bg-white rounded-xl p-2 shadow-lg">
           <QRCodeSVG
             value={qrUrl}
-            size={size}
+            size={qrSize}
             bgColor="#ffffff"
             fgColor="#1a1a2e"
             level="M"
