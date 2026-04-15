@@ -157,7 +157,7 @@ export default function ImageCropModal({ open, onClose, imageUrl, imageName, onS
         <div className="flex-1 min-h-0 overflow-auto flex items-center justify-center bg-black/5 rounded-lg p-2">
           <ReactCrop
             crop={crop}
-            onChange={(c) => setCrop(c)}
+            onChange={(_, c) => setCrop(c)}
             onComplete={(c) => setCompletedCrop(c)}
             aspect={aspect}
             className="max-h-[55vh]"
