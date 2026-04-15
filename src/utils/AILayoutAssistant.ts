@@ -293,14 +293,4 @@ export function generateLayoutFromPrompt(prompt: string): { zones: Zone[]; label
   return { zones: DEFAULT_LAYOUT, label: "Layout Padrão" };
 }
 
-export const ZONE_DEFAULTS = {
-  media: { label: "Zona de Mídia", defaultConfig: {} },
-  clock: { label: "Relógio", defaultConfig: {} },
-  weather: { label: "Previsão do Tempo", defaultConfig: { city: "São Paulo" } },
-  news: { label: "Ticker de Notícias", defaultConfig: { category: "technology" } },
-  finance: { label: "Widget Financeiro", defaultConfig: {} },
-  social: { label: "Rede Social", defaultConfig: {} },
-  qr: { label: "QR Code", defaultConfig: { url: "" } },
-  camera: { label: "Câmera CCTV", defaultConfig: { source: "webcam" } },
-  text: { label: "Texto Livre", defaultConfig: { text: "Sua mensagem aqui..." } },
-};
+
