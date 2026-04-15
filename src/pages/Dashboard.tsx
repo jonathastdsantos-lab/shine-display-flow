@@ -108,14 +108,20 @@ export default function Dashboard() {
                 <TemplateSelector profile={activeConfig as any} onSave={handleSaveEditor} />
               } />
               <Route path="devices" element={
-                <DeviceMonitor 
-                  playlists={data.playlists} 
-                  profile={data.profile}
-                  selectedPlaylistId={data.selectedPlaylistId}
-                  setSelectedPlaylistId={data.setSelectedPlaylistId}
-                  onSync={data.triggerSync}
-                  onCreate={data.createPlaylist}
-                />
+                  <DeviceMonitor 
+                    playlists={data.playlists} 
+                    profile={data.profile}
+                    media={data.media}
+                    selectedPlaylistId={data.selectedPlaylistId}
+                    setSelectedPlaylistId={data.setSelectedPlaylistId}
+                    onSync={data.triggerSync}
+                    onCreate={data.createPlaylist}
+                    onUpdatePlaylist={data.savePlaylistConfig}
+                    onAddMedia={data.addToPlaylist}
+                    onRemoveMedia={data.removeFromPlaylist}
+                    onReorder={data.reorderPlaylist}
+                    getMediaName={data.getMediaName}
+                  />
               } />
               <Route path="reports" element={<ReportsPanel profile={data.profile} />} />
               <Route path="developer/*" element={

@@ -274,7 +274,7 @@ export default function Player() {
 
     // Escuta Broadcast via Supabase Realtime
     const channel = supabase
-      .channel(`player-${id_cliente}`)
+      .channel(`player-${clientId}`)
       .on("broadcast", { event: "remote-intervention" }, ({ payload }) => {
         if (payload) {
           setRemoteIntervention({ active: payload.active, message: payload.message, type: payload.type });
@@ -283,7 +283,7 @@ export default function Player() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [id_cliente, playlistId]);
+  }, [clientId, playlist_id]);
 
   const goToNext = useCallback(() => {
     if (remoteIntervention.active) return;

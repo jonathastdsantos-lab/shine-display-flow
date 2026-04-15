@@ -7,11 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Monitor, Wifi, WifiOff, RefreshCw, Clock, MapPin,
   Tv2, Signal, Activity, Copy, ExternalLink, Settings2,
-  Zap, ShieldCheck, AlertCircle, Plus, Check, Info
+  Zap, ShieldCheck, AlertCircle, Plus, Check, Info,
+  Film, Image as ImageIcon, GripVertical, Trash2, CheckCircle2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import type { Playlist, ClientProfile } from "@/hooks/useDashboardData";
 import {
   Dialog,
   DialogContent,
@@ -23,14 +23,72 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { Playlist, ClientProfile, MediaItem } from "@/hooks/useDashboardData";
 
 interface DeviceMonitorProps {
   playlists: Playlist[];
   profile: ClientProfile;
+  media: MediaItem[];
   selectedPlaylistId: string | null;
   setSelectedPlaylistId: (id: string | null) => void;
   onSync: (ids?: string[]) => Promise<void>;
   onCreate: (name: string) => Promise<Playlist | null>;
+  onUpdatePlaylist: (id: string, updates: Partial<Playlist>) => Promise<void>;
+  onAddMedia: (playlistId: string, mediaId: string) => void;
+  onRemoveMedia: (playlistId: string, index: number) => void;
+  onReorder: (playlistId: string, newOrder: string[]) => void;
+  getMediaName: (id: string) => string;
+}
+
+function SortableMediaItem({ id, mediaItem, index, onRemove }: any) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  if (!mediaItem) return null;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative flex items-center gap-3 rounded-lg border bg-card p-2 shadow-sm transition-all duration-200 ${
+        isDragging ? "shadow-lg ring-2 ring-indigo-500/50 opacity-90 scale-[1.02] border-indigo-500" : "border-border/50 hover:border-indigo-400/30"
+      }`}
+    >
+      <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-indigo-500 p-1">
+        <GripVertical className="h-4 w-4" />
+      </button>
+
+      <div className="w-12 h-9 bg-muted rounded overflow-hidden shrink-0 relative flex items-center justify-center">
+         {mediaItem.tipo === "video" ? (
+           <video src={mediaItem.url_arquivo} className="w-full h-full object-cover" />
+         ) : (
+           <img src={mediaItem.url_arquivo} className="w-full h-full object-cover" />
+         )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-[11px] truncate">{mediaItem.nome}</p>
+        <p className="text-[9px] text-muted-foreground uppercase font-black">{mediaItem.duracao}s • Pos {index + 1}</p>
+      </div>
+
+      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onRemove}>
+        <Trash2 className="h-3 w-3" />
+      </Button>
+    </div>
+  );
 }
 
 function getStatusInfo(lastSeen: string | null): {
@@ -54,7 +112,18 @@ function getStatusInfo(lastSeen: string | null): {
 }
 
 export default function DeviceMonitor({ 
-  playlists, profile, selectedPlaylistId, setSelectedPlaylistId, onSync, onCreate 
+  playlists, 
+  profile, 
+  media,
+  selectedPlaylistId, 
+  setSelectedPlaylistId, 
+  onSync, 
+  onCreate,
+  onUpdatePlaylist,
+  onAddMedia,
+  onRemoveMedia,
+  onReorder,
+  getMediaName
 }: DeviceMonitorProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -65,6 +134,14 @@ export default function DeviceMonitor({
   const [newScreenName, setNewScreenName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [createdScreen, setCreatedScreen] = useState<Playlist | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
 
   const screenLimit = profile.screen_limit || 1;
   const usagePercentage = Math.min(100, (playlists.length / screenLimit) * 100);
@@ -135,6 +212,57 @@ export default function DeviceMonitor({
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleOpenSettings = (pl: Playlist) => {
+    setEditingPlaylist({ ...pl });
+    setIsSettingsOpen(true);
+  };
+
+  const handleSaveQuickConfig = async () => {
+    if (!editingPlaylist) return;
+    setIsSavingSettings(true);
+    try {
+      await onUpdatePlaylist(editingPlaylist.id, {
+        ordem_arquivos: editingPlaylist.ordem_arquivos,
+        template: editingPlaylist.template,
+        config_clima: editingPlaylist.config_clima,
+        config_noticias: editingPlaylist.config_noticias,
+        instagram_handle: editingPlaylist.instagram_handle,
+        widget_config: editingPlaylist.widget_config,
+        layout_config: editingPlaylist.layout_config,
+      });
+      
+      // Auto-sync after save
+      await onSync([editingPlaylist.id]);
+      
+      toast({
+        title: "✅ Configurações Salvas!",
+        description: "As alterações foram enviadas para o dispositivo.",
+      });
+      setIsSettingsOpen(false);
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || !editingPlaylist || active.id === over.id) return;
+    
+    const items = editingPlaylist.ordem_arquivos || [];
+    const oldIndex = items.findIndex((_, i) => `${editingPlaylist.id}-${i}` === active.id);
+    const newIndex = items.findIndex((_, i) => `${editingPlaylist.id}-${i}` === over.id);
+    
+    if (oldIndex === -1 || newIndex === -1) return;
+    
+    const newOrder = arrayMove(items, oldIndex, newIndex);
+    setEditingPlaylist({ ...editingPlaylist, ordem_arquivos: newOrder });
   };
 
   const copyPlayerLink = (id: string) => {
@@ -385,7 +513,7 @@ export default function DeviceMonitor({
                         <Button 
                           size="sm" 
                           variant={isCurrentEditor ? "default" : "outline"} 
-                          onClick={() => handleConfigure(pl.id)} 
+                          onClick={() => handleOpenSettings(pl)} 
                           className={`gap-2 ${isCurrentEditor ? 'bg-indigo-500 hover:bg-indigo-600' : ''}`}
                         >
                           <Settings2 className="w-4 h-4" />
@@ -414,14 +542,228 @@ export default function DeviceMonitor({
         )}
       </div>
 
-      {/* Heartbeat Tip */}
-      <div className="flex items-center gap-3 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 max-w-2xl">
-        <AlertCircle className="w-5 h-5 text-indigo-400 shrink-0" />
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          <span className="text-indigo-400 font-bold uppercase mr-1">Dica:</span>
-          Cada player envia um sinal ("Heartbeat") a cada 60 segundos. Se o status estiver <span className="text-red-400 font-semibold italic underline">Inativo</span>, verifique a conexão com a internet da sua TV ou dispositivo de reprodução.
-        </p>
-      </div>
+      {/* Quick Config Modal */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden shadow-2xl border-indigo-500/20">
+          <DialogHeader className="p-6 bg-indigo-500/5 border-b shrink-0">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-indigo-500 rounded-xl shadow-lg shadow-indigo-500/20 text-white">
+                  <Settings2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold">Configurações da Tela</DialogTitle>
+                  <DialogDescription className="text-indigo-500/60 font-medium">
+                    {editingPlaylist?.nome_da_tela} • ID: {editingPlaylist?.id.split("-")[0]}
+                  </DialogDescription>
+                </div>
+              </div>
+              <Badge variant="outline" className="h-6 gap-1 bg-white/50 border-indigo-500/20 text-indigo-500">
+                <ShieldCheck className="w-3 h-3" />
+                Master Admin
+              </Badge>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <Tabs defaultValue="geral" className="flex-1 flex flex-col overflow-hidden">
+              <div className="px-6 py-2 border-b bg-muted/30">
+                <TabsList className="bg-transparent gap-2 h-auto p-0">
+                  <TabsTrigger value="geral" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
+                    <Clock className="w-4 h-4" /> Geral
+                  </TabsTrigger>
+                  <TabsTrigger value="layout" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
+                    <Monitor className="w-4 h-4" /> Layout
+                  </TabsTrigger>
+                  <TabsTrigger value="programacao" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
+                    <Activity className="w-4 h-4" /> Programação
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <div className="flex-1 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <div className="p-6">
+                    <TabsContent value="geral" className="mt-0 space-y-6">
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Cidade (Clima)</Label>
+                          <Input 
+                            value={editingPlaylist?.config_clima || ""} 
+                            onChange={(e) => setEditingPlaylist(prev => prev ? { ...prev, config_clima: e.target.value } : null)}
+                            placeholder="Ex: São Paulo"
+                            className="bg-muted/30"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Categoria de Notícias</Label>
+                          <Select 
+                            value={editingPlaylist?.config_noticias || "technology"} 
+                            onValueChange={(val) => setEditingPlaylist(prev => prev ? { ...prev, config_noticias: val } : null)}
+                          >
+                            <SelectTrigger className="bg-muted/30">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="technology">Tecnologia</SelectItem>
+                              <SelectItem value="business">Economia / Negócios</SelectItem>
+                              <SelectItem value="sports">Esportes</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Instagram (Handle)</Label>
+                          <Input 
+                            value={editingPlaylist?.instagram_handle || ""} 
+                            onChange={(e) => setEditingPlaylist(prev => prev ? { ...prev, instagram_handle: e.target.value } : null)}
+                            placeholder="Ex: @minhaempresa"
+                            className="bg-muted/30"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Alertas Master (Cenário)</Label>
+                          <Select value="default_off">
+                             <SelectTrigger className="bg-muted/30 opacity-50 cursor-not-allowed">
+                               <SelectValue placeholder="Cenário de Segmento" />
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="default_off">Seguir Configuração Global</SelectItem>
+                             </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="layout" className="mt-0 space-y-6">
+                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                          { id: "varejo", label: "Varejo", icon: <Tv2 className="w-5 h-5" />, desc: "Impacto Visual" },
+                          { id: "corporativo", label: "Lobby", icon: <Monitor className="w-5 h-5" />, desc: "Informação & Clima" },
+                          { id: "lbar", label: "L-Bar", icon: <LayoutList className="w-5 h-5" />, desc: "Vertical Lateral" },
+                          { id: "split", label: "Split", icon: <Activity className="w-5 h-5" />, desc: "Zonas 60/40" },
+                        ].map((tpl) => (
+                          <div
+                            key={tpl.id}
+                            onClick={() => setEditingPlaylist(prev => prev ? { ...prev, template: tpl.id } : null)}
+                            className={`p-4 rounded-xl border-2 transition-all cursor-pointer text-center space-y-2 ${
+                              editingPlaylist?.template === tpl.id 
+                                ? "border-indigo-500 bg-indigo-500/5 shadow-md" 
+                                : "border-border/50 hover:bg-muted"
+                            }`}
+                          >
+                            <div className={`mx-auto w-10 h-10 rounded-full flex items-center justify-center ${editingPlaylist?.template === tpl.id ? "bg-indigo-500 text-white" : "bg-muted text-muted-foreground"}`}>
+                              {tpl.icon}
+                            </div>
+                            <p className="font-bold text-xs">{tpl.label}</p>
+                            <p className="text-[10px] text-muted-foreground">{tpl.desc}</p>
+                          </div>
+                        ))}
+                       </div>
+                    </TabsContent>
+
+                    <TabsContent value="programacao" className="mt-0 space-y-6">
+                      <div className="grid md:grid-cols-2 gap-8">
+                        {/* Timeline */}
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                             <Activity className="w-3 h-3" /> Ordem de Exibição
+                          </h4>
+                          <ScrollArea className="h-[300px] border rounded-xl bg-muted/10 p-4">
+                            <DndContext 
+                              sensors={sensors} 
+                              collisionDetection={closestCenter} 
+                              modifiers={[restrictToVerticalAxis]} 
+                              onDragEnd={handleDragEnd}
+                            >
+                              <SortableContext 
+                                items={(editingPlaylist?.ordem_arquivos || []).map((_, i) => `${editingPlaylist?.id}-${i}`)} 
+                                strategy={verticalListSortingStrategy}
+                              >
+                                <div className="space-y-3">
+                                  {(editingPlaylist?.ordem_arquivos || []).map((mediaId, idx) => {
+                                    const mInfo = media.find(x => x.id === mediaId);
+                                    return (
+                                      <SortableMediaItem
+                                        key={`${editingPlaylist?.id}-${idx}`}
+                                        id={`${editingPlaylist?.id}-${idx}`}
+                                        index={idx}
+                                        mediaItem={mInfo}
+                                        onRemove={() => {
+                                          const updated = [...(editingPlaylist?.ordem_arquivos || [])];
+                                          updated.splice(idx, 1);
+                                          setEditingPlaylist(prev => prev ? { ...prev, ordem_arquivos: updated } : null);
+                                        }}
+                                      />
+                                    );
+                                  })}
+                                  {(editingPlaylist?.ordem_arquivos || []).length === 0 && (
+                                    <div className="py-12 text-center">
+                                      <p className="text-xs text-muted-foreground italic">Nenhuma mídia na grade.</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </SortableContext>
+                            </DndContext>
+                          </ScrollArea>
+                        </div>
+
+                        {/* Media Selector */}
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                             <Plus className="w-3 h-3" /> Seu Acervo
+                          </h4>
+                          <ScrollArea className="h-[300px] border rounded-xl bg-card p-4">
+                            <div className="grid grid-cols-1 gap-2">
+                              {media.map((m) => (
+                                <Button 
+                                  key={m.id} 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    const updated = [...(editingPlaylist?.ordem_arquivos || []), m.id];
+                                    setEditingPlaylist(prev => prev ? { ...prev, ordem_arquivos: updated } : null);
+                                  }}
+                                  className="justify-start gap-4 h-12 px-3 border-dashed hover:border-indigo-500 hover:bg-indigo-500/5 group"
+                                >
+                                  {m.tipo === "video" ? <Film className="w-4 h-4 text-indigo-400" /> : <ImageIcon className="w-4 h-4 text-indigo-400" />}
+                                  <div className="flex-1 text-left">
+                                    <p className="text-[11px] font-bold truncate group-hover:text-indigo-600">{m.nome}</p>
+                                    <p className="text-[9px] uppercase font-black text-muted-foreground">{m.duracao} segundos</p>
+                                  </div>
+                                  <Plus className="w-3 h-3 opacity-30 group-hover:opacity-100" />
+                                </Button>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </div>
+                </ScrollArea>
+              </div>
+            </Tabs>
+          </div>
+
+          <DialogFooter className="p-6 border-t bg-muted/20">
+            <div className="flex w-full items-center justify-between gap-4">
+               <p className="text-[10px] text-muted-foreground max-w-[200px]">
+                 Ao salvar, o hardware receberá um comando instantâneo de atualização.
+               </p>
+               <div className="flex gap-2">
+                 <Button variant="ghost" onClick={() => setIsSettingsOpen(false)}>Cancelar</Button>
+                 <Button 
+                   onClick={handleSaveQuickConfig}
+                   disabled={isSavingSettings}
+                   className="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 px-8"
+                 >
+                   {isSavingSettings ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                   Salvar e Sincronizar
+                 </Button>
+               </div>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
