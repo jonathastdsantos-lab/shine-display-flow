@@ -934,6 +934,14 @@ export function VisualLayoutEditor({
                             </SelectContent>
                           </Select>
                         </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">Localidade (Opcional)</Label>
+                          <Input value={selectedZone.config?.location || ""}
+                            onChange={e => updateConfig(selectedZone.id, "location", e.target.value)}
+                            className="h-7 text-xs bg-white/5 border-white/10 text-white" 
+                            placeholder="Ex: Rio de Janeiro, SP, Curitiba..." />
+                          <p className="text-[8px] text-white/20 px-1">Deixe em branco para notícias de todo o Brasil.</p>
+                        </div>
                       )}
 
                       {/* Camera config */}

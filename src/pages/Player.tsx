@@ -142,6 +142,7 @@ export default function Player() {
   const [city, setCity] = useState("São Paulo");
   const [template, setTemplate] = useState("corporativo");
   const [newsCategory, setNewsCategory] = useState("technology");
+  const [headlines, setHeadlines] = useState<string[]>([]);
   const [widgetConfig, setWidgetConfig] = useState<any>(null);
   const [layoutConfig, setLayoutConfig] = useState<any>(null);
   const [igHandle, setIgHandle] = useState("");
@@ -182,6 +183,25 @@ export default function Player() {
         });
     } catch { /* silently ignore */ }
   }, [clientId, playlist_id]);
+
+  const fetchNews = useCallback(async (category: string, location?: string) => {
+    try {
+      console.log(`📡 Buscando notícias reais: ${category}${location ? ' @ ' + location : ''}`);
+      const { data, error } = await supabase.functions.invoke('get-news', {
+        body: { category, location }
+      });
+      
+      if (error) throw error;
+      if (data?.titles) {
+        setHeadlines(data.titles);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar notícias:", err);
+      // Fallback para mock se falhar
+      const fallback = mockNews[category as keyof typeof mockNews] || mockNews.technology;
+      setHeadlines(fallback);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     if (!playlist_id) return;
@@ -289,6 +309,9 @@ export default function Player() {
 
   useEffect(() => {
     fetchData();
+    // Busca inicial de notícias
+    fetchNews(newsCategory);
+    
     document.documentElement.requestFullscreen?.().catch(() => {});
 
     // Escuta Broadcast via Supabase Realtime
@@ -336,7 +359,20 @@ export default function Player() {
     }
   }, [currentIndex, mediaItems, goToNext, remoteIntervention.active]);
 
-  const headlines = mockNews[newsCategory] || mockNews.technology;
+  // Busca notícias quando a categoria ou configuração muda
+  useEffect(() => {
+    // Determina se há uma localização específica no ticker global do layout customizado
+    const newsZone = layoutConfig?.zones?.find((z: any) => z.type === "news");
+    const location = newsZone?.config?.location || "";
+    const category = newsZone?.config?.category || newsCategory;
+    
+    fetchNews(category, location);
+
+    // Refresh a cada 30 minutos
+    const interval = setInterval(() => fetchNews(category, location), 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [newsCategory, layoutConfig, fetchNews]);
+
   const current = mediaItems[currentIndex];
   const currentQrLink = current?.qr_link || widgetConfig?.qr?.default_url || undefined;
 
