@@ -4,13 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   Store, Building2, Check, Wand2,
-  LayoutPanelLeft, Columns2, Settings2, Sliders, PenSquare, LayoutGrid
+  LayoutPanelLeft, Columns2, Settings2, Sliders, PenSquare, LayoutGrid,
+  Monitor, Tv2, Link, RefreshCw, AlertCircle, Info, ExternalLink
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { VisualLayoutEditor } from "@/components/developer/VisualLayoutEditor";
 import type { Zone } from "@/utils/AILayoutAssistant";
 import { 
-  Monitor, Tv2, Link, RefreshCw, AlertCircle, Info, ExternalLink,
   Sheet, 
   SheetContent, 
   SheetDescription, 
