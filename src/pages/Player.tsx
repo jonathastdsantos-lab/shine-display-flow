@@ -195,12 +195,32 @@ export default function Player() {
       
     if (playlist) {
       setClientId(playlist.client_id);
-      setCity((playlist as any).config_clima || "São Paulo");
+      
+      // Fallback logic: Screen Config -> Profile Config -> Defaults
+      let finalCity = (playlist as any).config_clima;
+      let finalNews = (playlist as any).config_noticias;
+      let finalIG = (playlist as any).instagram_handle;
+      
+      if (!finalCity || !finalNews || !finalIG) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("config_clima, config_noticias, instagram_handle")
+          .eq("user_id", playlist.client_id)
+          .single();
+          
+        if (profile) {
+          finalCity = finalCity || profile.config_clima;
+          finalNews = finalNews || profile.config_noticias;
+          finalIG = finalIG || profile.instagram_handle;
+        }
+      }
+
+      setCity(finalCity || "São Paulo");
       setTemplate((playlist as any).template || "corporativo");
-      setNewsCategory((playlist as any).config_noticias || "technology");
+      setNewsCategory(finalNews || "technology");
       setWidgetConfig((playlist as any).widget_config || null);
       setLayoutConfig((playlist as any).layout_config || null);
-      setIgHandle((playlist as any).instagram_handle || "");
+      setIgHandle(finalIG || "");
 
       // 2. Buscar mídias da biblioteca do cliente
       const { data: allMedia } = await supabase

@@ -38,9 +38,11 @@ import { useState } from "react";
 
 interface DashboardSidebarProps {
   onSync?: () => Promise<void>;
+  playlists?: any[];
+  selectedPlaylistId?: string | null;
 }
 
-export function DashboardSidebar({ onSync }: DashboardSidebarProps) {
+export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -190,7 +192,18 @@ export function DashboardSidebar({ onSync }: DashboardSidebarProps) {
           variant="ghost"
           size="sm"
           className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
-          onClick={() => navigate(`/player/${user?.id}`)}
+          onClick={() => {
+            const targetId = selectedPlaylistId || playlists[0]?.id;
+            if (targetId) {
+              navigate(`/player/${targetId}`);
+            } else {
+              toast({
+                title: "Nenhuma tela encontrada",
+                description: "Crie uma playlist em 'Playlists' primeiro.",
+                variant: "destructive"
+              });
+            }
+          }}
         >
           <Eye className="mr-2 h-4 w-4" />
           {!collapsed && "Preview Player"}

@@ -58,7 +58,11 @@ export default function Dashboard() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <DashboardSidebar onSync={data.triggerSync} />
+        <DashboardSidebar 
+          onSync={data.triggerSync} 
+          playlists={data.playlists} 
+          selectedPlaylistId={data.selectedPlaylistId} 
+        />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b border-border bg-card px-4 gap-3">
             <SidebarTrigger />
