@@ -177,6 +177,17 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
 
                   {/* Actions Layer */}
                   <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 scale-95 group-hover:scale-100 bg-black/20 backdrop-blur-[2px]">
+                     {item.tipo === "imagem" && (
+                       <Button
+                         size="icon"
+                         variant="secondary"
+                         className="h-10 w-10 rounded-full shadow-lg"
+                         title="Recortar imagem"
+                         onClick={(e) => { e.stopPropagation(); setCropItem(item); }}
+                       >
+                          <Crop className="w-4 h-4" />
+                       </Button>
+                     )}
                      <Button
                        size="icon"
                        variant="secondary"
