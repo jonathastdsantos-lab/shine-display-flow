@@ -445,7 +445,7 @@ export default function Player() {
         </div>
 
         {/* Zona 2: Sidebar Widgets */}
-        <PlayerSidebar city={city} currentQrLink={currentQrLink} />
+        <PlayerSidebar city={city} currentQrLink={currentQrLink} wc={widgetConfig} />
       </div>
 
       {/* Zona 3: Footer Ticker */}
