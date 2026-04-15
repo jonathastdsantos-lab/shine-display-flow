@@ -72,18 +72,13 @@ function PlayerSidebar({ city, currentQrLink, wc, igHandle }: { city: string; cu
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-600/5 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/2 pointer-events-none" />
       {isWidgetEnabled(wc, "clock") && (
         <div className="p-4 bg-gradient-to-b from-white/5 to-transparent">
-          <ClockWidget />
+          <ClockWidget weatherCity={isWidgetEnabled(wc, "weather") ? city : undefined} />
         </div>
       )}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
       <div className="flex-1 overflow-hidden relative">
         <div className="absolute inset-0 p-4 space-y-5 overflow-hidden">
-          {isWidgetEnabled(wc, "weather") && city && (
-            <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl p-2 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <WeatherWidget city={city} />
-            </div>
-          )}
+          {/* Removido WeatherWidget standalone para evitar duplicidade com o relógio integrado */}
           {isWidgetEnabled(wc, "finance") && (
             <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -366,7 +361,7 @@ export default function Player() {
         case "clock":
           return (
             <div key={zone.id} style={style} className="bg-[#0A0D14] flex items-center justify-center p-2">
-              <ClockWidget />
+              <ClockWidget weatherCity={city} />
             </div>
           );
         case "weather":
@@ -501,15 +496,11 @@ export default function Player() {
           >
             <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
             <div className="p-3 bg-gradient-to-b from-white/5 to-transparent">
-              <ClockWidget compact />
+              <ClockWidget compact weatherCity={city} />
             </div>
             <div className="w-full h-px bg-white/10" />
             <div className="flex-1 p-3 space-y-3 overflow-hidden">
-              {city && (
-                <div className="bg-white/5 rounded-xl border border-white/5 p-1">
-                  <WeatherWidget city={city} compact />
-                </div>
-              )}
+              {/* Weather unificado com o relógio acima */}
               <div className="bg-white/5 rounded-xl border border-white/5 overflow-hidden">
                 <QRWidget url={currentQrLink} compact />
               </div>
@@ -563,15 +554,11 @@ export default function Player() {
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
             
             <div className="p-5 bg-gradient-to-b from-white/5 to-transparent border-b border-white/5">
-              <ClockWidget />
+              <ClockWidget weatherCity={city} />
             </div>
 
             <div className="flex-1 p-4 space-y-4 overflow-hidden">
-              {city && (
-                <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm p-2">
-                  <WeatherWidget city={city} />
-                </div>
-              )}
+              {/* Weather unificado com o relógio acima */}
               <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm overflow-hidden">
                 <SocialWidget />
               </div>
