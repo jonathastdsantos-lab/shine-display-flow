@@ -65,11 +65,24 @@ function snapToGrid(v: number): number {
   return Math.round(v / GRID_SIZE) * GRID_SIZE;
 }
 
+// Maps each palette widget type to its key in WidgetConfig
+const WIDGET_TO_CONFIG_KEY: Partial<Record<Zone["type"], string>> = {
+  clock:   "clock",
+  weather: "weather",
+  news:    "news",
+  finance: "finance",
+  social:  "social",
+  qr:      "qr",
+  camera:  "camera",
+  // media and text are always available (managed by MediaLibrary)
+};
+
 // ────────────────────────────────────────────────
 // Props
 // ────────────────────────────────────────────────
 interface VisualLayoutEditorProps {
   initialZones?: Zone[];
+  widgetConfig?: Record<string, { enabled: boolean; [k: string]: any }> | null;
   onSave: (zones: Zone[]) => void;
   onClose?: () => void;
 }
@@ -77,7 +90,7 @@ interface VisualLayoutEditorProps {
 // ────────────────────────────────────────────────
 // Main Component
 // ────────────────────────────────────────────────
-export function VisualLayoutEditor({ initialZones = [], onSave, onClose }: VisualLayoutEditorProps) {
+export function VisualLayoutEditor({ initialZones = [], widgetConfig, onSave, onClose }: VisualLayoutEditorProps) {
   const defaultZones: Zone[] = initialZones.length > 0 ? initialZones : [
     { id: "zone-main",   type: "media",  label: "Mídia Principal",  x: 0, y: 0,  width: 70, height: 88 },
     { id: "zone-clock",  type: "clock",  label: "Relógio",          x: 70, y: 0, width: 30, height: 28 },
@@ -104,6 +117,56 @@ export function VisualLayoutEditor({ initialZones = [], onSave, onClose }: Visua
   const resizeStart = useRef<{ mouseX: number; mouseY: number; zoneW: number; zoneH: number } | null>(null);
 
   const selectedZone = zones.find(z => z.id === selectedId);
+
+  // ── Helpers for widget store awareness ──
+  const isWidgetEnabled = (type: Zone["type"]): boolean => {
+    const key = WIDGET_TO_CONFIG_KEY[type];
+    if (!key || !widgetConfig) return true; // media/text always available
+    return widgetConfig[key]?.enabled !== false;
+  };
+
+  const hasWidgetConfig = widgetConfig && Object.keys(widgetConfig).length > 0;
+
+  const enabledTypes = WIDGET_PALETTE
+    .filter(w => isWidgetEnabled(w.type))
+    .map(w => w.type);
+
+  // ── Import from App Store ──
+  const importFromAppStore = () => {
+    if (!hasWidgetConfig) return;
+    pushHistory(zones);
+    // Build a sensible auto-layout from enabled widgets
+    const enabled = WIDGET_PALETTE.filter(w => isWidgetEnabled(w.type)).map(w => w.type);
+    const newZones: Zone[] = [];
+    let sideY = 0;
+    const sideW = 30;
+    const sideH = Math.floor(100 / Math.max(enabled.filter(t => t !== "media" && t !== "news").length, 1));
+
+    // Always keep media as main zone
+    newZones.push({ id: `zone-media-${Date.now()}`, type: "media", label: "Mídia Principal", x: 0, y: 0, width: 100 - sideW, height: 88 });
+
+    const sideWidgets = enabled.filter(t => t !== "media" && t !== "news" && t !== "text");
+    sideWidgets.forEach((type, i) => {
+      const h = Math.floor(88 / Math.max(sideWidgets.length, 1));
+      newZones.push({
+        id: `zone-${type}-${Date.now()}-${i}`,
+        type, label: ZONE_DEFAULTS[type].label,
+        x: 100 - sideW, y: i * h, width: sideW, height: h,
+        config: ZONE_DEFAULTS[type].defaultConfig,
+      });
+    });
+
+    // Ticker at bottom if news is enabled
+    if (enabled.includes("news")) {
+      newZones.push({ id: `zone-news-${Date.now()}`, type: "news", label: "Ticker Notícias", x: 0, y: 88, width: 100, height: 12 });
+      // Adjust main media height
+      newZones[0].height = 88;
+    }
+
+    setZones(newZones);
+    setSelectedId(null);
+    toast.success(`✨ Layout gerado com ${newZones.length} widgets habilitados!`);
+  };
 
   // ── History ──
   const pushHistory = useCallback((prev: Zone[]) => {
@@ -397,24 +460,66 @@ export function VisualLayoutEditor({ initialZones = [], onSave, onClose }: Visua
           {activeTab === "widgets" && (
             <ScrollArea className="flex-1">
               <div className="p-2 space-y-1">
-                <p className="text-[9px] text-white/30 uppercase tracking-widest px-1 pt-1 pb-0.5">Arraste para o canvas</p>
+
+                {/* Import from App Store banner */}
+                {hasWidgetConfig && (
+                  <div className="mb-2 p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                    <p className="text-[9px] text-indigo-400 font-bold mb-1">App Store conectado</p>
+                    <p className="text-[8px] text-white/40 mb-1.5">{enabledTypes.length} widget(s) habilitado(s)</p>
+                    <button
+                      onClick={importFromAppStore}
+                      className="w-full text-[10px] bg-indigo-600/40 hover:bg-indigo-600/70 border border-indigo-500/30 text-indigo-300 font-semibold py-1 px-2 rounded transition-colors flex items-center justify-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Importar do App Store
+                    </button>
+                  </div>
+                )}
+
+                <p className="text-[9px] text-white/30 uppercase tracking-widest px-1 pt-1 pb-0.5">Clique para adicionar</p>
                 {WIDGET_PALETTE.map(({ type, label, desc }) => {
                   const Icon = ZONE_ICONS[type];
                   const colors = ZONE_COLORS[type];
+                  const enabled = isWidgetEnabled(type);
                   return (
                     <button key={type} onClick={() => addZone(type)}
-                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 transition-all group text-left border border-transparent hover:border-white/10">
-                      <div className={`p-1.5 rounded-lg ${colors.bg} border ${colors.border} shrink-0`}>
+                      className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-all group text-left border
+                        ${enabled
+                          ? "hover:bg-white/5 hover:border-white/10 border-transparent"
+                          : "opacity-40 hover:opacity-60 border-transparent hover:border-white/5"
+                        }`}>
+                      <div className={`p-1.5 rounded-lg ${colors.bg} border ${colors.border} shrink-0 relative`}>
                         <Icon className="w-3.5 h-3.5 text-white" />
+                        {/* Status dot */}
+                        {hasWidgetConfig && (
+                          <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full border border-[#161b27] ${
+                            enabled ? "bg-emerald-400" : "bg-slate-500"
+                          }`} />
+                        )}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold text-white/80 leading-tight">{label}</p>
                         <p className="text-[9px] text-white/30 leading-tight truncate">{desc}</p>
                       </div>
-                      <Plus className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-60 text-white shrink-0" />
+                      {hasWidgetConfig && (
+                        <span className={`text-[8px] font-bold shrink-0 ${
+                          enabled ? "text-emerald-400" : "text-slate-500"
+                        }`}>
+                          {enabled ? "ON" : "OFF"}
+                        </span>
+                      )}
+                      {!hasWidgetConfig && (
+                        <Plus className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-60 text-white shrink-0" />
+                      )}
                     </button>
                   );
                 })}
+
+                {hasWidgetConfig && (
+                  <p className="text-[8px] text-white/20 px-1 pt-2 text-center leading-relaxed">
+                    🟢 ON = habilitado no App Store<br/>Vá em Widgets &amp; App Store para ativar mais
+                  </p>
+                )}
               </div>
             </ScrollArea>
           )}

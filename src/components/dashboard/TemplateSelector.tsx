@@ -212,6 +212,7 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
         <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-0 flex flex-col overflow-hidden">
           <VisualLayoutEditor
             initialZones={(profile.layout_config as any)?.zones || []}
+            widgetConfig={profile.widget_config}
             onSave={handleSaveCustomLayout}
             onClose={() => setIsEditorOpen(false)}
           />
