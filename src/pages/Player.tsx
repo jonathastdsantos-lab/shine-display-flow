@@ -9,6 +9,7 @@ import SocialWidget from "@/components/SocialWidget";
 import QRWidget from "@/components/QRWidget";
 import CameraWidget from "@/components/CameraWidget";
 import { AlertTriangle, Megaphone } from "lucide-react";
+import type { Zone } from "@/utils/AILayoutAssistant";
 
 interface MediaItem {
   id: string;
@@ -279,6 +280,90 @@ export default function Player() {
             <p className="text-xs text-white/20 mt-1 uppercase tracking-widest">Aguardando Programação Local</p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // ── CUSTOM MODE: Layout Personalizado (Arrastar & Soltar) ──
+  if (layoutConfig?.is_custom && Array.isArray(layoutConfig?.zones) && layoutConfig.zones.length > 0) {
+    const renderZone = (zone: Zone) => {
+      const style: React.CSSProperties = {
+        position: "absolute",
+        left: `${zone.x}%`,
+        top: `${zone.y}%`,
+        width: `${zone.width}%`,
+        height: `${zone.height}%`,
+        overflow: "hidden",
+      };
+
+      switch (zone.type) {
+        case "media":
+          return (
+            <div key={zone.id} style={style} className="bg-black">
+              {current?.tipo === "video" ? (
+                <video ref={videoRef} key={current.id} src={current.url_arquivo} className="w-full h-full object-cover" muted autoPlay playsInline />
+              ) : (
+                <img key={current?.id} src={current?.url_arquivo} alt="" className="w-full h-full object-contain bg-black" />
+              )}
+            </div>
+          );
+        case "clock":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14] flex items-center justify-center p-2">
+              <ClockWidget />
+            </div>
+          );
+        case "weather":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14] p-2">
+              <WeatherWidget city={zone.config?.city || city} />
+            </div>
+          );
+        case "news":
+          return (
+            <div key={zone.id} style={{ ...style, overflow: "hidden" }} className="bg-[#0A0D14]">
+              <NewsTicker headlines={headlines} />
+            </div>
+          );
+        case "finance":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14] p-2">
+              <FinanceWidget />
+            </div>
+          );
+        case "social":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14] p-2">
+              <SocialWidget />
+            </div>
+          );
+        case "qr":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14] flex items-center justify-center p-3">
+              <QRWidget url={zone.config?.url || currentQrLink || ""} />
+            </div>
+          );
+        case "camera":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14] p-2">
+              <CameraWidget />
+            </div>
+          );
+        case "text":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14] flex items-center justify-center p-4">
+              <p className="text-white text-center font-bold text-xl leading-snug">{zone.config?.text || ""}</p>
+            </div>
+          );
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="h-screen w-screen relative bg-black overflow-hidden">
+        <RemoteAlertOverlay active={remoteIntervention.active} message={remoteIntervention.message} type={remoteIntervention.type} />
+        {(layoutConfig.zones as Zone[]).map(renderZone)}
       </div>
     );
   }

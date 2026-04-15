@@ -4,8 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   Store, Building2, Check, Wand2,
-  LayoutPanelLeft, Columns2, Settings2, Sliders
+  LayoutPanelLeft, Columns2, Settings2, Sliders, PenSquare, LayoutGrid
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { VisualLayoutEditor } from "@/components/developer/VisualLayoutEditor";
+import type { Zone } from "@/utils/AILayoutAssistant";
 import { 
   Sheet, 
   SheetContent, 
@@ -133,6 +136,7 @@ const templatePreviews: Record<string, JSX.Element> = {
 export default function TemplateSelector({ profile, onSave }: TemplateSelectorProps) {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   const handleSelectTemplate = async (templateId: string) => {
     await onSave({ template: templateId });
@@ -170,6 +174,19 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
     toast({ title: "📏 Layout atualizado!", description: "As dimensões das áreas foram salvas." });
   };
 
+  const handleSaveCustomLayout = async (zones: Zone[]) => {
+    await onSave({
+      layout_config: {
+        ...(profile.layout_config || {}),
+        is_custom: true,
+        zones,
+      },
+      template: "custom",
+    });
+    toast({ title: "🎨 Layout personalizado salvo!", description: "Seu layout customizado foi aplicado ao canal." });
+    setIsEditorOpen(false);
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       <div>
@@ -179,6 +196,17 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
         </p>
       </div>
 
+      {/* Visual Editor Dialog */}
+      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+        <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-0 flex flex-col overflow-hidden">
+          <VisualLayoutEditor
+            initialZones={(profile.layout_config as any)?.zones || []}
+            onSave={handleSaveCustomLayout}
+            onClose={() => setIsEditorOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
       <Tabs defaultValue="scenarios" className="w-full">
         <TabsList className="mb-6 bg-muted/50 w-full justify-start overflow-x-auto">
           <TabsTrigger value="scenarios" className="px-5 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
@@ -186,6 +214,9 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
           </TabsTrigger>
           <TabsTrigger value="layouts" className="px-5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             Templates Base
+          </TabsTrigger>
+          <TabsTrigger value="editor" className="px-5 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm text-indigo-500 data-[state=active]:text-indigo-500">
+            <LayoutGrid className="w-4 h-4" /> Editor Visual
           </TabsTrigger>
           <TabsTrigger value="widgets" className="px-5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             Widgets & App Store
@@ -195,6 +226,69 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
         {/* ── ABA: Cenários ── */}
         <TabsContent value="scenarios">
           <ScenarioWizard profile={profile} onSave={onSave} />
+        </TabsContent>
+
+        {/* ── ABA: Editor Visual ── */}
+        <TabsContent value="editor" className="space-y-6">
+          <div className="bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-indigo-500/5 p-6 rounded-xl border border-indigo-500/20">
+            <div className="flex flex-col sm:flex-row items-start gap-6 justify-between">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30 text-white shrink-0">
+                  <LayoutGrid className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-indigo-700 dark:text-indigo-300">Editor Visual de Layout</h3>
+                  <p className="text-sm text-foreground/80 mt-1 max-w-xl">
+                    Crie seu layout personalizado arrastando e redimensionando zonas livremente. 
+                    Use a <strong>IA Geradora</strong> para criar um layout completo a partir de uma descrição do seu negócio.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {["Arrastar e Redimensionar", "9 Tipos de Widget", "IA Geradora de Layout", "Salva na Nuvem"].map(f => (
+                      <span key={f} className="text-xs bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-full px-2.5 py-0.5">✓ {f}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={() => setIsEditorOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 gap-2 shrink-0 shadow-lg shadow-indigo-500/20 h-12 px-6"
+                size="lg"
+              >
+                <PenSquare className="w-5 h-5" />
+                Abrir Editor Completo
+              </Button>
+            </div>
+          </div>
+
+          {/* Current custom layout preview */}
+          {(profile.layout_config as any)?.is_custom && (profile.layout_config as any)?.zones?.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-semibold flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-500" />
+                Layout Personalizado Ativo
+              </h4>
+              <div className="relative bg-black rounded-xl overflow-hidden border border-slate-700" style={{ aspectRatio: "16/9", maxWidth: "600px" }}>
+                <div className="absolute inset-0 pointer-events-none opacity-5"
+                  style={{
+                    backgroundImage: "linear-gradient(rgba(99,102,241,1) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,1) 1px, transparent 1px)",
+                    backgroundSize: "10% 11.11%"
+                  }}
+                />
+                {((profile.layout_config as any)?.zones as Zone[]).map((zone) => (
+                  <div
+                    key={zone.id}
+                    className="absolute border border-indigo-400/60 bg-indigo-600/40 flex items-center justify-center rounded"
+                    style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }}
+                  >
+                    <span className="text-white text-[8px] font-bold text-center px-1 truncate">{zone.label}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {(profile.layout_config as any)?.zones?.length} zona(s) configurada(s) · Clique em "Abrir Editor Completo" para modificar
+              </p>
+            </div>
+          )}
         </TabsContent>
 
         {/* ── ABA: Templates Base ── */}
