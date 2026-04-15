@@ -1,7 +1,15 @@
-  BarChart2,
-  Tv2,
-  Zap,
-  CheckCircle2
+import { 
+  Image, 
+  ListVideo, 
+  Settings, 
+  LayoutTemplate, 
+  BarChart2, 
+  Tv2, 
+  Terminal, 
+  Zap, 
+  Eye, 
+  LogOut, 
+  CheckCircle2 
 } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import { NavLink } from "@/components/NavLink";
