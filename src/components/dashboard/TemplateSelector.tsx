@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { VisualLayoutEditor } from "@/components/developer/VisualLayoutEditor";
 import type { Zone } from "@/utils/AILayoutAssistant";
 import { 
+  Monitor, Tv2, Link, RefreshCw, AlertCircle, Info, ExternalLink,
   Sheet, 
   SheetContent, 
   SheetDescription, 
@@ -31,7 +32,11 @@ import type { WidgetConfig } from "./WidgetStore";
 
 interface TemplateSelectorProps {
   profile: ClientProfile;
+  playlists?: any[];
+  selectedPlaylistId?: string | null;
+  setSelectedPlaylistId?: (id: string | null) => void;
   onSave: (updates: Partial<ClientProfile>) => Promise<void>;
+  onSavePlaylist?: (id: string, updates: any) => Promise<void>;
 }
 
 const templates = [
@@ -133,10 +138,21 @@ const templatePreviews: Record<string, JSX.Element> = {
   ),
 };
 
-export default function TemplateSelector({ profile, onSave }: TemplateSelectorProps) {
+export default function TemplateSelector({ 
+  profile, 
+  playlists = [], 
+  selectedPlaylistId, 
+  setSelectedPlaylistId,
+  onSave 
+}: TemplateSelectorProps) {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [targetScreenId, setTargetScreenId] = useState<string | null>(null);
+
+  const targetPlaylist = playlists.find(p => p.id === targetScreenId);
+  const activeLayout = targetPlaylist ? (targetPlaylist.layout_config || profile.layout_config) : profile.layout_config;
+  const activeWidgetConfig = targetPlaylist ? (targetPlaylist.widget_config || profile.widget_config) : profile.widget_config;
 
   const handleSelectTemplate = async (templateId: string) => {
     await onSave({ template: templateId });
@@ -176,25 +192,60 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
 
   const handleSaveCustomLayout = async (zones: Zone[]) => {
     try {
-      await onSave({
-        layout_config: {
-          ...(profile.layout_config || {}),
-          is_custom: true,
-          zones,
-        },
-        // NOTE: não enviamos template:"custom" pois o banco tem um CHECK constraint
-        // O Player verifica layout_config.is_custom antes de verificar o template
-      });
-      toast({ title: "🎨 Layout personalizado salvo!", description: "Seu layout customizado foi aplicado ao canal." });
+      if (targetScreenId) {
+        // Salvar para playlist específica (através do onSave do Dashboard que detecta se há playlist selecionada)
+        // OBS: Como TemplateSelector recebe onSave genérico, se targetScreenId estiver setado,
+        // precisamos garantir que o Dashboard use handleSaveEditor que já lida com playlists.
+        await onSave({
+          layout_config: {
+            ...(activeLayout || {}),
+            is_custom: true,
+            zones,
+          }
+        } as any);
+        toast({ title: "🎨 Layout dispositivo salvo!", description: `O layout personalizado da tela "${targetPlaylist?.nome_da_tela}" foi atualizado.` });
+      } else {
+        await onSave({
+          layout_config: {
+            ...(profile.layout_config || {}),
+            is_custom: true,
+            zones,
+          },
+        });
+        toast({ title: "🎨 Layout global salvo!", description: "Seu layout padrão foi aplicado. Novas telas herdarão este design." });
+      }
       setIsEditorOpen(false);
+      setTargetScreenId(null);
     } catch (err: any) {
       toast({
         title: "❌ Erro ao salvar layout",
-        description: err.message?.includes("column") || err.message?.includes("does not exist")
-          ? "Coluna layout_config não existe no banco. Execute o SQL de migração no Supabase."
-          : err.message,
+        description: err.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleOpenEditor = (screenId: string | null = null) => {
+    setTargetScreenId(screenId);
+    // Notificamos o Dashboard sobre a mudança de contexto para que activeConfig reflita a tela correta
+    if (setSelectedPlaylistId) setSelectedPlaylistId(screenId);
+    setIsEditorOpen(true);
+  };
+
+  const handleAtrelar = async (playlist: any) => {
+    try {
+      // "Atrelar" copia o layout global para a playlist específica
+      await onSave({
+        id_playlist_alvo: playlist.id, // Enviar sinalizador para o handleSaveEditor no Dashboard
+        layout_config: profile.layout_config,
+        widget_config: profile.widget_config
+      } as any);
+      toast({ 
+        title: "🔗 Conectado com sucesso!", 
+        description: `A tela "${playlist.nome_da_tela}" agora está usando os parâmetros do Layout Global.` 
+      });
+    } catch (error) {
+      toast({ title: "Erro ao atrelar", variant: "destructive" });
     }
   };
 
@@ -208,11 +259,18 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
       </div>
 
       {/* Visual Editor Dialog */}
-      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+      <Dialog open={isEditorOpen} onOpenChange={(open) => {
+        setIsEditorOpen(open);
+        if (!open) {
+          setTargetScreenId(null);
+          if (setSelectedPlaylistId) setSelectedPlaylistId(null);
+        }
+      }}>
         <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-0 flex flex-col overflow-hidden">
           <VisualLayoutEditor
-            initialZones={(profile.layout_config as any)?.zones || []}
-            widgetConfig={profile.widget_config}
+            initialZones={(activeLayout as any)?.zones || []}
+            widgetConfig={activeWidgetConfig}
+            contextName={targetPlaylist ? `Editando Tela: ${targetPlaylist.nome_da_tela}` : "Layout Padrão (Global)"}
             onSave={handleSaveCustomLayout}
             onClose={() => setIsEditorOpen(false)}
           />
@@ -241,66 +299,141 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
         </TabsContent>
 
         {/* ── ABA: Editor Visual ── */}
-        <TabsContent value="editor" className="space-y-6">
-          <div className="bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-indigo-500/5 p-6 rounded-xl border border-indigo-500/20">
-            <div className="flex flex-col sm:flex-row items-start gap-6 justify-between">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30 text-white shrink-0">
-                  <LayoutGrid className="w-6 h-6" />
+        <TabsContent value="editor" className="space-y-8">
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* CARD GLOBAL */}
+            <div className="w-full md:w-[350px] shrink-0">
+              <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden h-full flex flex-col">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <LayoutGrid className="w-32 h-32" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-indigo-700 dark:text-indigo-300">Editor Visual de Layout</h3>
-                  <p className="text-sm text-foreground/80 mt-1 max-w-xl">
-                    Crie seu layout personalizado arrastando e redimensionando zonas livremente. 
-                    Use a <strong>IA Geradora</strong> para criar um layout completo a partir de uma descrição do seu negócio.
+                <div className="relative z-10 space-y-4 flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                      <Settings2 className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold">Layout Global</h3>
+                  </div>
+                  <p className="text-indigo-100 text-sm leading-relaxed">
+                    Configure o padrão visual da sua conta. Todas as novas telas cadastradas herdarão este design automaticamente.
                   </p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {["Arrastar e Redimensionar", "9 Tipos de Widget", "IA Geradora de Layout", "Salva na Nuvem"].map(f => (
-                      <span key={f} className="text-xs bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-full px-2.5 py-0.5">✓ {f}</span>
+                  
+                  {/* Preview Mini do Global */}
+                  <div className="bg-black/40 rounded-xl p-2 border border-white/10 aspect-video relative">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                       <span className="text-[10px] uppercase font-bold tracking-widest text-white/50">Preview Global</span>
+                    </div>
+                    {((profile.layout_config as any)?.zones as Zone[] || []).map((zone) => (
+                      <div key={zone.id} className="absolute border border-indigo-400/40 bg-indigo-400/20 rounded-[1px]"
+                        style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }}
+                      ></div>
                     ))}
                   </div>
                 </div>
+                
+                <Button 
+                  onClick={() => handleOpenEditor(null)}
+                  className="w-full bg-white text-indigo-700 hover:bg-white/90 font-bold mt-6 h-12 rounded-xl"
+                >
+                  <PenSquare className="w-4 h-4 mr-2" /> Editar Padrão Geral
+                </Button>
               </div>
-              <Button
-                onClick={() => setIsEditorOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 gap-2 shrink-0 shadow-lg shadow-indigo-500/20 h-12 px-6"
-                size="lg"
-              >
-                <PenSquare className="w-5 h-5" />
-                Abrir Editor Completo
-              </Button>
+            </div>
+
+            {/* LISTA DE TELAS */}
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center justify-between border-b pb-4">
+                <div>
+                  <h3 className="text-lg font-bold flex items-center gap-2">
+                    <Monitor className="w-5 h-5 text-indigo-500" />
+                    Customização por Tela
+                  </h3>
+                  <p className="text-sm text-muted-foreground italic">Cada dispositivo pode ter um layout exclusivo.</p>
+                </div>
+                <div className="flex gap-2">
+                   <div className="px-3 py-1 bg-muted rounded-full text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1.5 border border-border">
+                      <Tv2 className="w-3 h-3" /> {playlists.length} Telas
+                   </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {playlists.map((pl) => {
+                  const hasCustomLayout = !!pl.layout_config && (pl.layout_config as any).is_custom;
+                  const plLayout = (pl.layout_config as any)?.zones || (profile.layout_config as any)?.zones || [];
+                  return (
+                    <Card key={pl.id} className={`group hover:shadow-lg transition-all duration-300 border-border overflow-hidden flex flex-col`}>
+                      <div className="aspect-video bg-muted/30 relative border-b border-border/50">
+                        {/* Mini Preview do Dispositivo */}
+                        <div className="absolute inset-0 p-2">
+                           <div className="w-full h-full bg-black/5 dark:bg-black/40 rounded border border-indigo-500/10 relative overflow-hidden">
+                              {plLayout.map((zone: Zone) => (
+                                <div key={zone.id} className="absolute border border-indigo-500/30 bg-indigo-500/10 rounded-[1px]"
+                                  style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }}
+                                ></div>
+                              ))}
+                           </div>
+                        </div>
+                        {/* Status Overlay */}
+                        <div className="absolute top-2 right-2 flex gap-1.5">
+                           {hasCustomLayout ? (
+                             <span className="px-1.5 py-0.5 bg-indigo-500 text-white text-[9px] font-black uppercase rounded shadow-lg">Custom</span>
+                           ) : (
+                             <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-black uppercase rounded shadow-lg">Global</span>
+                           )}
+                        </div>
+                      </div>
+                      <CardContent className="p-4 flex-1 flex flex-col">
+                        <div className="flex-1 mb-4">
+                           <h4 className="font-bold text-sm truncate">{pl.nome_da_tela}</h4>
+                           <p className="text-[10px] text-muted-foreground uppercase font-black mt-0.5 flex items-center gap-1.5">
+                             {hasCustomLayout ? "Layout Independente" : "Herdando Global"}
+                             {!hasCustomLayout && <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />}
+                           </p>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                           <Button 
+                             onClick={() => handleOpenEditor(pl.id)}
+                             variant="outline" size="sm" className="flex-1 h-9 bg-background border-border/50 hover:border-indigo-500/30 hover:bg-indigo-500/5"
+                           >
+                             Personalizar
+                           </Button>
+                           <Button 
+                             onClick={() => handleAtrelar(pl)}
+                             variant="outline" size="icon" className="h-9 w-9 border-border/50 hover:text-indigo-500 hover:border-indigo-500/30"
+                             title="Atrelar ao Global"
+                           >
+                             <Link className="w-4 h-4" />
+                           </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+                {playlists.length === 0 && (
+                  <div className="col-span-full py-12 flex flex-col items-center justify-center border-2 border-dashed rounded-2xl opacity-40">
+                    <Tv2 className="w-12 h-12 mb-3" />
+                    <p className="text-sm font-bold">Nenhuma tela encontrada</p>
+                    <p className="text-xs">Cadastre telas em 'Meus Dispositivos' para vê-las aqui.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Current custom layout preview */}
-          {(profile.layout_config as any)?.is_custom && (profile.layout_config as any)?.zones?.length > 0 && (
-            <div className="space-y-3">
-              <h4 className="font-semibold flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-500" />
-                Layout Personalizado Ativo
-              </h4>
-              <div className="relative bg-black rounded-xl overflow-hidden border border-slate-700" style={{ aspectRatio: "16/9", maxWidth: "600px" }}>
-                <div className="absolute inset-0 pointer-events-none opacity-5"
-                  style={{
-                    backgroundImage: "linear-gradient(rgba(99,102,241,1) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,1) 1px, transparent 1px)",
-                    backgroundSize: "10% 11.11%"
-                  }}
-                />
-                {((profile.layout_config as any)?.zones as Zone[]).map((zone) => (
-                  <div
-                    key={zone.id}
-                    className="absolute border border-indigo-400/60 bg-indigo-600/40 flex items-center justify-center rounded"
-                    style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%` }}
-                  >
-                    <span className="text-white text-[8px] font-bold text-center px-1 truncate">{zone.label}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {(profile.layout_config as any)?.zones?.length} zona(s) configurada(s) · Clique em "Abrir Editor Completo" para modificar
-              </p>
-            </div>
-          )}
+          <div className="bg-muted/40 rounded-xl p-4 flex items-start gap-3 border border-border">
+             <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+             <div className="text-xs text-muted-foreground leading-relaxed">
+                <p className="font-bold text-foreground">💡 Como funciona o Editor por Dispositivo?</p>
+                <p className="mt-1">
+                  O <strong>Layout Global</strong> serve como template padrão para todas as telas. Se você quiser que uma tela específica tenha um visual diferente 
+                  (ex: uma TV na recepção vs uma TV na vitrine), clique em <strong>Personalizar</strong> naquele dispositivo.
+                  Para que a tela volte a seguir o padrão geral, clique no ícone de <strong>Atrelar <Link className="inline h-3 w-3" /></strong>.
+                </p>
+             </div>
+          </div>
         </TabsContent>
 
         {/* ── ABA: Templates Base ── */}

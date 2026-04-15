@@ -88,12 +88,19 @@ interface VisualLayoutEditorProps {
   widgetConfig?: Record<string, { enabled: boolean; [k: string]: any }> | null;
   onSave: (zones: Zone[]) => void;
   onClose?: () => void;
+  contextName?: string;
 }
 
 // ────────────────────────────────────────────────────────────
 // Main Component
 // ────────────────────────────────────────────────────────────
-export function VisualLayoutEditor({ initialZones = [], widgetConfig, onSave, onClose }: VisualLayoutEditorProps) {
+export function VisualLayoutEditor({ 
+  initialZones = [], 
+  widgetConfig, 
+  onSave, 
+  onClose,
+  contextName = "Layout Padrão (Global)"
+}: VisualLayoutEditorProps) {
   const defaultZones: Zone[] = initialZones.length > 0 ? initialZones : [
     { id: "zone-main",   type: "media",  label: "Mídia Principal",  x: 0, y: 0,  width: 70, height: 88 },
     { id: "zone-clock",  type: "clock",  label: "Relógio",          x: 70, y: 0, width: 30, height: 28 },
@@ -352,8 +359,10 @@ export function VisualLayoutEditor({ initialZones = [], widgetConfig, onSave, on
             <LayoutGrid className="w-4 h-4 text-indigo-400" />
           </div>
           <div>
-            <p className="text-xs font-bold text-white">Editor Visual</p>
-            <p className="text-[9px] text-white/30">{zones.length} zona(s)</p>
+            <p className="text-xs font-bold text-white leading-none mb-0.5">Editor Visual</p>
+            <p className="text-[10px] text-indigo-400 font-black truncate max-w-[120px]" title={contextName}>
+              {contextName}
+            </p>
           </div>
         </div>
 

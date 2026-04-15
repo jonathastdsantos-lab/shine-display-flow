@@ -39,6 +39,13 @@ export default function Dashboard() {
   } : data.profile;
 
   const handleSaveEditor = async (updates: any) => {
+    // Se updates contiver um id_playlist_alvo, salvamos especificamente nela (usado pelo Atrelar)
+    if (updates?.id_playlist_alvo) {
+      const { id_playlist_alvo, ...rest } = updates;
+      await data.savePlaylistConfig(id_playlist_alvo, rest);
+      return;
+    }
+
     if (selectedPlaylist) {
       await data.savePlaylistConfig(selectedPlaylist.id, updates);
     } else {
@@ -105,7 +112,13 @@ export default function Dashboard() {
                 <ChannelSettings profile={activeConfig as any} setProfile={handleSetProfileMock} onSave={handleSaveEditor} />
               } />
               <Route path="templates" element={
-                <TemplateSelector profile={activeConfig as any} onSave={handleSaveEditor} />
+                <TemplateSelector 
+                  profile={activeConfig as any} 
+                  onSave={handleSaveEditor}
+                  playlists={data.playlists}
+                  selectedPlaylistId={data.selectedPlaylistId}
+                  setSelectedPlaylistId={data.setSelectedPlaylistId}
+                />
               } />
               <Route path="devices" element={
                   <DeviceMonitor 
