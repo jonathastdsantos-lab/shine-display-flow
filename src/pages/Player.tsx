@@ -237,9 +237,11 @@ export default function Player() {
     }
   }, [playlist_id]);
 
-  // Realtime Sync Listener
+  // Realtime Sync Listener + Safety Polling
   useEffect(() => {
-    if (!playlist_id) return;
+    if (!playlist_id || !fetchData) return;
+
+    console.log(`🔌 Iniciando conexão Realtime para tela: ${playlist_id}`);
 
     const channel = supabase
       .channel(`sync-${playlist_id}`)
@@ -252,14 +254,31 @@ export default function Player() {
           filter: `id=eq.${playlist_id}`
         },
         (payload) => {
-          console.log("⚡ Sinal de Sincronização Recebido:", payload);
+          console.log("⚡ Sinal de Sincronização Recebido via Realtime:", payload);
           fetchData();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`📡 Status da Conexão Realtime: ${status}`);
+        if (status === 'SUBSCRIBED') {
+          console.log("✅ Inscrito com sucesso no canal de sincronização.");
+        }
+        if (status === 'CHANNEL_ERROR') {
+          console.error("❌ Erro ao conectar ao Realtime. Verifique as configurações de replicação no Supabase.");
+        }
+      });
+
+    // Plano B: Polling de segurança a cada 5 minutos
+    // Garante que a tela atualizará mesmo se o sinal realtime falhar
+    const pollingInterval = setInterval(() => {
+      console.log("🔄 Executando busca de rotina (Polling de segurança)...");
+      fetchData();
+    }, 5 * 60 * 1000);
 
     return () => {
+      console.log("🔌 Desconectando canal Realtime");
       supabase.removeChannel(channel);
+      clearInterval(pollingInterval);
     };
   }, [playlist_id, fetchData]);
 

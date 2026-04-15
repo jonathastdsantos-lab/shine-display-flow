@@ -63,6 +63,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
     if (!onSync) return;
     try {
       setSyncing(true);
+      console.log("📤 Enviando sinal de sincronização para todas as telas...");
       await onSync();
       toast({
         title: "Telas Sincronizadas! 🚀",
