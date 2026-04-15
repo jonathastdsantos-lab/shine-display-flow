@@ -100,7 +100,7 @@ function MediaZone({ current, fading, videoRef }: {
       {current?.tipo === "video" ? (
         <video ref={videoRef} key={current.id} src={current.url_arquivo} className="h-full w-full object-cover" muted autoPlay playsInline />
       ) : (
-        <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-cover" />
+        <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-contain bg-black" />
       )}
     </div>
   );
@@ -271,7 +271,7 @@ export default function Player() {
             {current?.tipo === "video" ? (
               <video ref={videoRef} key={current.id} src={current.url_arquivo} className="h-full w-full object-cover" muted autoPlay playsInline />
             ) : (
-              <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-cover" />
+              <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-contain bg-black" />
             )}
           </div>
 

@@ -123,7 +123,7 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
                       <PlayCircle className="absolute z-10 w-12 h-12 text-white/50 group-hover:text-white transition-colors drop-shadow-md" />
                     </>
                   ) : (
-                    <img src={item.url_arquivo} alt={item.nome} className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={item.url_arquivo} alt={item.nome} className="absolute inset-0 h-full w-full object-contain bg-black group-hover:scale-105 transition-transform duration-700" />
                   )}
                   
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
