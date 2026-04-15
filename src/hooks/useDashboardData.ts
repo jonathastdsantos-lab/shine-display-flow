@@ -147,13 +147,24 @@ export function useDashboardData() {
   };
 
   const createPlaylist = async (name: string) => {
-    if (!user) return;
-    await supabase.from("playlists").insert({
-      client_id: user.id,
-      nome_da_tela: name,
-      ordem_arquivos: [],
-    });
-    fetchData();
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from("playlists")
+      .insert({
+        client_id: user.id,
+        nome_da_tela: name,
+        ordem_arquivos: [],
+      })
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("❌ Erro ao criar tela:", error.message);
+      throw error;
+    }
+    
+    await fetchData();
+    return data as Playlist;
   };
 
   const addToPlaylist = async (playlistId: string, mediaId: string) => {

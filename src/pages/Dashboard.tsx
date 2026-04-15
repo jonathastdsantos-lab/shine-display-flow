@@ -114,6 +114,7 @@ export default function Dashboard() {
                   selectedPlaylistId={data.selectedPlaylistId}
                   setSelectedPlaylistId={data.setSelectedPlaylistId}
                   onSync={data.triggerSync}
+                  onCreate={data.createPlaylist}
                 />
               } />
               <Route path="reports" element={<ReportsPanel profile={data.profile} />} />
