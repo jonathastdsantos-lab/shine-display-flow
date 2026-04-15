@@ -62,7 +62,7 @@ export default function ImageCropModal({ open, onClose, imageUrl, imageName, onS
   const [saving, setSaving] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const aspect = aspectOption === "free" ? undefined : eval(aspectOption);
+  const aspect = aspectOption === "free" ? undefined : aspectOption.split("/").reduce((a, b) => Number(a) / Number(b));
 
   const onImageLoad = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -83,7 +83,7 @@ export default function ImageCropModal({ open, onClose, imageUrl, imageName, onS
       if (value === "free") {
         setCrop({ unit: "%", x: 5, y: 5, width: 90, height: 90 });
       } else {
-        const a = eval(value);
+        const a = value.split("/").reduce((a, b) => Number(a) / Number(b));
         setCrop(centerAspectCrop(width, height, a));
       }
     }
