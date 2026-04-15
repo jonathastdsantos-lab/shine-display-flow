@@ -8,8 +8,15 @@ import FinanceWidget from "@/components/FinanceWidget";
 import SocialWidget from "@/components/SocialWidget";
 import QRWidget from "@/components/QRWidget";
 import CameraWidget from "@/components/CameraWidget";
+import ContentFeedWidget from "@/components/ContentFeedWidget";
 import { AlertTriangle, Megaphone } from "lucide-react";
 import type { Zone } from "@/utils/AILayoutAssistant";
+import type { BusinessSegment } from "@/utils/ContentFeed";
+
+// Wrapper for content_feed zone in custom layouts
+function ContentFeedZone({ segment }: { segment: string }) {
+  return <ContentFeedWidget segment={segment as BusinessSegment} />;
+}
 
 interface MediaItem {
   id: string;
@@ -183,7 +190,7 @@ export default function Player() {
     const fetchData = async () => {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("config_clima, config_noticias, template, widget_config")
+        .select("config_clima, config_noticias, template, widget_config, layout_config, instagram_handle")
         .eq("user_id", id_cliente)
         .single();
         
@@ -296,6 +303,9 @@ export default function Player() {
         width: `${zone.width}%`,
         height: `${zone.height}%`,
         overflow: "hidden",
+        opacity: zone.opacity !== undefined ? zone.opacity / 100 : 1,
+        borderRadius: zone.borderRadius ? `${zone.borderRadius}px` : undefined,
+        backgroundColor: zone.backgroundColor || undefined,
       };
 
       switch (zone.type) {
@@ -354,7 +364,19 @@ export default function Player() {
         case "text":
           return (
             <div key={zone.id} style={style} className="bg-[#0A0D14] flex items-center justify-center p-4">
-              <p className="text-white text-center font-bold text-xl leading-snug">{zone.config?.text || ""}</p>
+              <p className="text-white leading-snug"
+                style={{
+                  fontSize: zone.config?.fontSize ? `${zone.config.fontSize}px` : "1.25rem",
+                  textAlign: zone.config?.align || "center",
+                  fontWeight: "bold",
+                }}
+              >{zone.config?.text || ""}</p>
+            </div>
+          );
+        case "content_feed":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14] overflow-hidden">
+              <ContentFeedZone segment={zone.config?.segment || "corporativo"} />
             </div>
           );
         default:
