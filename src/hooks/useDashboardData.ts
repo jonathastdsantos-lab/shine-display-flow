@@ -178,7 +178,7 @@ export function useDashboardData() {
       if (key in updates) sanitized[key] = (updates as any)[key];
     }
     
-    console.log("💾 Salvando perfil:", sanitized);
+    console.log("💾 Salvando perfil:", JSON.stringify(sanitized, null, 2));
     
     const { error } = await supabase
       .from("profiles")
@@ -186,12 +186,15 @@ export function useDashboardData() {
       .eq("user_id", user.id);
     
     if (error) {
-      console.error("❌ Erro ao salvar perfil:", error.message, error.details);
+      console.error("❌ Erro ao salvar perfil:", error.message, error.details, error.hint);
       throw new Error(`Falha ao salvar: ${error.message}`);
     }
     
     console.log("✅ Perfil salvo com sucesso!");
+    // Update local state immediately for optimistic UI
     setProfile((prev) => ({ ...prev, ...updates }));
+    // Also refetch to confirm DB persistence
+    await fetchData();
   };
 
   return {

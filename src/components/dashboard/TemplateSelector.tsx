@@ -175,16 +175,26 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
   };
 
   const handleSaveCustomLayout = async (zones: Zone[]) => {
-    await onSave({
-      layout_config: {
-        ...(profile.layout_config || {}),
-        is_custom: true,
-        zones,
-      },
-      template: "custom",
-    });
-    toast({ title: "🎨 Layout personalizado salvo!", description: "Seu layout customizado foi aplicado ao canal." });
-    setIsEditorOpen(false);
+    try {
+      await onSave({
+        layout_config: {
+          ...(profile.layout_config || {}),
+          is_custom: true,
+          zones,
+        },
+        template: "custom",
+      });
+      toast({ title: "🎨 Layout personalizado salvo!", description: "Seu layout customizado foi aplicado ao canal." });
+      setIsEditorOpen(false);
+    } catch (err: any) {
+      toast({
+        title: "❌ Erro ao salvar layout",
+        description: err.message?.includes("column") || err.message?.includes("does not exist")
+          ? "Coluna layout_config não existe no banco. Execute o SQL de migração no Supabase."
+          : err.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
