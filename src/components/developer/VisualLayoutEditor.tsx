@@ -5,7 +5,7 @@ import {
   Lock, Unlock, Eye, EyeOff, Copy,
   ChevronUp, ChevronDown, Layers, Settings, Wand2, X, Grid3x3,
   ZoomIn, ZoomOut, RotateCcw, Maximize2, MapPin, AlignLeft, AlignCenter, AlignRight,
-  Palette, Move, Sliders, Square
+  Palette, Move, Sliders, Square, BarChart3, Target, Timer, PartyPopper, Bus, MapPin as MapPinIcon, Quote, Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,8 @@ import { SEGMENT_LABELS, type BusinessSegment } from "@/utils/ContentFeed";
 const ZONE_ICONS: Record<Zone["type"], React.ComponentType<any>> = {
   media: Monitor, clock: Clock, weather: CloudSun, news: Newspaper,
   finance: TrendingUp, social: Instagram, qr: QrCode, camera: Camera,
-  text: Type, content_feed: Sparkles,
+  text: Type, content_feed: Sparkles, motivational: Quote,
+  crypto_pro: Coins, kpi_dashboard: BarChart3, transit: Bus, countdown: Timer
 };
 
 const ZONE_COLORS: Record<Zone["type"], { bg: string; border: string; accent: string }> = {
@@ -39,6 +40,11 @@ const ZONE_COLORS: Record<Zone["type"], { bg: string; border: string; accent: st
   camera:       { bg: "bg-red-600/70",     border: "border-red-400",     accent: "#dc2626" },
   text:         { bg: "bg-orange-600/70",  border: "border-orange-400",  accent: "#ea580c" },
   content_feed: { bg: "bg-yellow-600/70",  border: "border-yellow-400",  accent: "#ca8a04" },
+  motivational: { bg: "bg-purple-600/70",  border: "border-purple-400",  accent: "#9333ea" },
+  crypto_pro:   { bg: "bg-indigo-800/70",  border: "border-indigo-400",  accent: "#4338ca" },
+  kpi_dashboard:{ bg: "bg-emerald-700/70", border: "border-emerald-400", accent: "#047857" },
+  transit:      { bg: "bg-amber-500/70",   border: "border-amber-400",   accent: "#f59e0b" },
+  countdown:    { bg: "bg-rose-600/70",    border: "border-rose-400",    accent: "#e11d48" },
 };
 
 const GRID_SIZE = 5;
@@ -56,6 +62,11 @@ const WIDGET_PALETTE: { type: Zone["type"]; label: string; desc: string }[] = [
   { type: "weather",      label: "Clima Global",        desc: "Previsão do tempo" },
   { type: "news",         label: "Ticker Notícias",     desc: "RSS rolando" },
   { type: "finance",      label: "Cotações",            desc: "USD, EUR, BTC" },
+  { type: "crypto_pro",   label: "Cripto Pro",          desc: "BTC, ETH, SOL (Premium)" },
+  { type: "kpi_dashboard",label: "KPI Dashboard",       desc: "Progresso e Metas" },
+  { type: "transit",      label: "Transporte",          desc: "Ônibus e Metrô" },
+  { type: "motivational", label: "Frases do Dia",       desc: "Mensagens de Wisdom" },
+  { type: "countdown",    label: "Contador Evento",      desc: "Countdown regressivo" },
   { type: "content_feed", label: "Dicas & Tendências",  desc: "Conteúdo por segmento" },
   { type: "social",       label: "Mural Instagram",     desc: "Últimos posts" },
   { type: "qr",           label: "QR Code",             desc: "Link dinâmico" },
@@ -988,8 +999,91 @@ export function VisualLayoutEditor({
                         </div>
                       )}
 
+                      {/* Motivational config */}
+                      {selectedZone.type === "motivational" && (
+                        <>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Frase Customizada</Label>
+                            <textarea value={selectedZone.config?.customQuote || ""} rows={3}
+                              onChange={e => updateConfig(selectedZone.id, "customQuote", e.target.value)}
+                              className="w-full bg-white/5 border border-white/10 rounded p-2 text-xs text-white placeholder:text-white/20 resize-none focus:outline-none focus:border-indigo-500/50"
+                              placeholder="Deixe vazio para frases aleatórias..." />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Tamanho da Fonte</Label>
+                            <div className="flex gap-2 items-center">
+                              <Slider min={12} max={72} step={2} value={[selectedZone.config?.fontSize || 24]}
+                                onValueChange={([v]) => updateConfig(selectedZone.id, "fontSize", v)} className="flex-1" />
+                              <span className="text-[9px] text-white/40 font-mono w-8 text-right">{selectedZone.config?.fontSize || 24}px</span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Crypto Pro config */}
+                      {selectedZone.type === "crypto_pro" && (
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">Tamanho do Preço</Label>
+                          <div className="flex gap-2 items-center">
+                            <Slider min={20} max={80} step={2} value={[selectedZone.config?.fontSize || 40]}
+                              onValueChange={([v]) => updateConfig(selectedZone.id, "fontSize", v)} className="flex-1" />
+                            <span className="text-[9px] text-white/40 font-mono w-8 text-right">{selectedZone.config?.fontSize || 40}px</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* KPI Dashboard config */}
+                      {selectedZone.type === "kpi_dashboard" && (
+                        <>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Nome da Meta</Label>
+                            <Input value={selectedZone.config?.label || ""}
+                              onChange={e => updateConfig(selectedZone.id, "label", e.target.value)}
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="Meta de Vendas" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                             <div className="space-y-1.5">
+                                <Label className="text-[9px] text-white/30 uppercase tracking-wider">Valor Atual</Label>
+                                <Input type="number" value={selectedZone.config?.value || 0}
+                                  onChange={e => updateConfig(selectedZone.id, "value", +e.target.value)}
+                                  className="h-7 text-xs bg-white/5 border-white/10 text-white" />
+                             </div>
+                             <div className="space-y-1.5">
+                                <Label className="text-[9px] text-white/30 uppercase tracking-wider">Valor Alvo</Label>
+                                <Input type="number" value={selectedZone.config?.target || 100}
+                                  onChange={e => updateConfig(selectedZone.id, "target", +e.target.value)}
+                                  className="h-7 text-xs bg-white/5 border-white/10 text-white" />
+                             </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Sufixo (R$, %, etc.)</Label>
+                            <Input value={selectedZone.config?.suffix || "R$"}
+                              onChange={e => updateConfig(selectedZone.id, "suffix", e.target.value)}
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" />
+                          </div>
+                        </>
+                      )}
+
+                      {/* Countdown config */}
+                      {selectedZone.type === "countdown" && (
+                        <>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Título do Evento</Label>
+                            <Input value={selectedZone.config?.label || ""}
+                              onChange={e => updateConfig(selectedZone.id, "label", e.target.value)}
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="Inauguração" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Data e Hora Alvo</Label>
+                            <Input type="datetime-local" value={selectedZone.config?.targetDate || ""}
+                              onChange={e => updateConfig(selectedZone.id, "targetDate", e.target.value)}
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" />
+                          </div>
+                        </>
+                      )}
+
                       {/* Default: no config needed */}
-                      {!["weather", "text", "qr", "news", "camera", "content_feed", "social", "clock", "media"].includes(selectedZone.type) && (
+                      {!["weather", "text", "qr", "news", "camera", "content_feed", "social", "clock", "media", "motivational", "crypto_pro", "kpi_dashboard", "transit", "countdown"].includes(selectedZone.type) && (
                         <div className="text-center py-6 text-white/20">
                           <Square className="w-7 h-7 mx-auto mb-2 opacity-30" />
                           <p className="text-[10px]">Este widget não<br />tem configurações</p>

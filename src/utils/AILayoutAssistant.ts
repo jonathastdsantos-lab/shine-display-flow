@@ -1,6 +1,6 @@
 export interface Zone {
   id: string;
-  type: "media" | "clock" | "weather" | "news" | "finance" | "social" | "qr" | "camera" | "text" | "content_feed";
+  type: "media" | "clock" | "weather" | "news" | "finance" | "social" | "qr" | "camera" | "text" | "content_feed" | "motivational" | "crypto_pro" | "kpi_dashboard" | "transit" | "countdown";
   label: string;
   x: number; // percentage 0-100
   y: number; // percentage 0-100
@@ -163,4 +163,9 @@ export const ZONE_DEFAULTS: Record<Zone["type"], { label: string; defaultConfig:
   camera:       { label: "Câmera CCTV",          defaultConfig: { source: "webcam", url: "" } },
   text:         { label: "Texto Livre",          defaultConfig: { text: "Sua mensagem aqui...", fontSize: 24, align: "center" } },
   content_feed: { label: "Dicas & Tendências",   defaultConfig: { segment: "corporativo" } },
+  motivational: { label: "Frase do Dia",          defaultConfig: { customQuote: "", fontSize: 24 } },
+  crypto_pro:   { label: "Cripto Pro",            defaultConfig: { fontSize: 40 } },
+  kpi_dashboard:{ label: "KPI Dashboard",         defaultConfig: { label: "Meta de Vendas", value: 75000, target: 100000, suffix: "R$", fontSize: 40 } },
+  transit:      { label: "Transporte Público",    defaultConfig: {} },
+  countdown:    { label: "Contador Eventos",      defaultConfig: { targetDate: "2026-12-31T23:59:59", label: "Próximo Evento", fontSize: 40 } },
 };

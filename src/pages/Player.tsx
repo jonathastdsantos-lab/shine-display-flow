@@ -9,6 +9,11 @@ import SocialWidget from "@/components/SocialWidget";
 import QRWidget from "@/components/QRWidget";
 import CameraWidget from "@/components/CameraWidget";
 import ContentFeedWidget from "@/components/ContentFeedWidget";
+import MotivationalWidget from "@/components/MotivationalWidget";
+import CryptoProWidget from "@/components/CryptoProWidget";
+import KPIDashboard from "@/components/KPIDashboard";
+import TransitWidget from "@/components/TransitWidget";
+import CountdownWidget from "@/components/CountdownWidget";
 import { AlertTriangle, Megaphone } from "lucide-react";
 import type { Zone } from "@/utils/AILayoutAssistant";
 import type { BusinessSegment } from "@/utils/ContentFeed";
@@ -430,6 +435,46 @@ export default function Player() {
                   fontWeight: "bold",
                 }}
               >{zone.config?.text || ""}</p>
+            </div>
+          );
+        case "motivational":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14]">
+              <MotivationalWidget customQuote={zone.config?.customQuote} fontSize={zone.config?.fontSize} />
+            </div>
+          );
+        case "crypto_pro":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14]">
+              <CryptoProWidget fontSize={zone.config?.fontSize} />
+            </div>
+          );
+        case "kpi_dashboard":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14]">
+              <KPIDashboard 
+                label={zone.config?.label}
+                value={zone.config?.value}
+                target={zone.config?.target}
+                suffix={zone.config?.suffix}
+                fontSize={zone.config?.fontSize}
+              />
+            </div>
+          );
+        case "transit":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14]">
+              <TransitWidget />
+            </div>
+          );
+        case "countdown":
+          return (
+            <div key={zone.id} style={style} className="bg-[#0A0D14]">
+              <CountdownWidget 
+                targetDate={zone.config?.targetDate}
+                label={zone.config?.label}
+                fontSize={zone.config?.fontSize}
+              />
             </div>
           );
         case "content_feed":
