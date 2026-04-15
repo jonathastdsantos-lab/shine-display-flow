@@ -346,7 +346,7 @@ export default function Player() {
         case "social":
           return (
             <div key={zone.id} style={style} className="bg-[#0A0D14] p-2">
-              <SocialWidget />
+              <SocialWidget instagramHandle={zone.config?.handle || igHandle} />
             </div>
           );
         case "qr":
