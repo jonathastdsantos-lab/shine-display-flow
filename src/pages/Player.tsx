@@ -116,6 +116,7 @@ export default function Player() {
   const [city, setCity] = useState("São Paulo");
   const [template, setTemplate] = useState("corporativo");
   const [newsCategory, setNewsCategory] = useState("technology");
+  const [widgetConfig, setWidgetConfig] = useState<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Estado de intervenção remota do Master
@@ -160,7 +161,7 @@ export default function Player() {
     const fetchData = async () => {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("config_clima, config_noticias, template")
+        .select("config_clima, config_noticias, template, widget_config")
         .eq("user_id", id_cliente)
         .single();
         
@@ -168,6 +169,7 @@ export default function Player() {
         setCity(profile.config_clima || "São Paulo");
         setTemplate((profile as any).template || "corporativo");
         setNewsCategory(profile.config_noticias || "technology");
+        setWidgetConfig((profile as any).widget_config || null);
       }
 
       let mediaIds: string[] | null = null;
