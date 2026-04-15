@@ -54,7 +54,7 @@ function getStatusInfo(lastSeen: string | null): {
 }
 
 export default function DeviceMonitor({ 
-  playlists, profile, selectedPlaylistId, setSelectedPlaylistId, onSync 
+  playlists, profile, selectedPlaylistId, setSelectedPlaylistId, onSync, onCreate 
 }: DeviceMonitorProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
