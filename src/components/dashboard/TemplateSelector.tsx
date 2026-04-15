@@ -4,8 +4,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   Store, Building2, Check, Wand2,
-  LayoutPanelLeft, Columns2
+  LayoutPanelLeft, Columns2, Settings2, Sliders
 } from "lucide-react";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetDescription, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger,
+  SheetFooter,
+  SheetClose
+} from "@/components/ui/sheet";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ClientProfile } from "@/hooks/useDashboardData";
 import ScenarioWizard from "./ScenarioWizard";
@@ -145,6 +159,17 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
     await onSave({ widget_config: wc, ...extras });
   };
 
+  const handleLayoutSave = async (updates: any) => {
+    const currentLayout = profile.layout_config || {
+      sidebar_width: 300,
+      footer_height: 60,
+      split_ratio: 60,
+      show_ticker: true
+    };
+    await onSave({ layout_config: { ...currentLayout, ...updates } });
+    toast({ title: "📏 Layout atualizado!", description: "As dimensões das áreas foram salvas." });
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       <div>
@@ -228,6 +253,117 @@ export default function TemplateSelector({ profile, onSave }: TemplateSelectorPr
                       <div>
                         <h3 className="font-display font-bold text-xl">{tmpl.label}</h3>
                       </div>
+                      {isActive && (
+                        <Sheet>
+                          <SheetTrigger asChild>
+                            <Button variant="outline" size="sm" className="ml-auto gap-2 bg-background/50 backdrop-blur-sm border-indigo-500/30 hover:bg-indigo-500/10">
+                              <Settings2 className="w-4 h-4" />
+                              Configurar
+                            </Button>
+                          </SheetTrigger>
+                          <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+                            <SheetHeader className="pb-6">
+                              <SheetTitle className="flex items-center gap-2">
+                                <Sliders className="w-5 h-5 text-indigo-500" />
+                                Ajustar Layout: {tmpl.label}
+                              </SheetTitle>
+                              <SheetDescription>
+                                Personalize o tamanho das áreas e os elementos visíveis deste template.
+                              </SheetDescription>
+                            </SheetHeader>
+
+                            <div className="space-y-8 py-4">
+                              {/* Configuração de Tamanhos */}
+                              <div className="space-y-6">
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                  <div className="w-1 h-4 bg-indigo-500 rounded-full" />
+                                  Dimensões das Áreas
+                                </h4>
+                                
+                                {(tmpl.id === "corporativo" || tmpl.id === "lbar") && (
+                                  <div className="space-y-4">
+                                    <div className="flex justify-between">
+                                      <Label>Largura da Sidebar (px)</Label>
+                                      <span className="text-sm font-mono text-indigo-600 font-bold">{profile.layout_config?.sidebar_width || 300}px</span>
+                                    </div>
+                                    <Slider 
+                                      defaultValue={[profile.layout_config?.sidebar_width || 300]} 
+                                      max={500} 
+                                      min={200} 
+                                      step={10}
+                                      onValueCommit={(val) => handleLayoutSave({ sidebar_width: val[0] })}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground italic">Arraste para ajustar a largura da barra lateral de widgets.</p>
+                                  </div>
+                                )}
+
+                                {tmpl.id === "split" && (
+                                  <div className="space-y-4">
+                                    <div className="flex justify-between">
+                                      <Label>Proporção da Divisão (%)</Label>
+                                      <span className="text-sm font-mono text-indigo-600 font-bold">{profile.layout_config?.split_ratio || 60}% / {100 - (profile.layout_config?.split_ratio || 60)}%</span>
+                                    </div>
+                                    <Slider 
+                                      defaultValue={[profile.layout_config?.split_ratio || 60]} 
+                                      max={80} 
+                                      min={40} 
+                                      step={5}
+                                      onValueCommit={(val) => handleLayoutSave({ split_ratio: val[0] })}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground italic">Ajuste o equilíbrio entre a mídia principal e os widgets.</p>
+                                  </div>
+                                )}
+
+                                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50">
+                                  <div className="space-y-0.5">
+                                    <Label>Exibir Rodapé (Ticker)</Label>
+                                    <p className="text-[10px] text-muted-foreground">Mostrar barra de notícias na base.</p>
+                                  </div>
+                                  <Switch 
+                                    checked={profile.layout_config?.show_ticker !== false}
+                                    onCheckedChange={(checked) => handleLayoutSave({ show_ticker: checked })}
+                                  />
+                                </div>
+                              </div>
+
+                              <Separator />
+
+                              {/* Seleção de Widgets para este Template */}
+                              <div className="space-y-6">
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                  <div className="w-1 h-4 bg-indigo-500 rounded-full" />
+                                  Widgets Ativos no Template
+                                </h4>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                  Ative ou desative aplicações de inteligência especificamente para este layout.
+                                </p>
+                                
+                                <div className="grid gap-3">
+                                  {Object.entries(profile.widget_config || {}).map(([key, cfg]: [string, any]) => (
+                                    <div key={key} className="flex items-center justify-between p-3 rounded-md border border-border/50 hover:bg-muted/20 transition-colors">
+                                      <span className="text-sm font-medium capitalize">{key === 'qr' ? 'QR Code' : key}</span>
+                                      <Switch 
+                                        checked={cfg.enabled}
+                                        onCheckedChange={(checked) => {
+                                          const newConfig = { ...profile.widget_config };
+                                          newConfig[key] = { ...newConfig[key], enabled: checked };
+                                          handleWidgetSave(newConfig, {});
+                                        }}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            <SheetFooter className="mt-8 border-t pt-6">
+                                <SheetClose asChild>
+                                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">Concluir Ajustes</Button>
+                                </SheetClose>
+                            </SheetFooter>
+                          </SheetContent>
+                        </Sheet>
+                      )}
                     </div>
 
                     {/* Preview visual */}

@@ -136,6 +136,7 @@ export default function Player() {
   const [template, setTemplate] = useState("corporativo");
   const [newsCategory, setNewsCategory] = useState("technology");
   const [widgetConfig, setWidgetConfig] = useState<any>(null);
+  const [layoutConfig, setLayoutConfig] = useState<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Estado de intervenção remota do Master
@@ -189,6 +190,7 @@ export default function Player() {
         setTemplate((profile as any).template || "corporativo");
         setNewsCategory(profile.config_noticias || "technology");
         setWidgetConfig((profile as any).widget_config || null);
+        setLayoutConfig((profile as any).layout_config || null);
       }
 
       let mediaIds: string[] | null = null;
@@ -312,7 +314,7 @@ export default function Player() {
           </div>
         </div>
         
-        {isWidgetEnabled(widgetConfig, "news") && (
+        {isWidgetEnabled(widgetConfig, "news") && layoutConfig?.show_ticker !== false && (
           <div className="z-20 relative shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
              <NewsTicker headlines={headlines} />
           </div>
@@ -340,7 +342,10 @@ export default function Player() {
           </div>
 
           {/* Sidebar compacta (L-bar lateral) */}
-          <div className="w-52 flex flex-col bg-[#0A0D14] border-l border-white/5 relative overflow-hidden z-20">
+          <div 
+            className="flex flex-col bg-[#0A0D14] border-l border-white/5 relative overflow-hidden z-20"
+            style={{ width: layoutConfig?.sidebar_width ? `${layoutConfig.sidebar_width}px` : '208px' }}
+          >
             <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
             <div className="p-3 bg-gradient-to-b from-white/5 to-transparent">
               <ClockWidget compact />
@@ -363,10 +368,12 @@ export default function Player() {
         </div>
 
         {/* Rodapé Ticker */}
-        <div className="z-30 shadow-[0_-5px_30px_rgba(0,0,0,0.5)] border-t border-white/10">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/50 to-amber-500/0" />
-          <NewsTicker headlines={headlines} accentColor="amber" />
-        </div>
+        {layoutConfig?.show_ticker !== false && (
+          <div className="z-30 shadow-[0_-5px_30px_rgba(0,0,0,0.5)] border-t border-white/10">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/50 to-amber-500/0" />
+            <NewsTicker headlines={headlines} accentColor="amber" />
+          </div>
+        )}
       </div>
     );
   }
@@ -379,7 +386,10 @@ export default function Player() {
 
         <div className="flex-1 flex min-h-0">
           {/* Zona Principal 60% */}
-          <div className="flex-[3] relative bg-black overflow-hidden">
+          <div 
+            className="relative bg-black overflow-hidden"
+            style={{ flex: layoutConfig?.split_ratio || 60 }}
+          >
             <MediaZone current={current} fading={fading} videoRef={videoRef} />
             <div className="absolute top-0 left-0 right-0 h-1 bg-black/20 z-20">
               <div
@@ -393,7 +403,10 @@ export default function Player() {
           <div className="w-px bg-white/10 z-10" />
 
           {/* Zona Widget 40% */}
-          <div className="flex-[2] flex flex-col bg-[#0D111A] relative overflow-hidden z-20">
+          <div 
+            className="flex flex-col bg-[#0D111A] relative overflow-hidden z-20"
+            style={{ flex: 100 - (layoutConfig?.split_ratio || 60) }}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
             
             <div className="p-5 bg-gradient-to-b from-white/5 to-transparent border-b border-white/5">
@@ -421,9 +434,11 @@ export default function Player() {
         </div>
 
         {/* Ticker */}
-        <div className="z-30 shadow-[0_-5px_30px_rgba(0,0,0,0.5)] border-t border-white/10">
-          <NewsTicker headlines={headlines} accentColor="orange" />
-        </div>
+        {layoutConfig?.show_ticker !== false && (
+          <div className="z-30 shadow-[0_-5px_30px_rgba(0,0,0,0.5)] border-t border-white/10">
+            <NewsTicker headlines={headlines} accentColor="orange" />
+          </div>
+        )}
       </div>
     );
   }
@@ -447,14 +462,18 @@ export default function Player() {
         </div>
 
         {/* Zona 2: Sidebar Widgets */}
-        <PlayerSidebar city={city} currentQrLink={currentQrLink} wc={widgetConfig} />
+        <div style={{ width: layoutConfig?.sidebar_width ? `${layoutConfig.sidebar_width}px` : '300px' }}>
+          <PlayerSidebar city={city} currentQrLink={currentQrLink} wc={widgetConfig} />
+        </div>
       </div>
 
       {/* Zona 3: Footer Ticker */}
-      <div className="z-30 shadow-[0_-5px_30px_rgba(0,0,0,0.5)] border-t border-white/10 relative">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0" />
-        <NewsTicker headlines={headlines} />
-      </div>
+      {layoutConfig?.show_ticker !== false && (
+        <div className="z-30 shadow-[0_-5px_30px_rgba(0,0,0,0.5)] border-t border-white/10 relative">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0" />
+          <NewsTicker headlines={headlines} />
+        </div>
+      )}
     </div>
   );
 }
