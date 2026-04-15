@@ -267,6 +267,16 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
           </div>
         )}
       </div>
+
+      {cropItem && (
+        <ImageCropModal
+          open={!!cropItem}
+          onClose={() => setCropItem(null)}
+          imageUrl={cropItem.url_arquivo}
+          imageName={cropItem.nome}
+          onSave={handleCropSave}
+        />
+      )}
     </div>
   );
 }
