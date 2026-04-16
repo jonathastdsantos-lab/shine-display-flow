@@ -124,7 +124,7 @@ export function ClientManager() {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ screen_limit: newLimit })
+        .update({ nome_empresa: (selectedClient as any)?.nome_empresa } as any)
         .eq("user_id", id);
       
       if (error) throw error;
@@ -618,7 +618,7 @@ export function ClientManager() {
                               onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')}
                               title="Ver Link do Player"
                             >
-                              <ExternalLink className="h-4 w-4" />
+                              <ArrowRight className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="ghost" 

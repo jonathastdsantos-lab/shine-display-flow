@@ -57,7 +57,7 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
           .select("*")
           .eq("is_global", true)
           .order("created_at", { ascending: false });
-        if (!error) setScenarios(data || []);
+        if (!error) setScenarios((data as any[] || []) as Scenario[]);
       } catch (e) {
         console.warn("Aguardando ID do usuário para busca completa...");
       }
@@ -73,7 +73,7 @@ export default function ScenarioWizard({ profile, onSave }: ScenarioWizardProps)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setScenarios(data || []);
+      setScenarios((data as any[] || []) as Scenario[]);
     } catch (err: any) {
       console.error("Erro ao carregar cenários:", err);
       toast({

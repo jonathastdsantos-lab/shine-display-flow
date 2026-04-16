@@ -106,7 +106,7 @@ export function ScenarioManager({ clientId, isGlobalOnly = false }: ScenarioMana
     } else {
       const { error: err } = await supabase
         .from("scenarios")
-        .insert([dataToSave]);
+        .insert([dataToSave as any]);
       error = err;
     }
 
