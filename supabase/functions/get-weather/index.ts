@@ -10,124 +10,139 @@ Deno.serve(async (req) => {
 
   try {
     let { city } = await req.json();
-    
+
     // IP-based automatic detection if city is empty or "auto"
     if (!city || city === "auto" || city.trim() === "") {
       const clientIp = req.headers.get("x-real-ip") || req.headers.get("cf-connecting-ip");
-      console.log(`📡 Automatic location requested. Client IP: ${clientIp || "Unknown"}`);
-      
       try {
-        // Use ip-api.com (free) to get city from IP
         const ipUrl = `http://ip-api.com/json/${clientIp || ""}?fields=status,message,city,regionName,country`;
         const ipRes = await fetch(ipUrl);
         const ipData = await ipRes.json();
-        
         if (ipData.status === "success" && ipData.city) {
           city = `${ipData.city}, ${ipData.regionName || ""}`;
-          console.log(`📍 IP Geolocated: ${city}`);
         } else {
-          console.warn("⚠️ IP Geolocation failed or returned no city. Falling back to default.");
           city = "São Paulo, SP";
         }
-      } catch (e) {
-        console.error("❌ Error during IP geolocation:", e);
+      } catch {
         city = "São Paulo, SP";
       }
     }
 
-    // Clean city name (e.g., "Mesquita - RJ" -> "Mesquita, RJ")
+    // Clean city name
     const cleanCity = city.replace(/\s*-\s*/g, ", ").trim();
-    
-    // 1. Get coordinates using Open-Meteo Geocoding
-    const query = cleanCity.toLowerCase().includes("brasil") || cleanCity.toLowerCase().includes(", br") 
-      ? cleanCity 
-      : `${cleanCity}, Brasil`;
+    const cityParts = cleanCity.split(",").map((p: string) => p.trim().toLowerCase());
+    const cityName = cityParts[0];
+    const stateHint = cityParts.length > 1 ? cityParts[1] : "";
 
-    console.log(`🔍 Geocoding search: ${query}`);
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=pt&format=json`;
+    // 1. Geocoding - search by city name only (no ", Brasil" suffix that breaks results)
+    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=10&language=pt&format=json`;
+    console.log(`🔍 Geocoding: ${geoUrl}`);
     const geoRes = await fetch(geoUrl);
     const geoData = await geoRes.json();
 
     if (!geoRes.ok || !geoData.results || geoData.results.length === 0) {
-      return new Response(JSON.stringify({ error: "City not found: " + query }), {
+      return new Response(JSON.stringify({ error: "Cidade não encontrada: " + cleanCity }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Pick best match. 
-    let bestMatch = geoData.results[0];
-    const cityParts = cleanCity.split(",").map((p: string) => p.trim().toLowerCase());
-    
-    if (cityParts.length > 1) {
-      const stateHint = cityParts[1];
-      const foundInState = geoData.results.find((r: any) => 
-        (r.admin1 && r.admin1.toLowerCase().includes(stateHint)) ||
-        (r.admin1_id && r.admin1_id.toString().includes(stateHint))
-      );
-      if (foundInState) {
-        bestMatch = foundInState;
-      }
+    // Filter to Brazilian results first
+    const brResults = geoData.results.filter((r: any) => r.country_code === "BR");
+    const candidates = brResults.length > 0 ? brResults : geoData.results;
+
+    // Pick best match considering state hint
+    let bestMatch = candidates[0];
+    if (stateHint) {
+      const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const found = candidates.find((r: any) => {
+        const admin1 = normalize(r.admin1 || "");
+        return admin1.includes(normalize(stateHint)) || normalize(stateHint).includes(admin1.substring(0, 3));
+      });
+      if (found) bestMatch = found;
     }
 
     const { latitude, longitude, name, admin1 } = bestMatch;
     const displayCity = admin1 ? `${name}, ${admin1}` : name;
+    console.log(`📍 Matched: ${displayCity} (${latitude}, ${longitude})`);
 
-    // 2. Get weather using Open-Meteo
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=relative_humidity_2m&timezone=auto&forecast_days=1`;
+    // 2. Weather - get current + hourly for accurate data
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl&hourly=temperature_2m,relative_humidity_2m,weather_code&timezone=America/Sao_Paulo&forecast_days=1`;
     const weatherRes = await fetch(weatherUrl);
-    const weatherData = await weatherRes.json();
+    const wd = await weatherRes.json();
 
-    if (!weatherRes.ok || !weatherData.current_weather) {
-      return new Response(JSON.stringify({ error: "Weather data not available" }), {
+    if (!weatherRes.ok || !wd.current) {
+      return new Response(JSON.stringify({ error: "Dados meteorológicos indisponíveis" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const getIconFromWmo = (code: number) => {
-      if (code === 0) return "01d";
-      if (code <= 3) return "03d";
-      if (code <= 48) return "50d";
-      if (code <= 57) return "09d";
-      if (code <= 67) return "10d";
-      if (code <= 77) return "13d";
-      if (code <= 82) return "09d";
-      if (code <= 86) return "13d";
-      if (code <= 99) return "11d";
-      return "01d";
+    const cur = wd.current;
+
+    const getIconFromWmo = (code: number, isNight: boolean) => {
+      const suffix = isNight ? "n" : "d";
+      if (code === 0) return `01${suffix}`;
+      if (code <= 3) return `03${suffix}`;
+      if (code <= 48) return `50${suffix}`;
+      if (code <= 57) return `09${suffix}`;
+      if (code <= 67) return `10${suffix}`;
+      if (code <= 77) return `13${suffix}`;
+      if (code <= 82) return `09${suffix}`;
+      if (code <= 86) return `13${suffix}`;
+      if (code <= 99) return `11${suffix}`;
+      return `01${suffix}`;
     };
 
     const getConditionFromWmo = (code: number) => {
       if (code === 0) return "Céu limpo";
-      if (code <= 3) return "Parcialmente nublado";
+      if (code === 1) return "Predominantemente limpo";
+      if (code === 2) return "Parcialmente nublado";
+      if (code === 3) return "Nublado";
       if (code <= 48) return "Nevoeiro";
-      if (code <= 57) return "Garoa";
-      if (code <= 67) return "Chuva";
-      if (code <= 77) return "Neve";
+      if (code <= 55) return "Garoa";
+      if (code <= 57) return "Garoa congelante";
+      if (code <= 65) return "Chuva";
+      if (code <= 67) return "Chuva congelante";
+      if (code <= 75) return "Neve";
+      if (code === 77) return "Granizo fino";
       if (code <= 82) return "Pancadas de chuva";
       if (code <= 86) return "Pancadas de neve";
-      if (code <= 99) return "Tempestade";
+      if (code === 95) return "Tempestade";
+      if (code <= 99) return "Tempestade com granizo";
       return "Limpo";
     };
 
-    // Get current humidity from hourly data
-    const currentHour = new Date().getHours();
-    const humidity = weatherData.hourly?.relative_humidity_2m?.[currentHour] ?? 0;
+    // Determine if night (simple: between 18-06 local time)
+    const now = new Date();
+    // Use timezone offset from the API response time
+    const localHour = parseInt(cur.time?.split("T")[1]?.split(":")[0] || "12");
+    const isNight = localHour >= 18 || localHour < 6;
+
+    const windDirectionLabel = (deg: number) => {
+      const dirs = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
+      return dirs[Math.round(deg / 45) % 8];
+    };
 
     const weather = {
-      temp: Math.round(weatherData.current_weather.temperature),
-      condition: getConditionFromWmo(weatherData.current_weather.weathercode),
-      icon: getIconFromWmo(weatherData.current_weather.weathercode),
-      humidity,
+      temp: Math.round(cur.temperature_2m),
+      feels_like: Math.round(cur.apparent_temperature),
+      condition: getConditionFromWmo(cur.weather_code),
+      icon: getIconFromWmo(cur.weather_code, isNight),
+      humidity: Math.round(cur.relative_humidity_2m),
+      wind_speed: Math.round(cur.wind_speed_10m),
+      wind_direction: windDirectionLabel(cur.wind_direction_10m),
+      pressure: Math.round(cur.pressure_msl),
       city: displayCity,
     };
+
+    console.log(`✅ Weather: ${weather.temp}°C, ${weather.condition}, Humidity: ${weather.humidity}%`);
 
     return new Response(JSON.stringify(weather), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Internal error: " + (err as Error).message }), {
+    return new Response(JSON.stringify({ error: "Erro interno: " + (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
