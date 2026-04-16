@@ -891,11 +891,19 @@ export function VisualLayoutEditor({
                               ))}
                             </div>
                           </div>
+                          <div className="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/10">
+                            <div className="space-y-0.5">
+                              <Label className="text-[10px] font-bold text-white uppercase tracking-wider">Exibir Clima</Label>
+                              <p className="text-[8px] text-white/40">Mostra temperatura e ícone</p>
+                            </div>
+                            <Switch checked={selectedZone.config?.showWeather !== false}
+                              onCheckedChange={checked => updateConfig(selectedZone.id, "showWeather", checked)} />
+                          </div>
                           <div className="space-y-1.5 pt-2">
                             <Label className="text-[9px] text-white/30 uppercase tracking-wider">Cidade (Clima)</Label>
                             <Input value={selectedZone.config?.city || ""}
                               onChange={e => updateConfig(selectedZone.id, "city", e.target.value)}
-                              className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="São Paulo, BR" />
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="Deixe vazio para Automático (IP)" />
                             <p className="text-[8px] text-indigo-400/60 font-medium px-1 italic">
                               Recomendado: Cidade, UF (Ex: Mesquita, RJ)
                             </p>

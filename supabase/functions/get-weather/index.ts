@@ -9,12 +9,30 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { city } = await req.json();
-    if (!city || typeof city !== "string") {
-      return new Response(JSON.stringify({ error: "City is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    let { city } = await req.json();
+    
+    // IP-based automatic detection if city is empty or "auto"
+    if (!city || city === "auto" || city.trim() === "") {
+      const clientIp = req.headers.get("x-real-ip") || req.headers.get("cf-connecting-ip");
+      console.log(`📡 Automatic location requested. Client IP: ${clientIp || "Unknown"}`);
+      
+      try {
+        // Use ip-api.com (free) to get city from IP
+        const ipUrl = `http://ip-api.com/json/${clientIp || ""}?fields=status,message,city,regionName,country`;
+        const ipRes = await fetch(ipUrl);
+        const ipData = await ipRes.json();
+        
+        if (ipData.status === "success" && ipData.city) {
+          city = `${ipData.city}, ${ipData.regionName || ""}`;
+          console.log(`📍 IP Geolocated: ${city}`);
+        } else {
+          console.warn("⚠️ IP Geolocation failed or returned no city. Falling back to default.");
+          city = "São Paulo, SP";
+        }
+      } catch (e) {
+        console.error("❌ Error during IP geolocation:", e);
+        city = "São Paulo, SP";
+      }
     }
 
     // Clean city name (e.g., "Mesquita - RJ" -> "Mesquita, RJ")
@@ -31,14 +49,13 @@ Deno.serve(async (req) => {
     const geoData = await geoRes.json();
 
     if (!geoRes.ok || !geoData.results || geoData.results.length === 0) {
-      return new Response(JSON.stringify({ error: "City not found" }), {
+      return new Response(JSON.stringify({ error: "City not found: " + query }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Pick best match. 
-    // Logic: If user provided a State hint (RJ, SP, etc.), find it in results.
     let bestMatch = geoData.results[0];
     const cityParts = cleanCity.split(",").map(p => p.trim().toLowerCase());
     
@@ -46,18 +63,15 @@ Deno.serve(async (req) => {
       const stateHint = cityParts[1];
       const foundInState = geoData.results.find((r: any) => 
         (r.admin1 && r.admin1.toLowerCase().includes(stateHint)) ||
-        (r.admin1_id && r.admin1_id.toString().includes(stateHint)) // simplistic check
+        (r.admin1_id && r.admin1_id.toString().includes(stateHint))
       );
       if (foundInState) {
-        console.log(`🎯 State Hint Match: Found ${foundInState.name} in ${foundInState.admin1}`);
         bestMatch = foundInState;
       }
     }
 
     const { latitude, longitude, name, admin1 } = bestMatch;
     const displayCity = admin1 ? `${name}, ${admin1}` : name;
-
-    console.log(`✅ Found: ${displayCity} (${latitude}, ${longitude})`);
 
     // 2. Get weather using Open-Meteo
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`;
@@ -71,7 +85,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Map WMO code to OpenWeatherMap-like icons
     const getIconFromWmo = (code: number) => {
       if (code === 0) return "01d";
       if (code <= 3) return "03d";

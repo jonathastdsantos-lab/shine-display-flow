@@ -8,13 +8,15 @@ interface ClockWidgetProps {
   weatherCity?: string;
   fontSize?: number;
   variant?: 'standard' | 'glass' | 'bold' | 'split';
+  showWeather?: boolean;
 }
 
 export default function ClockWidget({ 
   compact = false, 
   weatherCity, 
   fontSize,
-  variant = 'standard'
+  variant = 'standard',
+  showWeather = true
 }: ClockWidgetProps) {
   const [now, setNow] = useState(new Date());
 
@@ -22,6 +24,9 @@ export default function ClockWidget({
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Is weather enabled and do we have a city/auto?
+  const displayWeather = showWeather && !!weatherCity;
 
   // Variant: GLASS (Modern, blurred look)
   if (variant === 'glass') {
@@ -36,7 +41,7 @@ export default function ClockWidget({
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">{format(now, "EEEE", { locale: ptBR })}</p>
           <p className="text-[11px] font-bold text-white/60 uppercase tracking-widest">{format(now, "d MMMM", { locale: ptBR })}</p>
         </div>
-        {weatherCity && (
+        {displayWeather && (
           <div className="mt-4 pt-4 border-t border-white/5 w-full">
             <WeatherWidget city={weatherCity} compact variant="glass" />
           </div>
@@ -58,7 +63,7 @@ export default function ClockWidget({
           <span className="text-[10px] font-black text-black uppercase">{format(now, "EEEE", { locale: ptBR })}</span>
           <span className="text-[10px] font-black text-black uppercase">{format(now, "dd/MM/yy")}</span>
         </div>
-        {weatherCity && (
+        {displayWeather && (
           <div className="mt-2 w-full">
             <WeatherWidget city={weatherCity} compact fontSize={20} />
           </div>
@@ -80,7 +85,7 @@ export default function ClockWidget({
             {format(now, "EEEE, d MMM", { locale: ptBR })}
           </p>
         </div>
-        {weatherCity && (
+        {displayWeather && (
           <div className="ml-4 pl-6 border-l border-white/10 h-full flex items-center">
             <WeatherWidget city={weatherCity} fontSize={fontSize ? fontSize * 0.6 : 32} />
           </div>
@@ -99,7 +104,7 @@ export default function ClockWidget({
         </p>
         <p className="text-[10px] text-player-muted mt-0.5 uppercase font-bold tracking-widest">{format(now, "dd/MM", { locale: ptBR })}</p>
         
-        {weatherCity && (
+        {displayWeather && (
           <div className="mt-2 pt-2 border-t border-white/5 w-full">
             <WeatherWidget city={weatherCity} compact />
           </div>
@@ -119,7 +124,7 @@ export default function ClockWidget({
         <p className="text-sm font-bold text-player-muted uppercase tracking-wider">{format(now, "d 'de' MMMM", { locale: ptBR })}</p>
       </div>
 
-      {weatherCity && (
+      {displayWeather && (
         <div className="mt-4 pt-4 border-t border-white/10 w-full flex justify-center">
           <WeatherWidget city={weatherCity} />
         </div>
