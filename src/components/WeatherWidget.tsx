@@ -6,6 +6,7 @@ interface WeatherWidgetProps {
   city: string;
   compact?: boolean;
   fontSize?: number;
+  variant?: 'standard' | 'glass' | 'bold' | 'split';
 }
 
 interface WeatherData {
@@ -25,7 +26,12 @@ function getWeatherIcon(icon: string) {
   return Cloud;
 }
 
-export default function WeatherWidget({ city, compact = false, fontSize }: WeatherWidgetProps) {
+export default function WeatherWidget({ 
+  city, 
+  compact = false, 
+  fontSize,
+  variant = 'standard'
+}: WeatherWidgetProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,53 +40,87 @@ export default function WeatherWidget({ city, compact = false, fontSize }: Weath
     const fetchWeather = async () => {
       setLoading(true);
       try {
-        console.log(`🌦️ Buscando clima para: ${city}`);
         const { data, error } = await supabase.functions.invoke("get-weather", { body: { city } });
-        if (error) {
-          console.error("❌ Erro na Edge Function get-weather:", error);
-          throw error;
-        }
+        if (error) throw error;
         if (data) setWeather(data);
       } catch (err: any) {
-        console.error("❌ Falha crítica ao buscar clima:", err.message);
-        // keep last known or show nothing
+        console.error("❌ Erro clima:", err.message);
       } finally {
         setLoading(false);
       }
     };
     fetchWeather();
-    const interval = setInterval(fetchWeather, 10 * 60 * 1000);
+    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
     return () => clearInterval(interval);
   }, [city]);
 
   if (loading && !weather) {
-    if (compact) return <div className="animate-pulse h-8 w-16 bg-white/5 rounded mx-auto" />;
+    return <div className="animate-pulse h-10 w-24 bg-white/5 rounded mx-auto" />;
+  }
+
+  if (!weather) return null;
+  const Icon = getWeatherIcon(weather.icon);
+
+  // Variant: GLASS
+  if (variant === 'glass') {
     return (
-      <div className="flex flex-col items-center justify-center px-4 py-4">
-        <Loader2 className="h-5 w-5 animate-spin text-player-muted" />
-        <span className="text-[10px] text-player-muted mt-1 uppercase tracking-widest font-bold">Buscando...</span>
+      <div className={`flex flex-col items-center justify-center p-3 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm ${compact ? 'flex-row gap-3' : ''}`}>
+        <Icon className="h-8 w-8 text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]" />
+        <div className="text-center">
+          <p className="font-display font-black text-white leading-none"
+             style={{ fontSize: fontSize ? `${fontSize}px` : "1.75rem" }}>
+            {weather.temp}°
+          </p>
+          {!compact && <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">{weather.condition}</p>}
+        </div>
       </div>
     );
   }
 
-  if (!weather) {
-    console.warn("⚠️ Sem dados de clima para exibir");
-    return null;
+  // Variant: BOLD
+  if (variant === 'bold') {
+    return (
+      <div className="flex items-center gap-4 p-2 bg-black text-white uppercase italic">
+        <Icon className="h-8 w-8 text-white" />
+        <div className="flex flex-col">
+          <p className="font-display font-black leading-none"
+             style={{ fontSize: fontSize ? `${fontSize}px` : "2rem" }}>
+            {weather.temp}°C
+          </p>
+          <span className="text-[8px] font-bold tracking-tighter">{weather.condition}</span>
+        </div>
+      </div>
+    );
   }
 
-  const Icon = getWeatherIcon(weather.icon);
+  // Variant: SPLIT (Transparent, relies on container)
+  if (variant === 'split') {
+    return (
+      <div className="flex items-center gap-4">
+        <Icon className="h-10 w-10 text-sky-400" />
+        <div className="flex flex-col">
+          <p className="font-display font-black text-white leading-none"
+             style={{ fontSize: fontSize ? `${fontSize}px` : "2.5rem" }}>
+            {weather.temp}°
+          </p>
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{weather.city}</p>
+        </div>
+      </div>
+    );
+  }
 
+  // DEFAULT
   if (compact) {
     return (
-      <div className="flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-top-1 duration-500">
-        <div className="flex items-center gap-1.5">
-          <Icon className="h-4 w-4 text-sky-400 shrink-0 drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]" />
+      <div className="flex flex-col items-center justify-center text-center">
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4 text-sky-400" />
           <p className="font-bold text-player-text font-display tabular-nums leading-none tracking-tighter"
-             style={{ fontSize: fontSize ? `${fontSize}px` : undefined }}>
+             style={{ fontSize: fontSize ? `${fontSize}px` : "1.25rem" }}>
             {weather.temp}°
           </p>
         </div>
-        <p className="text-[9px] text-player-muted font-black uppercase tracking-widest mt-0.5 opacity-60">
+        <p className="text-[8px] text-player-muted font-black uppercase tracking-widest mt-1 opacity-60">
           {weather.city}
         </p>
       </div>
@@ -88,17 +128,14 @@ export default function WeatherWidget({ city, compact = false, fontSize }: Weath
   }
 
   return (
-    <div className="flex flex-col items-center px-4 py-6 text-center animate-in zoom-in duration-500">
-      <div className="relative mb-3">
-        <div className="absolute inset-0 bg-sky-500/20 blur-2xl rounded-full" />
-        <Icon className="h-12 w-12 text-sky-400 relative drop-shadow-lg" />
-      </div>
-      <p className="font-bold text-player-text font-display tracking-tight"
-         style={{ fontSize: fontSize ? `${fontSize}px` : undefined }}>
+    <div className="flex flex-col items-center text-center">
+      <Icon className="h-12 w-12 text-sky-400 mb-2 drop-shadow-lg" />
+      <p className="font-bold text-player-text font-display tracking-tight leading-none"
+         style={{ fontSize: fontSize ? `${fontSize}px` : "2.5rem" }}>
         {weather.temp}°
       </p>
-      <p className="text-sm font-black text-player-muted uppercase tracking-[0.15em] mt-1">{weather.condition}</p>
-      <p className="text-[10px] text-player-muted/40 font-bold uppercase mt-1 tracking-widest">{weather.city}</p>
+      <p className="text-xs font-black text-player-muted uppercase tracking-[0.15em] mt-2">{weather.condition}</p>
+      <p className="text-[9px] text-player-muted/40 font-bold uppercase mt-1 tracking-widest">{weather.city}</p>
     </div>
   );
 }

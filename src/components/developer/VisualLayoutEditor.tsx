@@ -835,6 +835,23 @@ export function VisualLayoutEditor({
                       {selectedZone.type === "weather" && (
                         <>
                           <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Modelo do Clima</Label>
+                            <div className="grid grid-cols-2 gap-1">
+                              {[
+                                { v: "standard", label: "Padrão" },
+                                { v: "glass", label: "Glass" },
+                                { v: "bold", label: "Bold" },
+                                { v: "split", label: "Split" }
+                              ].map(({ v, label }) => (
+                                <button key={v} onClick={() => updateConfig(selectedZone.id, "variant", v)}
+                                  className={`py-1.5 text-[10px] font-bold rounded border transition-colors
+                                    ${(selectedZone.config?.variant || "standard") === v ? "bg-sky-500/30 border-sky-500/50 text-sky-400" : "border-white/10 text-white/30 hover:text-white hover:bg-white/5"}`}>
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
                             <Label className="text-[9px] text-white/30 uppercase tracking-wider">Cidade</Label>
                             <Input value={selectedZone.config?.city || ""}
                               onChange={e => updateConfig(selectedZone.id, "city", e.target.value)}
@@ -853,14 +870,33 @@ export function VisualLayoutEditor({
 
                       {/* Clock config */}
                       {selectedZone.type === "clock" && (
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">Tamanho da Hora</Label>
-                          <div className="flex gap-2 items-center">
-                            <Slider min={20} max={160} step={2} value={[selectedZone.config?.fontSize || 48]}
-                              onValueChange={([v]) => updateConfig(selectedZone.id, "fontSize", v)} className="flex-1" />
-                            <span className="text-[9px] text-white/40 font-mono w-8 text-right">{selectedZone.config?.fontSize || 48}px</span>
+                        <>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Modelo do Relógio</Label>
+                            <div className="grid grid-cols-2 gap-1">
+                              {[
+                                { v: "standard", label: "Padrão" },
+                                { v: "glass", label: "Glass" },
+                                { v: "bold", label: "Bold" },
+                                { v: "split", label: "Split" }
+                              ].map(({ v, label }) => (
+                                <button key={v} onClick={() => updateConfig(selectedZone.id, "variant", v)}
+                                  className={`py-1.5 text-[10px] font-bold rounded border transition-colors
+                                    ${(selectedZone.config?.variant || "standard") === v ? "bg-indigo-500/30 border-indigo-500/50 text-indigo-400" : "border-white/10 text-white/30 hover:text-white hover:bg-white/5"}`}>
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                          <div className="space-y-1.5 pt-2">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Tamanho da Hora</Label>
+                            <div className="flex gap-2 items-center">
+                              <Slider min={20} max={200} step={2} value={[selectedZone.config?.fontSize || 48]}
+                                onValueChange={([v]) => updateConfig(selectedZone.id, "fontSize", v)} className="flex-1" />
+                              <span className="text-[9px] text-white/40 font-mono w-8 text-right">{selectedZone.config?.fontSize || 48}px</span>
+                            </div>
+                          </div>
+                        </>
                       )}
 
                       {/* Text config */}

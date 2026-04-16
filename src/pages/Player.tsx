@@ -422,13 +422,13 @@ export default function Player() {
         case "clock":
           return (
             <div key={zone.id} style={style} className="bg-[#0A0D14] flex items-center justify-center p-2">
-              <ClockWidget weatherCity={city} fontSize={zone.config?.fontSize} />
+              <ClockWidget weatherCity={city} fontSize={zone.config?.fontSize} variant={zone.config?.variant} />
             </div>
           );
         case "weather":
           return (
             <div key={zone.id} style={style} className="bg-[#0A0D14] p-2">
-              <WeatherWidget city={zone.config?.city || city} fontSize={zone.config?.fontSize} />
+              <WeatherWidget city={zone.config?.city || city} fontSize={zone.config?.fontSize} variant={zone.config?.variant} />
             </div>
           );
         case "news":
