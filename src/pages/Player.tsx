@@ -77,7 +77,10 @@ function PlayerSidebar({ city, currentQrLink, wc, igHandle }: { city: string; cu
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-600/5 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/2 pointer-events-none" />
       {isWidgetEnabled(wc, "clock") && (
         <div className="p-4 bg-gradient-to-b from-white/5 to-transparent">
-          <ClockWidget weatherCity={isWidgetEnabled(wc, "weather") ? city : undefined} />
+          <ClockWidget 
+            weatherCity={isWidgetEnabled(wc, "weather") && wc?.clock?.showWeather !== false ? (city || "auto") : undefined}
+            showWeather={wc?.clock?.showWeather !== false}
+          />
         </div>
       )}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
