@@ -88,48 +88,48 @@ export type Database = {
       playlists: {
         Row: {
           client_id: string
-          created_at: string
-          id: string
-          nome_da_tela: string
-          ordem_arquivos: string[] | null
-          updated_at: string
           config_clima: string | null
           config_noticias: string | null
+          created_at: string
+          id: string
           instagram_handle: string | null
-          layout_config: Json | null
-          template: string | null
-          widget_config: Json | null
           last_sync_at: string | null
+          layout_config: Json | null
+          nome_da_tela: string
+          ordem_arquivos: string[] | null
+          template: string | null
+          updated_at: string
+          widget_config: Json | null
         }
         Insert: {
           client_id: string
-          created_at?: string
-          id?: string
-          nome_da_tela?: string
-          ordem_arquivos?: string[] | null
-          updated_at?: string
           config_clima?: string | null
           config_noticias?: string | null
+          created_at?: string
+          id?: string
           instagram_handle?: string | null
-          layout_config?: Json | null
-          template?: string | null
-          widget_config?: Json | null
           last_sync_at?: string | null
+          layout_config?: Json | null
+          nome_da_tela?: string
+          ordem_arquivos?: string[] | null
+          template?: string | null
+          updated_at?: string
+          widget_config?: Json | null
         }
         Update: {
           client_id?: string
-          created_at?: string
-          id?: string
-          nome_da_tela?: string
-          ordem_arquivos?: string[] | null
-          updated_at?: string
           config_clima?: string | null
           config_noticias?: string | null
+          created_at?: string
+          id?: string
           instagram_handle?: string | null
-          layout_config?: Json | null
-          template?: string | null
-          widget_config?: Json | null
           last_sync_at?: string | null
+          layout_config?: Json | null
+          nome_da_tela?: string
+          ordem_arquivos?: string[] | null
+          template?: string | null
+          updated_at?: string
+          widget_config?: Json | null
         }
         Relationships: []
       }
@@ -141,13 +141,13 @@ export type Database = {
           id: string
           instagram_handle: string | null
           last_seen: string | null
+          layout_config: Json | null
           logo_url: string | null
           nome_empresa: string
           template: string
           updated_at: string
           user_id: string
           widget_config: Json | null
-          screen_limit: number | null
         }
         Insert: {
           config_clima?: string | null
@@ -156,13 +156,13 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           last_seen?: string | null
+          layout_config?: Json | null
           logo_url?: string | null
           nome_empresa?: string
           template?: string
           updated_at?: string
           user_id: string
           widget_config?: Json | null
-          screen_limit?: number | null
         }
         Update: {
           config_clima?: string | null
@@ -171,13 +171,67 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           last_seen?: string | null
+          layout_config?: Json | null
           logo_url?: string | null
           nome_empresa?: string
           template?: string
           updated_at?: string
           user_id?: string
           widget_config?: Json | null
-          screen_limit?: number | null
+        }
+        Relationships: []
+      }
+      scenarios: {
+        Row: {
+          client_id: string | null
+          color: string | null
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          emoji: string | null
+          gradient: string | null
+          id: string
+          is_global: boolean | null
+          label: string
+          preview: Json | null
+          shadow_color: string | null
+          tags: string[] | null
+          template: string | null
+          widgets: string[] | null
+        }
+        Insert: {
+          client_id?: string | null
+          color?: string | null
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          emoji?: string | null
+          gradient?: string | null
+          id?: string
+          is_global?: boolean | null
+          label: string
+          preview?: Json | null
+          shadow_color?: string | null
+          tags?: string[] | null
+          template?: string | null
+          widgets?: string[] | null
+        }
+        Update: {
+          client_id?: string | null
+          color?: string | null
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          emoji?: string | null
+          gradient?: string | null
+          id?: string
+          is_global?: boolean | null
+          label?: string
+          preview?: Json | null
+          shadow_color?: string | null
+          tags?: string[] | null
+          template?: string | null
+          widgets?: string[] | null
         }
         Relationships: []
       }
