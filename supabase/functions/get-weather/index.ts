@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
 
     // Pick best match. 
     let bestMatch = geoData.results[0];
-    const cityParts = cleanCity.split(",").map(p => p.trim().toLowerCase());
+    const cityParts = cleanCity.split(",").map((p: string) => p.trim().toLowerCase());
     
     if (cityParts.length > 1) {
       const stateHint = cityParts[1];
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const displayCity = admin1 ? `${name}, ${admin1}` : name;
 
     // 2. Get weather using Open-Meteo
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`;
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=relative_humidity_2m&timezone=auto&forecast_days=1`;
     const weatherRes = await fetch(weatherUrl);
     const weatherData = await weatherRes.json();
 
@@ -111,11 +111,15 @@ Deno.serve(async (req) => {
       return "Limpo";
     };
 
+    // Get current humidity from hourly data
+    const currentHour = new Date().getHours();
+    const humidity = weatherData.hourly?.relative_humidity_2m?.[currentHour] ?? 0;
+
     const weather = {
       temp: Math.round(weatherData.current_weather.temperature),
       condition: getConditionFromWmo(weatherData.current_weather.weathercode),
       icon: getIconFromWmo(weatherData.current_weather.weathercode),
-      humidity: 0,
+      humidity,
       city: displayCity,
     };
 

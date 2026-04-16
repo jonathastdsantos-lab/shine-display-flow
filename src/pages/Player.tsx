@@ -77,7 +77,10 @@ function PlayerSidebar({ city, currentQrLink, wc, igHandle }: { city: string; cu
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-600/5 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/2 pointer-events-none" />
       {isWidgetEnabled(wc, "clock") && (
         <div className="p-4 bg-gradient-to-b from-white/5 to-transparent">
-          <ClockWidget weatherCity={isWidgetEnabled(wc, "weather") ? city : undefined} />
+          <ClockWidget 
+            weatherCity={isWidgetEnabled(wc, "weather") && wc?.clock?.showWeather !== false ? (city || "auto") : undefined}
+            showWeather={wc?.clock?.showWeather !== false}
+          />
         </div>
       )}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
@@ -602,7 +605,7 @@ export default function Player() {
           >
             <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
             <div className="p-3 bg-gradient-to-b from-white/5 to-transparent">
-              <ClockWidget compact weatherCity={city} />
+              <ClockWidget compact weatherCity={city || "auto"} />
             </div>
             <div className="w-full h-px bg-white/10" />
             <div className="flex-1 p-3 space-y-3 overflow-hidden">
@@ -660,7 +663,7 @@ export default function Player() {
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
             
             <div className="p-5 bg-gradient-to-b from-white/5 to-transparent border-b border-white/5">
-              <ClockWidget weatherCity={city} />
+              <ClockWidget weatherCity={city || "auto"} />
             </div>
 
             <div className="flex-1 p-4 space-y-4 overflow-hidden">
