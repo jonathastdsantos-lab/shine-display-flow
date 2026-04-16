@@ -918,30 +918,32 @@ export function VisualLayoutEditor({
 
                       {/* News config */}
                       {selectedZone.type === "news" && (
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">Categoria de Notícias</Label>
-                          <Select value={selectedZone.config?.category || "technology"}
-                            onValueChange={v => updateConfig(selectedZone.id, "category", v)}>
-                            <SelectTrigger className="h-7 text-xs bg-white/5 border-white/10 text-white"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="technology">🖥️ Tecnologia</SelectItem>
-                              <SelectItem value="business">💼 Negócios</SelectItem>
-                              <SelectItem value="sports">⚽ Esportes</SelectItem>
-                              <SelectItem value="general">📰 Geral</SelectItem>
-                              <SelectItem value="health">🏥 Saúde</SelectItem>
-                              <SelectItem value="science">🔬 Ciência</SelectItem>
-                              <SelectItem value="entertainment">🎬 Entretenimento</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] text-white/30 uppercase tracking-wider">Localidade (Opcional)</Label>
-                          <Input value={selectedZone.config?.location || ""}
-                            onChange={e => updateConfig(selectedZone.id, "location", e.target.value)}
-                            className="h-7 text-xs bg-white/5 border-white/10 text-white" 
-                            placeholder="Ex: Rio de Janeiro, SP, Curitiba..." />
-                          <p className="text-[8px] text-white/20 px-1">Deixe em branco para notícias de todo o Brasil.</p>
-                        </div>
+                        <>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Categoria de Notícias</Label>
+                            <Select value={selectedZone.config?.category || "technology"}
+                              onValueChange={v => updateConfig(selectedZone.id, "category", v)}>
+                              <SelectTrigger className="h-7 text-xs bg-white/5 border-white/10 text-white"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="technology">🖥️ Tecnologia</SelectItem>
+                                <SelectItem value="business">💼 Negócios</SelectItem>
+                                <SelectItem value="sports">⚽ Esportes</SelectItem>
+                                <SelectItem value="general">📰 Geral</SelectItem>
+                                <SelectItem value="health">🏥 Saúde</SelectItem>
+                                <SelectItem value="science">🔬 Ciência</SelectItem>
+                                <SelectItem value="entertainment">🎬 Entretenimento</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Localidade (Opcional)</Label>
+                            <Input value={selectedZone.config?.location || ""}
+                              onChange={e => updateConfig(selectedZone.id, "location", e.target.value)}
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" 
+                              placeholder="Ex: Rio de Janeiro, SP, Curitiba..." />
+                            <p className="text-[8px] text-white/20 px-1">Deixe em branco para notícias de todo o Brasil.</p>
+                          </div>
+                        </>
                       )}
 
                       {/* Camera config */}
