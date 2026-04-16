@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
 
     // Pick best match. 
     let bestMatch = geoData.results[0];
-    const cityParts = cleanCity.split(",").map(p => p.trim().toLowerCase());
+    const cityParts = cleanCity.split(",").map((p: string) => p.trim().toLowerCase());
     
     if (cityParts.length > 1) {
       const stateHint = cityParts[1];

@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { SEGMENT_LABELS, type BusinessSegment } from "@/utils/ContentFeed";
 
 export interface WidgetConfig {
-  clock: { enabled: boolean };
+  clock: { enabled: boolean; showWeather: boolean };
   weather: { enabled: boolean };
   news: { enabled: boolean };
   finance: { enabled: boolean };
@@ -21,7 +21,7 @@ export interface WidgetConfig {
 }
 
 const DEFAULT_CONFIG: WidgetConfig = {
-  clock: { enabled: true },
+  clock: { enabled: true, showWeather: true },
   weather: { enabled: true },
   news: { enabled: true },
   finance: { enabled: true },
@@ -262,8 +262,31 @@ export default function WidgetStore({ widgetConfig, instagramHandle, configClima
               <Switch checked={config.clock.enabled} onCheckedChange={checked => update("clock", { enabled: checked })} />
             </div>
             <h3 className="font-bold text-lg mb-1">Relógio Digital</h3>
-            <p className="text-sm text-muted-foreground mb-4">Exibe horário e data em tempo real na tela.</p>
-            <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground">✅ Inclui data por extenso</div>
+            <p className="text-sm text-muted-foreground mb-3">Exibe horário e data em tempo real na tela.</p>
+            {config.clock.enabled && (
+              <div className="space-y-3">
+                <div className="text-xs font-mono bg-muted p-2 rounded text-muted-foreground">✅ Inclui data por extenso</div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-sky-500/5 border border-sky-500/10">
+                  <div className="flex items-center gap-2">
+                    <CloudSun className="w-4 h-4 text-sky-400" />
+                    <div>
+                      <p className="text-xs font-semibold">Exibir Clima no Relógio</p>
+                      <p className="text-[10px] text-muted-foreground">Mostra temperatura junto ao relógio</p>
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={config.clock.showWeather !== false} 
+                    onCheckedChange={checked => update("clock", { showWeather: checked })} 
+                  />
+                </div>
+                {config.clock.showWeather !== false && (
+                  <div className="p-2 rounded bg-muted/50 text-[10px] text-muted-foreground">
+                    <p>🌡️ A previsão será buscada automaticamente pela cidade configurada no widget <strong>Clima</strong>.</p>
+                    <p className="mt-1">Se nenhuma cidade estiver configurada, será detectada automaticamente pela localização da rede.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
