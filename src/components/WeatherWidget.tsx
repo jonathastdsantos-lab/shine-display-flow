@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Loader2 } from "lucide-react";
+import { Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Wind, Droplets, Moon, CloudFog } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface WeatherWidgetProps {
@@ -11,18 +11,26 @@ interface WeatherWidgetProps {
 
 interface WeatherData {
   temp: number;
+  feels_like: number;
   condition: string;
   icon: string;
   humidity: number;
+  wind_speed: number;
+  wind_direction: string;
+  pressure: number;
   city: string;
 }
 
 function getWeatherIcon(icon: string) {
+  if (icon.startsWith("01") && icon.endsWith("n")) return Moon;
   if (icon.startsWith("01")) return Sun;
+  if (icon.startsWith("03") && icon.endsWith("n")) return Moon;
+  if (icon.startsWith("03")) return Cloud;
   if (icon.startsWith("09")) return CloudDrizzle;
   if (icon.startsWith("10")) return CloudRain;
   if (icon.startsWith("11")) return CloudLightning;
   if (icon.startsWith("13")) return CloudSnow;
+  if (icon.startsWith("50")) return CloudFog;
   return Cloud;
 }
 
@@ -50,7 +58,7 @@ export default function WeatherWidget({
       }
     };
     fetchWeather();
-    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
+    const interval = setInterval(fetchWeather, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, [city]);
 
@@ -71,7 +79,12 @@ export default function WeatherWidget({
              style={{ fontSize: fontSize ? `${fontSize}px` : "1.75rem" }}>
             {weather.temp}°
           </p>
-          {!compact && <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">{weather.condition}</p>}
+          {!compact && (
+            <>
+              <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">{weather.condition}</p>
+              <p className="text-[7px] text-white/30 mt-0.5">Sensação: {weather.feels_like}°</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -93,7 +106,7 @@ export default function WeatherWidget({
     );
   }
 
-  // Variant: SPLIT (Transparent, relies on container)
+  // Variant: SPLIT
   if (variant === 'split') {
     return (
       <div className="flex items-center gap-4">
@@ -134,7 +147,12 @@ export default function WeatherWidget({
          style={{ fontSize: fontSize ? `${fontSize}px` : "2.5rem" }}>
         {weather.temp}°
       </p>
+      <p className="text-[10px] text-player-muted/60 mt-1">Sensação: {weather.feels_like}°</p>
       <p className="text-xs font-black text-player-muted uppercase tracking-[0.15em] mt-2">{weather.condition}</p>
+      <div className="flex items-center gap-3 mt-2 text-[9px] text-player-muted/50 uppercase tracking-widest">
+        <span className="flex items-center gap-1"><Droplets className="w-3 h-3" />{weather.humidity}%</span>
+        <span className="flex items-center gap-1"><Wind className="w-3 h-3" />{weather.wind_direction} {weather.wind_speed}km/h</span>
+      </div>
       <p className="text-[9px] text-player-muted/40 font-bold uppercase mt-1 tracking-widest">{weather.city}</p>
     </div>
   );
