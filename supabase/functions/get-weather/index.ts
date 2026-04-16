@@ -18,17 +18,15 @@ Deno.serve(async (req) => {
     }
 
     // Clean city name (e.g., "Mesquita - RJ" -> "Mesquita, RJ")
-    // Some APIs don't like the "-" separator
     const cleanCity = city.replace(/\s*-\s*/g, ", ").trim();
     
     // 1. Get coordinates using Open-Meteo Geocoding
-    // Priority: Append ", Brasil" if no country specified to avoid international confusion
     const query = cleanCity.toLowerCase().includes("brasil") || cleanCity.toLowerCase().includes(", br") 
       ? cleanCity 
       : `${cleanCity}, Brasil`;
 
     console.log(`🔍 Geocoding search: ${query}`);
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=pt&format=json`;
+    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=pt&format=json`;
     const geoRes = await fetch(geoUrl);
     const geoData = await geoRes.json();
 
@@ -39,9 +37,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Pick best match. If multiple, prefer ones with state matches if user provided one.
-    // For now, take the first result as it's the most relevant to the query string.
-    const { latitude, longitude, name, admin1 } = geoData.results[0];
+    // Pick best match. 
+    // Logic: If user provided a State hint (RJ, SP, etc.), find it in results.
+    let bestMatch = geoData.results[0];
+    const cityParts = cleanCity.split(",").map(p => p.trim().toLowerCase());
+    
+    if (cityParts.length > 1) {
+      const stateHint = cityParts[1];
+      const foundInState = geoData.results.find((r: any) => 
+        (r.admin1 && r.admin1.toLowerCase().includes(stateHint)) ||
+        (r.admin1_id && r.admin1_id.toString().includes(stateHint)) // simplistic check
+      );
+      if (foundInState) {
+        console.log(`🎯 State Hint Match: Found ${foundInState.name} in ${foundInState.admin1}`);
+        bestMatch = foundInState;
+      }
+    }
+
+    const { latitude, longitude, name, admin1 } = bestMatch;
     const displayCity = admin1 ? `${name}, ${admin1}` : name;
 
     console.log(`✅ Found: ${displayCity} (${latitude}, ${longitude})`);

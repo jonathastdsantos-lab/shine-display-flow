@@ -892,6 +892,15 @@ export function VisualLayoutEditor({
                             </div>
                           </div>
                           <div className="space-y-1.5 pt-2">
+                            <Label className="text-[9px] text-white/30 uppercase tracking-wider">Cidade (Clima)</Label>
+                            <Input value={selectedZone.config?.city || ""}
+                              onChange={e => updateConfig(selectedZone.id, "city", e.target.value)}
+                              className="h-7 text-xs bg-white/5 border-white/10 text-white" placeholder="São Paulo, BR" />
+                            <p className="text-[8px] text-indigo-400/60 font-medium px-1 italic">
+                              Recomendado: Cidade, UF (Ex: Mesquita, RJ)
+                            </p>
+                          </div>
+                          <div className="space-y-1.5 pt-2">
                             <Label className="text-[9px] text-white/30 uppercase tracking-wider">Tamanho da Hora</Label>
                             <div className="flex gap-2 items-center">
                               <Slider min={20} max={200} step={2} value={[selectedZone.config?.fontSize || 48]}
