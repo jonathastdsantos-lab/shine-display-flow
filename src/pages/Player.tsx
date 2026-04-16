@@ -605,7 +605,7 @@ export default function Player() {
           >
             <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
             <div className="p-3 bg-gradient-to-b from-white/5 to-transparent">
-              <ClockWidget compact weatherCity={city} />
+              <ClockWidget compact weatherCity={city || "auto"} />
             </div>
             <div className="w-full h-px bg-white/10" />
             <div className="flex-1 p-3 space-y-3 overflow-hidden">
@@ -663,7 +663,7 @@ export default function Player() {
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
             
             <div className="p-5 bg-gradient-to-b from-white/5 to-transparent border-b border-white/5">
-              <ClockWidget weatherCity={city} />
+              <ClockWidget weatherCity={city || "auto"} />
             </div>
 
             <div className="flex-1 p-4 space-y-4 overflow-hidden">
