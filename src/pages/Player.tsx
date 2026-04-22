@@ -254,6 +254,31 @@ export default function Player() {
       setLayoutConfig((playlist as any).layout_config || null);
       setIgHandle(finalIG || "");
 
+      // Anuncie Aqui + estado de reprodução remoto
+      setAdWidgetEnabled((playlist as any).ad_widget_enabled !== false);
+      setAdWidgetUrl((playlist as any).ad_widget_url || undefined);
+      setPaused((playlist as any).playback_state === "paused");
+
+      // Comando remoto pendente
+      const cmd = (playlist as any).remote_command;
+      if (cmd) {
+        if (cmd === "reload") {
+          await (supabase as any).rpc("clear_remote_command", { p_playlist_id: playlist_id });
+          setTimeout(() => window.location.reload(), 300);
+          return;
+        }
+        if (cmd === "pause") setPaused(true);
+        if (cmd === "play") setPaused(false);
+        if (cmd === "next") {
+          setFading(true);
+          setTimeout(() => {
+            setCurrentIndex((prev) => (prev + 1) % Math.max(1, mediaItems.length));
+            setFading(false);
+          }, 400);
+        }
+        await (supabase as any).rpc("clear_remote_command", { p_playlist_id: playlist_id });
+      }
+
       // 2. Buscar mídias da biblioteca do cliente
       const { data: allMedia } = await supabase
         .from("media_library")
