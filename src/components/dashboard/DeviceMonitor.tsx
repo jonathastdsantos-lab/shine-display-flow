@@ -9,7 +9,7 @@ import {
   Tv2, Signal, Activity, Copy, ExternalLink, Settings2,
   Zap, ShieldCheck, AlertCircle, Plus, Check, Info,
   Film, Image as ImageIcon, GripVertical, Trash2, CheckCircle2,
-  LayoutList
+  LayoutList, RotateCw, Pause, Play, AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -147,17 +147,38 @@ export default function DeviceMonitor({
   const screenLimit = profile.screen_limit || 1;
   const usagePercentage = Math.min(100, (playlists.length / screenLimit) * 100);
 
-  // Fetch heartbeats for all screens (using a mock or separate query if needed)
-  // For now we'll simulate heartbeats from the profiles table as a baseline
+  // Status real por tela usando last_heartbeat individual
   useEffect(() => {
-    const checkStatuses = async () => {
-      // In a real multi-screen system, each screen would have its own last_seen
-      // Currently we only have one last_seen in the profiles table
-      // We'll use that for all screens as a placeholder until we add screen-level heartbeats
-      setStatuses(playlists.reduce((acc, p) => ({ ...acc, [p.id]: (profile as any).last_seen }), {}));
-    };
-    checkStatuses();
-  }, [playlists, profile]);
+    const map: Record<string, string | null> = {};
+    playlists.forEach((p) => {
+      map[p.id] = (p as any).last_heartbeat || null;
+    });
+    setStatuses(map);
+  }, [playlists]);
+
+  // Refresh playlists every 30s to refresh heartbeat status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Force re-render by triggering a state change with same data
+      setStatuses((prev) => ({ ...prev }));
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sendRemoteCommand = async (playlistId: string, command: "reload" | "pause" | "play" | "next") => {
+    try {
+      await onUpdatePlaylist(playlistId, {
+        remote_command: command,
+        remote_command_at: new Date().toISOString(),
+        ...(command === "pause" && { playback_state: "paused" }),
+        ...(command === "play" && { playback_state: "playing" }),
+      } as any);
+      const labels = { reload: "Reload solicitado", pause: "Tela pausada", play: "Tela retomada", next: "Próxima mídia" };
+      toast({ title: labels[command], description: "Sinal enviado para a tela." });
+    } catch (e) {
+      toast({ title: "Erro ao enviar comando", variant: "destructive" });
+    }
+  };
 
   const handleSyncSelected = async () => {
     if (selectedIds.length === 0) return;
