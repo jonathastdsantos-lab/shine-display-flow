@@ -365,20 +365,32 @@ export default function Player() {
   }, [clientId, playlist_id]);
 
   const goToNext = useCallback(() => {
-    if (remoteIntervention.active) return;
-    // Log da mídia atual antes de avançar
+    if (remoteIntervention.active || paused) return;
     const currentItem = mediaItems[currentIndex];
     if (currentItem) logPlay(currentItem);
 
     setFading(true);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % mediaItems.length);
-      setFading(false);
+      const newCount = mediaPlayCount + 1;
+      setMediaPlayCount(newCount);
+
+      // Mostra "Anuncie Aqui" a cada 3 mídias se habilitado
+      if (adWidgetEnabled && newCount > 0 && newCount % 3 === 0) {
+        setShowAdOverlay(true);
+        setTimeout(() => {
+          setShowAdOverlay(false);
+          setCurrentIndex((prev) => (prev + 1) % mediaItems.length);
+          setFading(false);
+        }, 8000);
+      } else {
+        setCurrentIndex((prev) => (prev + 1) % mediaItems.length);
+        setFading(false);
+      }
     }, 800);
-  }, [mediaItems, currentIndex, remoteIntervention.active, logPlay]);
+  }, [mediaItems, currentIndex, remoteIntervention.active, paused, logPlay, mediaPlayCount, adWidgetEnabled]);
 
   useEffect(() => {
-    if (mediaItems.length === 0 || remoteIntervention.active) return;
+    if (mediaItems.length === 0 || remoteIntervention.active || paused || showAdOverlay) return;
     const current = mediaItems[currentIndex];
     if (!current) return;
 
@@ -394,7 +406,7 @@ export default function Player() {
       const timer = setTimeout(goToNext, (current.duracao || 10) * 1000);
       return () => clearTimeout(timer);
     }
-  }, [currentIndex, mediaItems, goToNext, remoteIntervention.active]);
+  }, [currentIndex, mediaItems, goToNext, remoteIntervention.active, paused, showAdOverlay]);
 
   // Busca notícias quando a categoria ou configuração muda
   useEffect(() => {
