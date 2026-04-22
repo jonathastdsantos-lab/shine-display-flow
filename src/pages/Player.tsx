@@ -742,6 +742,12 @@ export default function Player() {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-slate-900 relative">
       <RemoteAlertOverlay active={remoteIntervention.active} message={remoteIntervention.message} type={remoteIntervention.type} />
+      {showAdOverlay && <AdvertiseHereWidget customUrl={adWidgetUrl} playlistId={playlist_id} clientId={clientId || undefined} />}
+      {paused && (
+        <div className="absolute top-4 right-4 z-40 px-3 py-1.5 bg-amber-500 text-black text-xs font-black uppercase tracking-widest rounded-full shadow-lg flex items-center gap-1.5 animate-pulse">
+          <Pause className="w-3 h-3" /> Pausado
+        </div>
+      )}
       
       <div className="flex-1 flex min-h-0 relative">
         {/* Zona 1: Main Media */}
