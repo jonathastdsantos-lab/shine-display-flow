@@ -9,7 +9,7 @@ import {
   Tv2, Signal, Activity, Copy, ExternalLink, Settings2,
   Zap, ShieldCheck, AlertCircle, Plus, Check, Info,
   Film, Image as ImageIcon, GripVertical, Trash2, CheckCircle2,
-  LayoutList
+  LayoutList, RotateCw, Pause, Play, AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -147,17 +147,38 @@ export default function DeviceMonitor({
   const screenLimit = profile.screen_limit || 1;
   const usagePercentage = Math.min(100, (playlists.length / screenLimit) * 100);
 
-  // Fetch heartbeats for all screens (using a mock or separate query if needed)
-  // For now we'll simulate heartbeats from the profiles table as a baseline
+  // Status real por tela usando last_heartbeat individual
   useEffect(() => {
-    const checkStatuses = async () => {
-      // In a real multi-screen system, each screen would have its own last_seen
-      // Currently we only have one last_seen in the profiles table
-      // We'll use that for all screens as a placeholder until we add screen-level heartbeats
-      setStatuses(playlists.reduce((acc, p) => ({ ...acc, [p.id]: (profile as any).last_seen }), {}));
-    };
-    checkStatuses();
-  }, [playlists, profile]);
+    const map: Record<string, string | null> = {};
+    playlists.forEach((p) => {
+      map[p.id] = (p as any).last_heartbeat || null;
+    });
+    setStatuses(map);
+  }, [playlists]);
+
+  // Refresh playlists every 30s to refresh heartbeat status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Force re-render by triggering a state change with same data
+      setStatuses((prev) => ({ ...prev }));
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sendRemoteCommand = async (playlistId: string, command: "reload" | "pause" | "play" | "next") => {
+    try {
+      await onUpdatePlaylist(playlistId, {
+        remote_command: command,
+        remote_command_at: new Date().toISOString(),
+        ...(command === "pause" && { playback_state: "paused" }),
+        ...(command === "play" && { playback_state: "playing" }),
+      } as any);
+      const labels = { reload: "Reload solicitado", pause: "Tela pausada", play: "Tela retomada", next: "Próxima mídia" };
+      toast({ title: labels[command], description: "Sinal enviado para a tela." });
+    } catch (e) {
+      toast({ title: "Erro ao enviar comando", variant: "destructive" });
+    }
+  };
 
   const handleSyncSelected = async () => {
     if (selectedIds.length === 0) return;
@@ -451,6 +472,19 @@ export default function DeviceMonitor({
         </CardContent>
       </Card>
 
+      {/* Tip on link 404 */}
+      <Card className="border-amber-500/30 bg-amber-500/5">
+        <CardContent className="p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+          <div className="text-xs space-y-1">
+            <p className="font-bold text-amber-700 dark:text-amber-400">Importante sobre os links das telas</p>
+            <p className="text-muted-foreground leading-relaxed">
+              Para que o link <code className="bg-muted px-1 py-0.5 rounded text-[10px]">/player/...</code> funcione em qualquer dispositivo (TV, celular, outra rede), o app precisa estar <strong>publicado com visibilidade pública</strong>. Clique em <strong>Publish</strong> no topo do editor e marque como público. No preview (id-preview-...), o link só funciona para você logado.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Individual Devices List */}
       <div className="grid gap-4">
         <div className="flex items-center gap-2 px-2">
@@ -510,7 +544,7 @@ export default function DeviceMonitor({
                          <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Último Sinal</p>
                          <p className="text-xs font-medium text-foreground">{status.ago}</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5 flex-wrap justify-end">
                         <Button 
                           size="sm" 
                           variant={isCurrentEditor ? "default" : "outline"} 
@@ -520,7 +554,34 @@ export default function DeviceMonitor({
                           <Settings2 className="w-4 h-4" />
                           Configurar
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => sendRemoteCommand(pl.id, (pl as any).playback_state === "paused" ? "play" : "pause")}
+                          className="text-muted-foreground hover:text-amber-500"
+                          title={(pl as any).playback_state === "paused" ? "Retomar reprodução" : "Pausar reprodução"}
+                        >
+                          {(pl as any).playback_state === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => sendRemoteCommand(pl.id, "reload")}
+                          className="text-muted-foreground hover:text-indigo-500"
+                          title="Recarregar tela remotamente"
+                        >
+                          <RotateCw className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyPlayerLink(pl.id)}
+                          className="text-muted-foreground hover:text-foreground"
+                          title="Copiar link"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400" title="Abrir tela">
                           <ExternalLink className="w-4 h-4" />
                         </Button>
                       </div>

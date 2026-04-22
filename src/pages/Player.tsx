@@ -14,7 +14,8 @@ import CryptoProWidget from "@/components/CryptoProWidget";
 import KPIDashboard from "@/components/KPIDashboard";
 import TransitWidget from "@/components/TransitWidget";
 import CountdownWidget from "@/components/CountdownWidget";
-import { AlertTriangle, Megaphone } from "lucide-react";
+import { AlertTriangle, Megaphone, Pause } from "lucide-react";
+import AdvertiseHereWidget from "@/components/AdvertiseHereWidget";
 import type { Zone } from "@/utils/AILayoutAssistant";
 import type { BusinessSegment } from "@/utils/ContentFeed";
 
@@ -154,21 +155,29 @@ export default function Player() {
   // Estado de intervenção remota do Master
   const [remoteIntervention, setRemoteIntervention] = useState<{active: boolean, message: string, type: 'alert'|'media'|null}>({active: false, message: '', type: null});
 
-  // Heartbeat – envia sinalização ao Supabase a cada 60s
+  // Controle remoto: pause/play
+  const [paused, setPaused] = useState(false);
+
+  // Anuncie Aqui
+  const [adWidgetEnabled, setAdWidgetEnabled] = useState(true);
+  const [adWidgetUrl, setAdWidgetUrl] = useState<string | undefined>(undefined);
+  const [showAdOverlay, setShowAdOverlay] = useState(false);
+  const [mediaPlayCount, setMediaPlayCount] = useState(0);
+
+  // Heartbeat por TELA (playlist) – atualiza last_heartbeat a cada 30s
   useEffect(() => {
-    if (!clientId) return;
+    if (!playlist_id) return;
     const sendHeartbeat = async () => {
       try {
-        await supabase
-          .from("profiles")
-          .update({ last_seen: new Date().toISOString() } as any)
-          .eq("user_id", clientId);
-      } catch { /* silently ignore */ }
+        await (supabase as any).rpc("update_playlist_heartbeat", { p_playlist_id: playlist_id });
+      } catch (err) {
+        console.warn("Heartbeat falhou:", err);
+      }
     };
     sendHeartbeat();
-    const hbInterval = setInterval(sendHeartbeat, 60000);
+    const hbInterval = setInterval(sendHeartbeat, 30000);
     return () => clearInterval(hbInterval);
-  }, [clientId]);
+  }, [playlist_id]);
 
   // Proof of Play – loga toda vez que uma mídia terminar
   const logPlay = useCallback(async (mediaItem: MediaItem) => {
@@ -244,6 +253,31 @@ export default function Player() {
       setWidgetConfig((playlist as any).widget_config || null);
       setLayoutConfig((playlist as any).layout_config || null);
       setIgHandle(finalIG || "");
+
+      // Anuncie Aqui + estado de reprodução remoto
+      setAdWidgetEnabled((playlist as any).ad_widget_enabled !== false);
+      setAdWidgetUrl((playlist as any).ad_widget_url || undefined);
+      setPaused((playlist as any).playback_state === "paused");
+
+      // Comando remoto pendente
+      const cmd = (playlist as any).remote_command;
+      if (cmd) {
+        if (cmd === "reload") {
+          await (supabase as any).rpc("clear_remote_command", { p_playlist_id: playlist_id });
+          setTimeout(() => window.location.reload(), 300);
+          return;
+        }
+        if (cmd === "pause") setPaused(true);
+        if (cmd === "play") setPaused(false);
+        if (cmd === "next") {
+          setFading(true);
+          setTimeout(() => {
+            setCurrentIndex((prev) => (prev + 1) % Math.max(1, mediaItems.length));
+            setFading(false);
+          }, 400);
+        }
+        await (supabase as any).rpc("clear_remote_command", { p_playlist_id: playlist_id });
+      }
 
       // 2. Buscar mídias da biblioteca do cliente
       const { data: allMedia } = await supabase
@@ -331,20 +365,32 @@ export default function Player() {
   }, [clientId, playlist_id]);
 
   const goToNext = useCallback(() => {
-    if (remoteIntervention.active) return;
-    // Log da mídia atual antes de avançar
+    if (remoteIntervention.active || paused) return;
     const currentItem = mediaItems[currentIndex];
     if (currentItem) logPlay(currentItem);
 
     setFading(true);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % mediaItems.length);
-      setFading(false);
+      const newCount = mediaPlayCount + 1;
+      setMediaPlayCount(newCount);
+
+      // Mostra "Anuncie Aqui" a cada 3 mídias se habilitado
+      if (adWidgetEnabled && newCount > 0 && newCount % 3 === 0) {
+        setShowAdOverlay(true);
+        setTimeout(() => {
+          setShowAdOverlay(false);
+          setCurrentIndex((prev) => (prev + 1) % mediaItems.length);
+          setFading(false);
+        }, 8000);
+      } else {
+        setCurrentIndex((prev) => (prev + 1) % mediaItems.length);
+        setFading(false);
+      }
     }, 800);
-  }, [mediaItems, currentIndex, remoteIntervention.active, logPlay]);
+  }, [mediaItems, currentIndex, remoteIntervention.active, paused, logPlay, mediaPlayCount, adWidgetEnabled]);
 
   useEffect(() => {
-    if (mediaItems.length === 0 || remoteIntervention.active) return;
+    if (mediaItems.length === 0 || remoteIntervention.active || paused || showAdOverlay) return;
     const current = mediaItems[currentIndex];
     if (!current) return;
 
@@ -360,7 +406,7 @@ export default function Player() {
       const timer = setTimeout(goToNext, (current.duracao || 10) * 1000);
       return () => clearTimeout(timer);
     }
-  }, [currentIndex, mediaItems, goToNext, remoteIntervention.active]);
+  }, [currentIndex, mediaItems, goToNext, remoteIntervention.active, paused, showAdOverlay]);
 
   // Busca notícias quando a categoria ou configuração muda
   useEffect(() => {
@@ -696,6 +742,12 @@ export default function Player() {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-slate-900 relative">
       <RemoteAlertOverlay active={remoteIntervention.active} message={remoteIntervention.message} type={remoteIntervention.type} />
+      {showAdOverlay && <AdvertiseHereWidget customUrl={adWidgetUrl} playlistId={playlist_id} clientId={clientId || undefined} />}
+      {paused && (
+        <div className="absolute top-4 right-4 z-40 px-3 py-1.5 bg-amber-500 text-black text-xs font-black uppercase tracking-widest rounded-full shadow-lg flex items-center gap-1.5 animate-pulse">
+          <Pause className="w-3 h-3" /> Pausado
+        </div>
+      )}
       
       <div className="flex-1 flex min-h-0 relative">
         {/* Zona 1: Main Media */}

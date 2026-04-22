@@ -8,6 +8,7 @@ import ChannelSettings from "@/components/dashboard/ChannelSettings";
 import TemplateSelector from "@/components/dashboard/TemplateSelector";
 import DeviceMonitor from "@/components/dashboard/DeviceMonitor";
 import ReportsPanel from "@/components/dashboard/ReportsPanel";
+import AdLeadsPanel from "@/components/dashboard/AdLeadsPanel";
 import DeveloperArea from "@/components/developer/DeveloperArea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -137,6 +138,7 @@ export default function Dashboard() {
                   />
               } />
               <Route path="reports" element={<ReportsPanel profile={data.profile} />} />
+              <Route path="leads" element={<AdLeadsPanel />} />
               <Route path="developer/*" element={
                 user?.email === "jonathastdsantos@gmail.com" 
                   ? <DeveloperArea /> 

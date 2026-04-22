@@ -21,6 +21,12 @@ export interface Playlist {
   config_noticias?: string;
   instagram_handle?: string;
   last_sync_at?: string;
+  last_heartbeat?: string;
+  remote_command?: string | null;
+  remote_command_at?: string | null;
+  playback_state?: string;
+  ad_widget_enabled?: boolean;
+  ad_widget_url?: string | null;
 }
 
 export interface ClientProfile {
