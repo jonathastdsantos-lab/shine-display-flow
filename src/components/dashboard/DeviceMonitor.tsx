@@ -472,6 +472,19 @@ export default function DeviceMonitor({
         </CardContent>
       </Card>
 
+      {/* Tip on link 404 */}
+      <Card className="border-amber-500/30 bg-amber-500/5">
+        <CardContent className="p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+          <div className="text-xs space-y-1">
+            <p className="font-bold text-amber-700 dark:text-amber-400">Importante sobre os links das telas</p>
+            <p className="text-muted-foreground leading-relaxed">
+              Para que o link <code className="bg-muted px-1 py-0.5 rounded text-[10px]">/player/...</code> funcione em qualquer dispositivo (TV, celular, outra rede), o app precisa estar <strong>publicado com visibilidade pública</strong>. Clique em <strong>Publish</strong> no topo do editor e marque como público. No preview (id-preview-...), o link só funciona para você logado.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Individual Devices List */}
       <div className="grid gap-4">
         <div className="flex items-center gap-2 px-2">
