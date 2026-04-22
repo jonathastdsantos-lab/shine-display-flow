@@ -9,7 +9,8 @@ import {
   Zap, 
   Eye, 
   LogOut, 
-  CheckCircle2 
+  CheckCircle2,
+  Megaphone
 } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import { NavLink } from "@/components/NavLink";
@@ -38,6 +39,7 @@ const navItems = [
 
 const analyticsItems = [
   { title: "Meus Dispositivos", url: "/dashboard/devices", icon: Tv2 },
+  { title: "Leads de Anúncios", url: "/dashboard/leads", icon: Megaphone },
   { title: "Relatórios", url: "/dashboard/reports", icon: BarChart2 },
 ];
 
