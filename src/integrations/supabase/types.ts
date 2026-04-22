@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_leads: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          email: string | null
+          empresa: string | null
+          id: string
+          mensagem: string | null
+          nome: string
+          playlist_id: string | null
+          source: string | null
+          status: string
+          telefone: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          mensagem?: string | null
+          nome: string
+          playlist_id?: string | null
+          source?: string | null
+          status?: string
+          telefone: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          mensagem?: string | null
+          nome?: string
+          playlist_id?: string | null
+          source?: string | null
+          status?: string
+          telefone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       media_library: {
         Row: {
           client_id: string
@@ -87,46 +132,64 @@ export type Database = {
       }
       playlists: {
         Row: {
+          ad_widget_enabled: boolean | null
+          ad_widget_url: string | null
           client_id: string
           config_clima: string | null
           config_noticias: string | null
           created_at: string
           id: string
           instagram_handle: string | null
+          last_heartbeat: string | null
           last_sync_at: string | null
           layout_config: Json | null
           nome_da_tela: string
           ordem_arquivos: string[] | null
+          playback_state: string | null
+          remote_command: string | null
+          remote_command_at: string | null
           template: string | null
           updated_at: string
           widget_config: Json | null
         }
         Insert: {
+          ad_widget_enabled?: boolean | null
+          ad_widget_url?: string | null
           client_id: string
           config_clima?: string | null
           config_noticias?: string | null
           created_at?: string
           id?: string
           instagram_handle?: string | null
+          last_heartbeat?: string | null
           last_sync_at?: string | null
           layout_config?: Json | null
           nome_da_tela?: string
           ordem_arquivos?: string[] | null
+          playback_state?: string | null
+          remote_command?: string | null
+          remote_command_at?: string | null
           template?: string | null
           updated_at?: string
           widget_config?: Json | null
         }
         Update: {
+          ad_widget_enabled?: boolean | null
+          ad_widget_url?: string | null
           client_id?: string
           config_clima?: string | null
           config_noticias?: string | null
           created_at?: string
           id?: string
           instagram_handle?: string | null
+          last_heartbeat?: string | null
           last_sync_at?: string | null
           layout_config?: Json | null
           nome_da_tela?: string
           ordem_arquivos?: string[] | null
+          playback_state?: string | null
+          remote_command?: string | null
+          remote_command_at?: string | null
           template?: string | null
           updated_at?: string
           widget_config?: Json | null
