@@ -303,6 +303,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_remote_command: {
+        Args: { p_playlist_id: string }
+        Returns: undefined
+      }
       create_client_user: {
         Args: {
           p_email: string
@@ -321,6 +325,10 @@ export type Database = {
       update_client_password: {
         Args: { p_new_password: string; p_user_id: string }
         Returns: Json
+      }
+      update_playlist_heartbeat: {
+        Args: { p_playlist_id: string }
+        Returns: undefined
       }
     }
     Enums: {
