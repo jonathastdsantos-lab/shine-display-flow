@@ -14,7 +14,8 @@ import CryptoProWidget from "@/components/CryptoProWidget";
 import KPIDashboard from "@/components/KPIDashboard";
 import TransitWidget from "@/components/TransitWidget";
 import CountdownWidget from "@/components/CountdownWidget";
-import { AlertTriangle, Megaphone } from "lucide-react";
+import { AlertTriangle, Megaphone, Pause } from "lucide-react";
+import AdvertiseHereWidget from "@/components/AdvertiseHereWidget";
 import type { Zone } from "@/utils/AILayoutAssistant";
 import type { BusinessSegment } from "@/utils/ContentFeed";
 
@@ -154,21 +155,29 @@ export default function Player() {
   // Estado de intervenção remota do Master
   const [remoteIntervention, setRemoteIntervention] = useState<{active: boolean, message: string, type: 'alert'|'media'|null}>({active: false, message: '', type: null});
 
-  // Heartbeat – envia sinalização ao Supabase a cada 60s
+  // Controle remoto: pause/play
+  const [paused, setPaused] = useState(false);
+
+  // Anuncie Aqui
+  const [adWidgetEnabled, setAdWidgetEnabled] = useState(true);
+  const [adWidgetUrl, setAdWidgetUrl] = useState<string | undefined>(undefined);
+  const [showAdOverlay, setShowAdOverlay] = useState(false);
+  const [mediaPlayCount, setMediaPlayCount] = useState(0);
+
+  // Heartbeat por TELA (playlist) – atualiza last_heartbeat a cada 30s
   useEffect(() => {
-    if (!clientId) return;
+    if (!playlist_id) return;
     const sendHeartbeat = async () => {
       try {
-        await supabase
-          .from("profiles")
-          .update({ last_seen: new Date().toISOString() } as any)
-          .eq("user_id", clientId);
-      } catch { /* silently ignore */ }
+        await (supabase as any).rpc("update_playlist_heartbeat", { p_playlist_id: playlist_id });
+      } catch (err) {
+        console.warn("Heartbeat falhou:", err);
+      }
     };
     sendHeartbeat();
-    const hbInterval = setInterval(sendHeartbeat, 60000);
+    const hbInterval = setInterval(sendHeartbeat, 30000);
     return () => clearInterval(hbInterval);
-  }, [clientId]);
+  }, [playlist_id]);
 
   // Proof of Play – loga toda vez que uma mídia terminar
   const logPlay = useCallback(async (mediaItem: MediaItem) => {
