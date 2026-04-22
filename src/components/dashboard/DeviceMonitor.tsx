@@ -531,7 +531,7 @@ export default function DeviceMonitor({
                          <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Último Sinal</p>
                          <p className="text-xs font-medium text-foreground">{status.ago}</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5 flex-wrap justify-end">
                         <Button 
                           size="sm" 
                           variant={isCurrentEditor ? "default" : "outline"} 
@@ -541,7 +541,34 @@ export default function DeviceMonitor({
                           <Settings2 className="w-4 h-4" />
                           Configurar
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => sendRemoteCommand(pl.id, (pl as any).playback_state === "paused" ? "play" : "pause")}
+                          className="text-muted-foreground hover:text-amber-500"
+                          title={(pl as any).playback_state === "paused" ? "Retomar reprodução" : "Pausar reprodução"}
+                        >
+                          {(pl as any).playback_state === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => sendRemoteCommand(pl.id, "reload")}
+                          className="text-muted-foreground hover:text-indigo-500"
+                          title="Recarregar tela remotamente"
+                        >
+                          <RotateCw className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => copyPlayerLink(pl.id)}
+                          className="text-muted-foreground hover:text-foreground"
+                          title="Copiar link"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400" title="Abrir tela">
                           <ExternalLink className="w-4 h-4" />
                         </Button>
                       </div>
