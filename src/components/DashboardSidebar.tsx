@@ -82,7 +82,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
     }
   };
   
-  const isMaster = user?.email === "jonathastdsantos@gmail.com";
+  const { isAdmin: isMaster } = useIsAdmin();
 
   return (
     <Sidebar collapsible="icon">
