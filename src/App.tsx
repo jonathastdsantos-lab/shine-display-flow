@@ -37,6 +37,7 @@ const App = () => (
               <Route path="/dashboard/*" element={<Dashboard />} />
               <Route path="/player/:playlist_id" element={<Player />} />
               <Route path="/anuncie" element={<Anuncie />} />
+              <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
