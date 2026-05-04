@@ -500,7 +500,9 @@ export default function Player() {
           const objectFit = zone.config?.fit === "contain" ? "object-contain" : "object-cover";
           return (
             <div key={zone.id} style={style} className="bg-black">
-              {current?.tipo === "video" ? (
+              {isYoutubeUrl(current?.url_arquivo) ? (
+                <YoutubeWidget key={current?.id} url={current?.url_arquivo} />
+              ) : current?.tipo === "video" ? (
                 <video ref={videoRef} key={current.id} src={current.url_arquivo} className={`w-full h-full ${objectFit}`} muted autoPlay playsInline />
               ) : (
                 <img key={current?.id} src={current?.url_arquivo} alt="" className={`w-full h-full ${objectFit} bg-black`} />
