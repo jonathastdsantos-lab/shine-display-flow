@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Megaphone, Phone, Mail, MessageSquare, Trash2, Calendar, Building2, ExternalLink, Copy, RefreshCw } from "lucide-react";
+import { Megaphone, Phone, Mail, MessageSquare, Trash2, Calendar, Building2, ExternalLink, Copy, RefreshCw, Download } from "lucide-react";
 
 interface AdLead {
   id: string;
@@ -98,6 +98,33 @@ export default function AdLeadsPanel() {
     toast({ title: "Link copiado!", description: "Compartilhe para captar mais anunciantes." });
   };
 
+  const exportCSV = () => {
+    const rows = [
+      ["Nome", "Empresa", "Telefone", "Email", "Status", "Origem", "Mensagem", "Data"],
+      ...filtered.map((l) => [
+        l.nome,
+        l.empresa || "",
+        l.telefone,
+        l.email || "",
+        l.status,
+        l.source || "",
+        (l.mensagem || "").replace(/[\r\n]+/g, " "),
+        new Date(l.created_at).toLocaleString("pt-BR"),
+      ]),
+    ];
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-anuncios-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "CSV exportado!" });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -112,12 +139,15 @@ export default function AdLeadsPanel() {
             Pessoas interessadas em comprar espaço publicitário nas suas telas.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={copyLanding} className="gap-2">
             <Copy className="w-4 h-4" /> Link público
           </Button>
           <Button variant="outline" onClick={() => window.open(landingUrl, "_blank")} className="gap-2">
             <ExternalLink className="w-4 h-4" /> Abrir página
+          </Button>
+          <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0} className="gap-2">
+            <Download className="w-4 h-4" /> CSV
           </Button>
           <Button variant="outline" onClick={load} className="gap-2">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />

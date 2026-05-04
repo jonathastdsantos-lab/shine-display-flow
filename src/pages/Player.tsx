@@ -16,6 +16,7 @@ import TransitWidget from "@/components/TransitWidget";
 import CountdownWidget from "@/components/CountdownWidget";
 import { AlertTriangle, Megaphone, Pause } from "lucide-react";
 import AdvertiseHereWidget from "@/components/AdvertiseHereWidget";
+import YoutubeWidget from "@/components/YoutubeWidget";
 import type { Zone } from "@/utils/AILayoutAssistant";
 import type { BusinessSegment } from "@/utils/ContentFeed";
 
@@ -120,15 +121,24 @@ function PlayerSidebar({ city, currentQrLink, wc, igHandle }: { city: string; cu
   );
 }
 
+// Detecta URLs do YouTube em qualquer formato
+function isYoutubeUrl(url?: string) {
+  if (!url) return false;
+  return /(?:youtube\.com|youtu\.be)/i.test(url);
+}
+
 // Zona de mídia principal
 function MediaZone({ current, fading, videoRef }: {
   current: MediaItem | undefined;
   fading: boolean;
   videoRef: React.RefObject<HTMLVideoElement>;
 }) {
+  const youtube = isYoutubeUrl(current?.url_arquivo);
   return (
     <div className={`absolute inset-0 transition-all duration-1000 ease-in-out ${fading ? "opacity-0 blur-sm scale-105" : "opacity-100 blur-0 scale-100"}`}>
-      {current?.tipo === "video" ? (
+      {youtube ? (
+        <YoutubeWidget key={current?.id} url={current?.url_arquivo} />
+      ) : current?.tipo === "video" ? (
         <video ref={videoRef} key={current.id} src={current.url_arquivo} className="h-full w-full object-cover" muted autoPlay playsInline />
       ) : (
         <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-contain bg-black" />
@@ -423,7 +433,7 @@ export default function Player() {
     const current = mediaItems[currentIndex];
     if (!current) return;
 
-    if (current.tipo === "video") {
+    if (current.tipo === "video" && !isYoutubeUrl(current.url_arquivo)) {
       const video = videoRef.current;
       if (video) {
         video.play().catch(() => {});
@@ -490,7 +500,9 @@ export default function Player() {
           const objectFit = zone.config?.fit === "contain" ? "object-contain" : "object-cover";
           return (
             <div key={zone.id} style={style} className="bg-black">
-              {current?.tipo === "video" ? (
+              {isYoutubeUrl(current?.url_arquivo) ? (
+                <YoutubeWidget key={current?.id} url={current?.url_arquivo} />
+              ) : current?.tipo === "video" ? (
                 <video ref={videoRef} key={current.id} src={current.url_arquivo} className={`w-full h-full ${objectFit}`} muted autoPlay playsInline />
               ) : (
                 <img key={current?.id} src={current?.url_arquivo} alt="" className={`w-full h-full ${objectFit} bg-black`} />
@@ -623,7 +635,9 @@ export default function Player() {
         
         <div className="flex-1 relative bg-black">
           <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${fading ? "opacity-0 scale-105" : "opacity-100 scale-100"}`}>
-            {current?.tipo === "video" ? (
+            {isYoutubeUrl(current?.url_arquivo) ? (
+              <YoutubeWidget key={current?.id} url={current?.url_arquivo} />
+            ) : current?.tipo === "video" ? (
               <video ref={videoRef} key={current.id} src={current.url_arquivo} className="h-full w-full object-cover" muted autoPlay playsInline />
             ) : (
               <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-contain bg-black" />

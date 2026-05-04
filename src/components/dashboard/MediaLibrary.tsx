@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Edit2, QrCode, Check, X, Crop } from "lucide-react";
+import { Upload, Trash2, Film, ImageIcon, CloudUpload, PlayCircle, Edit2, QrCode, Check, X, Crop, Youtube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { MediaItem } from "@/hooks/useDashboardData";
@@ -30,6 +30,32 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
     const ok = await onUpload(files);
     if (ok) toast({ title: "✅ Upload concluído com sucesso!" });
     else toast({ title: "Erro no upload", variant: "destructive" });
+  };
+
+  const handleAddYoutube = async () => {
+    if (!user) return;
+    const url = window.prompt("Cole o link do vídeo do YouTube:");
+    if (!url) return;
+    const isYt = /(?:youtube\.com|youtu\.be)/i.test(url);
+    if (!isYt) {
+      toast({ title: "Link inválido", description: "Use uma URL do YouTube.", variant: "destructive" });
+      return;
+    }
+    const nome = window.prompt("Nome para identificar este vídeo:", "Vídeo YouTube") || "Vídeo YouTube";
+    const dur = parseInt(window.prompt("Duração em segundos (quanto tempo permanecerá em tela):", "30") || "30", 10) || 30;
+    const { error } = await (supabase as any).from("media_library").insert({
+      client_id: user.id,
+      nome,
+      tipo: "video",
+      url_arquivo: url,
+      duracao: dur,
+    });
+    if (error) {
+      toast({ title: "Erro ao adicionar", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "✅ Vídeo do YouTube adicionado!" });
+      onRefresh?.();
+    }
   };
 
   const getFormat = (name: string) => name.split('.').pop()?.toUpperCase() || 'ARQUIVO';
@@ -92,8 +118,11 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
             Faça upload e gerencie os vídeos e imagens que serão exibidos na TV.
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-right space-y-2">
           <p className="text-xs text-muted-foreground">💡 Dica: Cada mídia pode ter um QR Code único que aparece na tela enquanto ela está passando.</p>
+          <Button variant="outline" size="sm" onClick={handleAddYoutube} className="gap-2">
+            <Youtube className="w-4 h-4 text-red-500" /> Adicionar vídeo do YouTube
+          </Button>
         </div>
       </div>
 
