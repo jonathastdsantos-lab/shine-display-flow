@@ -118,8 +118,11 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
             Faça upload e gerencie os vídeos e imagens que serão exibidos na TV.
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-right space-y-2">
           <p className="text-xs text-muted-foreground">💡 Dica: Cada mídia pode ter um QR Code único que aparece na tela enquanto ela está passando.</p>
+          <Button variant="outline" size="sm" onClick={handleAddYoutube} className="gap-2">
+            <Youtube className="w-4 h-4 text-red-500" /> Adicionar vídeo do YouTube
+          </Button>
         </div>
       </div>
 
