@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Player = lazy(() => import("./pages/Player"));
 const Anuncie = lazy(() => import("./pages/Anuncie"));
+const Install = lazy(() => import("./pages/Install"));
 
 const queryClient = new QueryClient();
 
