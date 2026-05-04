@@ -350,8 +350,16 @@ export default function Player() {
     fetchData();
     // Busca inicial de notícias
     fetchNews(newsCategory);
-    
+
     document.documentElement.requestFullscreen?.().catch(() => {});
+
+    // Fullscreen-on-click (browsers exigem gesto do usuário)
+    const tryFullscreen = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+      }
+    };
+    document.addEventListener("click", tryFullscreen);
 
     // Escuta Broadcast via Supabase Realtime
     const channel = supabase
@@ -363,8 +371,27 @@ export default function Player() {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      document.removeEventListener("click", tryFullscreen);
+      supabase.removeChannel(channel);
+    };
   }, [clientId, playlist_id]);
+
+  // Preload da próxima mídia (cache do browser)
+  useEffect(() => {
+    if (mediaItems.length < 2) return;
+    const next = mediaItems[(currentIndex + 1) % mediaItems.length];
+    if (!next) return;
+    if (next.tipo === "video") {
+      const v = document.createElement("video");
+      v.src = next.url_arquivo;
+      v.preload = "auto";
+      v.muted = true;
+    } else {
+      const img = new Image();
+      img.src = next.url_arquivo;
+    }
+  }, [currentIndex, mediaItems]);
 
   const goToNext = useCallback(() => {
     if (remoteIntervention.active || paused) return;
