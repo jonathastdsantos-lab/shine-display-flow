@@ -16,6 +16,7 @@ import TransitWidget from "@/components/TransitWidget";
 import CountdownWidget from "@/components/CountdownWidget";
 import { AlertTriangle, Megaphone, Pause } from "lucide-react";
 import AdvertiseHereWidget from "@/components/AdvertiseHereWidget";
+import YoutubeWidget from "@/components/YoutubeWidget";
 import type { Zone } from "@/utils/AILayoutAssistant";
 import type { BusinessSegment } from "@/utils/ContentFeed";
 
