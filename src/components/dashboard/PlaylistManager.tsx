@@ -85,6 +85,28 @@ export default function PlaylistManager({
   const [newName, setNewName] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleDuplicate = async (pl: Playlist) => {
+    if (!user) return;
+    const { error } = await supabase.from("playlists").insert({
+      client_id: user.id,
+      nome_da_tela: `${pl.nome_da_tela} (cópia)`,
+      ordem_arquivos: pl.ordem_arquivos || [],
+      template: pl.template,
+      layout_config: pl.layout_config,
+      widget_config: pl.widget_config,
+      config_clima: pl.config_clima,
+      config_noticias: pl.config_noticias,
+      instagram_handle: pl.instagram_handle,
+    } as any);
+    if (error) {
+      toast({ title: "Erro ao duplicar", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Tela duplicada!", description: `"${pl.nome_da_tela} (cópia)" criada com sucesso.` });
+      window.location.reload();
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -165,6 +187,9 @@ export default function PlaylistManager({
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate(`/player/${pl.id}`)}>
                       <Eye className="h-4 w-4" /> <span className="hidden sm:inline">Preview na TV</span>
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-2" onClick={() => handleDuplicate(pl)} title="Duplicar tela">
+                      <Copy className="h-4 w-4" />
                     </Button>
                     <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-white transition-colors" onClick={() => onDelete(pl.id)}>
                       <Trash2 className="h-4 w-4" />
