@@ -433,7 +433,7 @@ export default function Player() {
     const current = mediaItems[currentIndex];
     if (!current) return;
 
-    if (current.tipo === "video") {
+    if (current.tipo === "video" && !isYoutubeUrl(current.url_arquivo)) {
       const video = videoRef.current;
       if (video) {
         video.play().catch(() => {});
