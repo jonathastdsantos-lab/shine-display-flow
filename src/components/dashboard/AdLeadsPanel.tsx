@@ -139,12 +139,15 @@ export default function AdLeadsPanel() {
             Pessoas interessadas em comprar espaço publicitário nas suas telas.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={copyLanding} className="gap-2">
             <Copy className="w-4 h-4" /> Link público
           </Button>
           <Button variant="outline" onClick={() => window.open(landingUrl, "_blank")} className="gap-2">
             <ExternalLink className="w-4 h-4" /> Abrir página
+          </Button>
+          <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0} className="gap-2">
+            <Download className="w-4 h-4" /> CSV
           </Button>
           <Button variant="outline" onClick={load} className="gap-2">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
