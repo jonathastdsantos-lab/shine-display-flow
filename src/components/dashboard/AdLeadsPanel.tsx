@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Megaphone, Phone, Mail, MessageSquare, Trash2, Calendar, Building2, ExternalLink, Copy, RefreshCw } from "lucide-react";
+import { Megaphone, Phone, Mail, MessageSquare, Trash2, Calendar, Building2, ExternalLink, Copy, RefreshCw, Download } from "lucide-react";
 
 interface AdLead {
   id: string;
