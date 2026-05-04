@@ -98,6 +98,33 @@ export default function AdLeadsPanel() {
     toast({ title: "Link copiado!", description: "Compartilhe para captar mais anunciantes." });
   };
 
+  const exportCSV = () => {
+    const rows = [
+      ["Nome", "Empresa", "Telefone", "Email", "Status", "Origem", "Mensagem", "Data"],
+      ...filtered.map((l) => [
+        l.nome,
+        l.empresa || "",
+        l.telefone,
+        l.email || "",
+        l.status,
+        l.source || "",
+        (l.mensagem || "").replace(/[\r\n]+/g, " "),
+        new Date(l.created_at).toLocaleString("pt-BR"),
+      ]),
+    ];
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-anuncios-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "CSV exportado!" });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
