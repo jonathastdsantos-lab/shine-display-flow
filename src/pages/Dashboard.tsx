@@ -11,11 +11,13 @@ import ReportsPanel from "@/components/dashboard/ReportsPanel";
 import AdLeadsPanel from "@/components/dashboard/AdLeadsPanel";
 import DeveloperArea from "@/components/developer/DeveloperArea";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const data = useDashboardData();
 
