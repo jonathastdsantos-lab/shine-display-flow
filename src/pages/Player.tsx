@@ -120,15 +120,24 @@ function PlayerSidebar({ city, currentQrLink, wc, igHandle }: { city: string; cu
   );
 }
 
+// Detecta URLs do YouTube em qualquer formato
+function isYoutubeUrl(url?: string) {
+  if (!url) return false;
+  return /(?:youtube\.com|youtu\.be)/i.test(url);
+}
+
 // Zona de mídia principal
 function MediaZone({ current, fading, videoRef }: {
   current: MediaItem | undefined;
   fading: boolean;
   videoRef: React.RefObject<HTMLVideoElement>;
 }) {
+  const youtube = isYoutubeUrl(current?.url_arquivo);
   return (
     <div className={`absolute inset-0 transition-all duration-1000 ease-in-out ${fading ? "opacity-0 blur-sm scale-105" : "opacity-100 blur-0 scale-100"}`}>
-      {current?.tipo === "video" ? (
+      {youtube ? (
+        <YoutubeWidget key={current?.id} url={current?.url_arquivo} />
+      ) : current?.tipo === "video" ? (
         <video ref={videoRef} key={current.id} src={current.url_arquivo} className="h-full w-full object-cover" muted autoPlay playsInline />
       ) : (
         <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-contain bg-black" />
