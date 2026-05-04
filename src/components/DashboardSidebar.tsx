@@ -16,6 +16,7 @@ import logo from "@/assets/logo.jpg";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import {
   Sidebar,
   SidebarContent,
@@ -82,7 +83,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
     }
   };
   
-  const isMaster = user?.email === "jonathastdsantos@gmail.com";
+  const { isAdmin: isMaster } = useIsAdmin();
 
   return (
     <Sidebar collapsible="icon">

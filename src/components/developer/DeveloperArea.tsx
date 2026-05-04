@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientManager } from "./ClientManager";
 import { BroadcastCenter } from "./BroadcastCenter";
-import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Navigate } from "react-router-dom";
 import { Terminal, Users, Send } from "lucide-react";
 
 export default function DeveloperArea() {
-  const { user } = useAuth();
+  const { isAdmin, loading } = useIsAdmin();
   const [activeTab, setActiveTab] = useState("clients");
 
-  // Security barrier
-  if (user?.email !== "jonathastdsantos@gmail.com") {
+  // Security barrier (server-side via user_roles)
+  if (loading) return null;
+  if (!isAdmin) {
     return <Navigate to="/dashboard/media" replace />;
   }
 

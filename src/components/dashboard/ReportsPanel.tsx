@@ -173,22 +173,42 @@ export default function ReportsPanel({ profile }: { profile?: any }) {
   const fetchLogs = async () => {
     if (!user) return;
     try {
+      // 1. Buscar IDs das playlists do usuário
+      const { data: pls } = await supabase
+        .from("playlists")
+        .select("id")
+        .eq("client_id", user.id);
+
+      const playlistIds = (pls || []).map((p: any) => p.id);
+      if (playlistIds.length === 0) {
+        setLogs([]);
+        setIsMock(false);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Buscar logs reais dessas playlists (RLS já garante segurança)
       const { data, error } = await (supabase as any)
         .from("play_logs")
         .select("*")
-        .eq("player_id", user.id)
+        .in("player_id", playlistIds)
         .order("played_at", { ascending: false })
-        .limit(200);
+        .limit(500);
 
-      if (error || !data) {
-        // Tabela não existe ainda → usar mock
+      if (error) {
+        console.error("Erro ao buscar play_logs:", error);
+        setLogs(generateMockData());
+        setIsMock(true);
+      } else if (!data || data.length === 0) {
+        // Sem dados reais ainda — mostra demo + flag
         setLogs(generateMockData());
         setIsMock(true);
       } else {
         setLogs(data);
         setIsMock(false);
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
       setLogs(generateMockData());
       setIsMock(true);
     }
@@ -246,6 +266,62 @@ export default function ReportsPanel({ profile }: { profile?: any }) {
     return null;
   };
 
+  const exportCSV = () => {
+    const header = "data,hora,midia,tipo,duracao_seg\n";
+    const rows = logs.map((l) => {
+      const d = l.played_at ? new Date(l.played_at) : new Date();
+      return [
+        format(d, "yyyy-MM-dd"),
+        format(d, "HH:mm:ss"),
+        `"${(l.media_name || "").replace(/"/g, '""')}"`,
+        l.media_type || "",
+        l.duration_sec || 10,
+      ].join(",");
+    }).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `relatorio-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPDF = () => {
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) return;
+    const totalH = (logs.reduce((a, l) => a + (l.duration_sec || 10), 0) / 3600).toFixed(1);
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Relatório de Exibição</title>
+      <style>
+        body{font-family:system-ui,sans-serif;padding:32px;color:#111}
+        h1{margin:0 0 8px} .sub{color:#666;margin-bottom:24px}
+        .stats{display:flex;gap:16px;margin-bottom:24px}
+        .stat{flex:1;padding:14px;border:1px solid #e5e5e5;border-radius:8px}
+        .stat b{font-size:22px;display:block}
+        table{width:100%;border-collapse:collapse;font-size:12px}
+        th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+        th{background:#fafafa}
+      </style></head><body>
+      <h1>Relatório de Exibição</h1>
+      <p class="sub">Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")}</p>
+      <div class="stats">
+        <div class="stat"><b>${logs.length}</b>Total de exibições</div>
+        <div class="stat"><b>${totalH}h</b>Horas no ar</div>
+        <div class="stat"><b>${Object.keys(mediaCounts).length}</b>Arquivos únicos</div>
+      </div>
+      <table><thead><tr><th>Data/Hora</th><th>Mídia</th><th>Tipo</th><th>Duração</th></tr></thead><tbody>
+      ${logs.slice(0, 200).map(l => `<tr>
+        <td>${l.played_at ? format(new Date(l.played_at), "dd/MM/yyyy HH:mm") : "—"}</td>
+        <td>${(l.media_name || "—").replace(/</g, "&lt;")}</td>
+        <td>${l.media_type || "—"}</td>
+        <td>${l.duration_sec || 10}s</td>
+      </tr>`).join("")}
+      </tbody></table>
+      <script>setTimeout(()=>window.print(),300)</script>
+      </body></html>`);
+    w.document.close();
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -255,10 +331,18 @@ export default function ReportsPanel({ profile }: { profile?: any }) {
             Proof of Play – veja quantas vezes cada mídia foi exibida e por quanto tempo.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
-          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-          Atualizar
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2" disabled={logs.length === 0}>
+            📊 CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportPDF} className="gap-2" disabled={logs.length === 0}>
+            📄 PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {isMock && (
