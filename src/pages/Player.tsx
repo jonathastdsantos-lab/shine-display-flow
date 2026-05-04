@@ -181,20 +181,22 @@ export default function Player() {
 
   // Proof of Play – loga toda vez que uma mídia terminar
   const logPlay = useCallback(async (mediaItem: MediaItem) => {
-    if (!clientId || !mediaItem) return;
+    if (!playlist_id || !mediaItem) return;
     try {
       await (supabase as any)
         .from("play_logs")
         .insert({
           player_id: playlist_id,
           media_id: mediaItem.id,
-          media_name: mediaItem.url_arquivo.split("/").pop() || "unknown",
+          media_name: (mediaItem as any).nome || mediaItem.url_arquivo.split("/").pop() || "unknown",
           media_type: mediaItem.tipo,
           played_at: new Date().toISOString(),
           duration_sec: mediaItem.duracao || 10,
         });
-    } catch { /* silently ignore */ }
-  }, [clientId, playlist_id]);
+    } catch (e) {
+      console.warn("play_logs insert falhou:", e);
+    }
+  }, [playlist_id]);
 
   const fetchNews = useCallback(async (category: string, location?: string) => {
     try {
