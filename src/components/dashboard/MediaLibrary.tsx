@@ -32,6 +32,32 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
     else toast({ title: "Erro no upload", variant: "destructive" });
   };
 
+  const handleAddYoutube = async () => {
+    if (!user) return;
+    const url = window.prompt("Cole o link do vídeo do YouTube:");
+    if (!url) return;
+    const isYt = /(?:youtube\.com|youtu\.be)/i.test(url);
+    if (!isYt) {
+      toast({ title: "Link inválido", description: "Use uma URL do YouTube.", variant: "destructive" });
+      return;
+    }
+    const nome = window.prompt("Nome para identificar este vídeo:", "Vídeo YouTube") || "Vídeo YouTube";
+    const dur = parseInt(window.prompt("Duração em segundos (quanto tempo permanecerá em tela):", "30") || "30", 10) || 30;
+    const { error } = await (supabase as any).from("media_library").insert({
+      client_id: user.id,
+      nome,
+      tipo: "video",
+      url_arquivo: url,
+      duracao: dur,
+    });
+    if (error) {
+      toast({ title: "Erro ao adicionar", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "✅ Vídeo do YouTube adicionado!" });
+      onRefresh?.();
+    }
+  };
+
   const getFormat = (name: string) => name.split('.').pop()?.toUpperCase() || 'ARQUIVO';
 
   const handleSaveQR = async (mediaId: string) => {
