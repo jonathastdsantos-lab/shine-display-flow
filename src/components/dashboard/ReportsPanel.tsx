@@ -173,22 +173,42 @@ export default function ReportsPanel({ profile }: { profile?: any }) {
   const fetchLogs = async () => {
     if (!user) return;
     try {
+      // 1. Buscar IDs das playlists do usuário
+      const { data: pls } = await supabase
+        .from("playlists")
+        .select("id")
+        .eq("client_id", user.id);
+
+      const playlistIds = (pls || []).map((p: any) => p.id);
+      if (playlistIds.length === 0) {
+        setLogs([]);
+        setIsMock(false);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Buscar logs reais dessas playlists (RLS já garante segurança)
       const { data, error } = await (supabase as any)
         .from("play_logs")
         .select("*")
-        .eq("player_id", user.id)
+        .in("player_id", playlistIds)
         .order("played_at", { ascending: false })
-        .limit(200);
+        .limit(500);
 
-      if (error || !data) {
-        // Tabela não existe ainda → usar mock
+      if (error) {
+        console.error("Erro ao buscar play_logs:", error);
+        setLogs(generateMockData());
+        setIsMock(true);
+      } else if (!data || data.length === 0) {
+        // Sem dados reais ainda — mostra demo + flag
         setLogs(generateMockData());
         setIsMock(true);
       } else {
         setLogs(data);
         setIsMock(false);
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
       setLogs(generateMockData());
       setIsMock(true);
     }
