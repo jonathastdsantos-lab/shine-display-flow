@@ -635,7 +635,9 @@ export default function Player() {
         
         <div className="flex-1 relative bg-black">
           <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${fading ? "opacity-0 scale-105" : "opacity-100 scale-100"}`}>
-            {current?.tipo === "video" ? (
+            {isYoutubeUrl(current?.url_arquivo) ? (
+              <YoutubeWidget key={current?.id} url={current?.url_arquivo} />
+            ) : current?.tipo === "video" ? (
               <video ref={videoRef} key={current.id} src={current.url_arquivo} className="h-full w-full object-cover" muted autoPlay playsInline />
             ) : (
               <img key={current?.id} src={current?.url_arquivo} alt="" className="h-full w-full object-contain bg-black" />
