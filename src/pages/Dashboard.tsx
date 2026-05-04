@@ -140,8 +140,8 @@ export default function Dashboard() {
               <Route path="reports" element={<ReportsPanel profile={data.profile} />} />
               <Route path="leads" element={<AdLeadsPanel />} />
               <Route path="developer/*" element={
-                user?.email === "jonathastdsantos@gmail.com" 
-                  ? <DeveloperArea /> 
+                isAdmin
+                  ? <DeveloperArea />
                   : <Navigate to="/dashboard/media" replace />
               } />
             </Routes>
