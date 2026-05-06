@@ -25,6 +25,22 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
   const [editingQR, setEditingQR] = useState<string | null>(null);
   const [qrInputs, setQrInputs] = useState<Record<string, string>>({});
   const [cropItem, setCropItem] = useState<MediaItem | null>(null);
+  const [savingDur, setSavingDur] = useState<string | null>(null);
+
+  const updateDuration = async (mediaId: string, newDur: number) => {
+    const clamped = Math.max(3, Math.min(600, Math.round(newDur)));
+    setSavingDur(mediaId);
+    const { error } = await (supabase as any)
+      .from("media_library")
+      .update({ duracao: clamped })
+      .eq("id", mediaId);
+    setSavingDur(null);
+    if (error) {
+      toast({ title: "Erro ao salvar duração", description: error.message, variant: "destructive" });
+    } else {
+      onRefresh?.();
+    }
+  };
 
   const handleFiles = async (files: FileList) => {
     const ok = await onUpload(files);
