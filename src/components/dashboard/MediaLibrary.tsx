@@ -257,9 +257,37 @@ export default function MediaLibrary({ media, uploading, onUpload, onDelete, onR
                 <CardContent className="p-4 bg-background space-y-3">
                   <div>
                     <p className="text-sm font-medium truncate mb-1" title={item.nome}>{item.nome}</p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-medium gap-2">
                       <span className="bg-muted px-2 py-0.5 rounded">{getFormat(item.nome)}</span>
-                      <span>{item.duracao}s</span>
+                      <div className="flex items-center gap-1 bg-muted rounded px-1">
+                        <button
+                          type="button"
+                          className="px-1.5 py-0.5 hover:text-indigo-400 disabled:opacity-30"
+                          disabled={savingDur === item.id || item.duracao <= 3}
+                          onClick={(e) => { e.stopPropagation(); updateDuration(item.id, item.duracao - 5); }}
+                          title="Diminuir 5s"
+                        >−</button>
+                        <Input
+                          type="number"
+                          min={3}
+                          max={600}
+                          value={item.duracao}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value, 10);
+                            if (!isNaN(v)) updateDuration(item.id, v);
+                          }}
+                          className="h-6 w-14 text-center text-xs px-1 border-0 bg-transparent focus-visible:ring-1"
+                        />
+                        <span className="text-[10px] pr-1">s</span>
+                        <button
+                          type="button"
+                          className="px-1.5 py-0.5 hover:text-indigo-400 disabled:opacity-30"
+                          disabled={savingDur === item.id || item.duracao >= 600}
+                          onClick={(e) => { e.stopPropagation(); updateDuration(item.id, item.duracao + 5); }}
+                          title="Aumentar 5s"
+                        >+</button>
+                      </div>
                     </div>
                   </div>
 
