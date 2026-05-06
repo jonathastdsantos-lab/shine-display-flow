@@ -90,12 +90,26 @@ export default function WeatherWidget({
       }
     };
     fetchWeather();
-    const interval = setInterval(fetchWeather, 15 * 60 * 1000);
+    const interval = setInterval(fetchWeather, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [city]);
 
   if (loading && !weather) {
-    return <div className="animate-pulse h-10 w-24 bg-white/5 rounded mx-auto" />;
+    const isCompact = compact || variant === 'glass';
+    return (
+      <div
+        className={`flex ${isCompact ? 'flex-row items-center gap-3' : 'flex-col items-center'} justify-center p-3 rounded-xl bg-white/5 border border-white/5 animate-pulse`}
+        aria-label="Carregando clima"
+        role="status"
+      >
+        <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+        <div className={`flex flex-col gap-1.5 ${isCompact ? '' : 'items-center mt-2'}`}>
+          <Skeleton className="h-6 w-16 bg-white/10" />
+          <Skeleton className="h-2 w-20 bg-white/10" />
+          {!isCompact && <Skeleton className="h-2 w-24 bg-white/10" />}
+        </div>
+      </div>
+    );
   }
 
   if (!weather) return null;
