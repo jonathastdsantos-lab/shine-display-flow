@@ -186,6 +186,11 @@ export default function WeatherWidget({
         <span className="flex items-center gap-1"><Wind className="w-3 h-3" />{weather.wind_direction} {weather.wind_speed}km/h</span>
       </div>
       <p className="text-[9px] text-player-muted/40 font-bold uppercase mt-1 tracking-widest">{weather.city}</p>
+      {updatedAt && (
+        <p className="text-[8px] text-player-muted/30 mt-1 tracking-wider">
+          Atualizado {format(updatedAt, "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
+        </p>
+      )}
     </div>
   );
 }
