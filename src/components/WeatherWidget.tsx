@@ -71,18 +71,21 @@ export default function WeatherWidget({
 }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (!city) return;
+    const target = city || "auto";
     const fetchWeather = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke("get-weather", { body: { city } });
-        if (error) throw error;
-        if (data) setWeather(data);
+        const { data, error } = await supabase.functions.invoke("get-weather", { body: { city: target } });
+        if (error || !data || (data as any).error) throw error || new Error("api falhou");
+        setWeather(data as WeatherData);
       } catch (err: any) {
-        console.error("❌ Erro clima:", err.message);
+        console.warn("⚠️ Clima via API falhou, usando mock:", err?.message);
+        setWeather(getMockWeather(target));
       } finally {
+        setUpdatedAt(new Date());
         setLoading(false);
       }
     };
