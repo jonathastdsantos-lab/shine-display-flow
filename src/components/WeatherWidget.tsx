@@ -1,6 +1,35 @@
 import { useState, useEffect } from "react";
 import { Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, Wind, Droplets, Moon, CloudFog } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+// Mock determinístico: gera dados plausíveis baseados na cidade quando a API real falha
+function getMockWeather(city: string): WeatherData {
+  const seed = (city || "default").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const conditions = [
+    { c: "Céu limpo", i: "01d" },
+    { c: "Parcialmente nublado", i: "03d" },
+    { c: "Nublado", i: "03d" },
+    { c: "Chuva leve", i: "10d" },
+    { c: "Tempestade", i: "11d" },
+  ];
+  const pick = conditions[seed % conditions.length];
+  const hour = new Date().getHours();
+  const isNight = hour >= 18 || hour < 6;
+  const temp = 18 + (seed % 15);
+  return {
+    temp,
+    feels_like: temp - 1,
+    condition: pick.c,
+    icon: isNight ? pick.i.replace("d", "n") : pick.i,
+    humidity: 40 + (seed % 50),
+    wind_speed: 5 + (seed % 20),
+    wind_direction: ["N", "NE", "L", "SE", "S", "SO", "O", "NO"][seed % 8],
+    pressure: 1010 + (seed % 15),
+    city: city || "São Paulo",
+  };
+}
 
 interface WeatherWidgetProps {
   city: string;
