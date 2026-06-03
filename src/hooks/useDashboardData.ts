@@ -1,45 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Playlist,
+  ClientProfile,
+  MediaItem,
+  toPlaylist,
+  toClientProfile,
+} from "@/types/player";
 
-export interface MediaItem {
-  id: string;
-  url_arquivo: string;
-  tipo: string;
-  nome: string;
-  duracao: number;
-}
-
-export interface Playlist {
-  id: string;
-  nome_da_tela: string;
-  ordem_arquivos: string[];
-  template?: string;
-  layout_config?: any;
-  widget_config?: any;
-  config_clima?: string;
-  config_noticias?: string;
-  instagram_handle?: string;
-  last_sync_at?: string;
-  last_heartbeat?: string;
-  remote_command?: string | null;
-  remote_command_at?: string | null;
-  playback_state?: string;
-  ad_widget_enabled?: boolean;
-  ad_widget_url?: string | null;
-}
-
-export interface ClientProfile {
-  config_clima: string;
-  config_noticias: string;
-  nome_empresa: string;
-  template: string;
-  instagram_handle: string;
-  widget_config: any;
-  layout_config?: any;
-  user_id?: string;
-  screen_limit?: number;
-}
+// Re-export para manter API pública (consumidores existentes)
+export type { Playlist, ClientProfile, MediaItem } from "@/types/player";
 
 export function useDashboardData() {
   const { user } = useAuth();
@@ -52,7 +23,8 @@ export function useDashboardData() {
     template: "corporativo",
     instagram_handle: "",
     widget_config: null,
-  });
+    layout_config: null,
+  } as ClientProfile);
   const [uploading, setUploading] = useState(false);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(() => {
     return localStorage.getItem("selectedPlaylistId");
