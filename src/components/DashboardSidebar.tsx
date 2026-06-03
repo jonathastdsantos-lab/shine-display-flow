@@ -30,18 +30,19 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const navItems = [
-  { title: "Biblioteca de Mídia", url: "/dashboard/media", icon: Image },
-  { title: "Playlists", url: "/dashboard/playlists", icon: ListVideo },
-  { title: "Config. do Canal", url: "/dashboard/settings", icon: Settings },
-  { title: "Templates & Cenários", url: "/dashboard/templates", icon: LayoutTemplate },
+  { key: "media", url: "/dashboard/media", icon: Image },
+  { key: "playlists", url: "/dashboard/playlists", icon: ListVideo },
+  { key: "settings", url: "/dashboard/settings", icon: Settings },
+  { key: "templates", url: "/dashboard/templates", icon: LayoutTemplate },
 ];
 
 const analyticsItems = [
-  { title: "Meus Dispositivos", url: "/dashboard/devices", icon: Tv2 },
-  { title: "Leads de Anúncios", url: "/dashboard/leads", icon: Megaphone },
-  { title: "Relatórios", url: "/dashboard/reports", icon: BarChart2 },
+  { key: "devices", url: "/dashboard/devices", icon: Tv2 },
+  { key: "leads", url: "/dashboard/leads", icon: Megaphone },
+  { key: "reports", url: "/dashboard/reports", icon: BarChart2 },
 ];
 
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +55,7 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }: DashboardSidebarProps) {
+  const { t } = useTranslation();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -69,14 +71,14 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
       console.log("📤 Enviando sinal de sincronização para todas as telas...");
       await onSync();
       toast({
-        title: "Telas Sincronizadas! 🚀",
-        description: "Todas as suas telas ativas receberam o sinal de atualização.",
+        title: t("sidebar.toasts.syncSuccessTitle"),
+        description: t("sidebar.toasts.syncSuccessDescription"),
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Erro na Sincronização",
-        description: "Não foi possível enviar o sinal para as telas.",
+        title: t("sidebar.toasts.syncErrorTitle"),
+        description: t("sidebar.toasts.syncErrorDescription"),
       });
     } finally {
       setTimeout(() => setSyncing(false), 2000);
@@ -105,7 +107,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
@@ -114,7 +116,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && <span>{t(`sidebar.nav.${item.key}`)}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -127,13 +129,13 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
         <SidebarGroup>
           {!collapsed && (
             <SidebarGroupLabel className="px-3 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-bold">
-              Monitoramento
+              {t("sidebar.groups.monitoring")}
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
             <SidebarMenu>
               {analyticsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
@@ -142,7 +144,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && <span>{t(`sidebar.nav.${item.key}`)}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -156,7 +158,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
           <SidebarGroup>
             {!collapsed && (
               <SidebarGroupLabel className="px-3 text-[10px] uppercase tracking-widest text-indigo-500/60 font-bold">
-                Developer
+                {t("sidebar.groups.developer")}
               </SidebarGroupLabel>
             )}
             <SidebarGroupContent>
@@ -169,7 +171,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
                       activeClassName="bg-indigo-500/10 text-indigo-500 font-medium"
                     >
                       <Terminal className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>Área Developer</span>}
+                      {!collapsed && <span>{t("sidebar.nav.developer")}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -195,7 +197,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
             )}
             {!collapsed && (
               <span className="font-bold tracking-tight">
-                {syncing ? "Sincronizado!" : "Sincronizar Telas"}
+                {syncing ? t("sidebar.actions.synced") : t("sidebar.actions.syncScreens")}
               </span>
             )}
           </Button>
@@ -210,15 +212,15 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
               navigate(`/player/${targetId}`);
             } else {
               toast({
-                title: "Nenhuma tela encontrada",
-                description: "Crie uma playlist em 'Playlists' primeiro.",
+                title: t("sidebar.toasts.noScreensTitle"),
+                description: t("sidebar.toasts.noScreensDescription"),
                 variant: "destructive"
               });
             }
           }}
         >
           <Eye className="mr-2 h-4 w-4" />
-          {!collapsed && "Preview Player"}
+          {!collapsed && t("sidebar.actions.previewPlayer")}
         </Button>
         <Button
           variant="ghost"
@@ -227,7 +229,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
           onClick={signOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          {!collapsed && "Sair"}
+          {!collapsed && t("sidebar.actions.logout")}
         </Button>
       </SidebarFooter>
     </Sidebar>

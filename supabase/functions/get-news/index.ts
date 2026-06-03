@@ -12,19 +12,21 @@ serve(async (req) => {
   }
 
   try {
-    const { category, location } = await req.json();
+    const { category, location, locale } = await req.json();
 
-    console.log(`Fetching news for category: ${category}, location: ${location}`);
+    // Normaliza locale (pt-BR padrão para compat com clientes existentes)
+    const lng = typeof locale === "string" && locale.startsWith("en") ? "en" : "pt-BR";
+    const isEn = lng === "en";
 
-    // Construct search query for Google News RSS
-    // q=location+category
+    console.log(`Fetching news for category: ${category}, location: ${location}, locale: ${lng}`);
+
     let query = "";
     if (location && location.trim() !== "") {
       query += `"${location}" `;
     }
-    
-    // Map category to Portuguese terms for better results in BR
-    const categoryMap: Record<string, string> = {
+
+    // Categorias por idioma para melhores resultados regionais
+    const categoryMapPt: Record<string, string> = {
       technology: "tecnologia",
       sports: "esportes",
       business: "economia",
@@ -33,45 +35,55 @@ serve(async (req) => {
       science: "ciência",
       general: "notícias",
     };
-
-    const translatedCategory = categoryMap[category] || category || "notícias";
+    const categoryMapEn: Record<string, string> = {
+      technology: "technology",
+      sports: "sports",
+      business: "business",
+      entertainment: "entertainment",
+      health: "health",
+      science: "science",
+      general: "news",
+    };
+    const map = isEn ? categoryMapEn : categoryMapPt;
+    const fallbackTerm = isEn ? "news" : "notícias";
+    const translatedCategory = map[category] || category || fallbackTerm;
     query += translatedCategory;
 
-    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+    const hl = isEn ? "en-US" : "pt-BR";
+    const gl = isEn ? "US" : "BR";
+    const ceid = isEn ? "US:en" : "BR:pt-419";
+    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
 
     console.log(`RSS URL: ${rssUrl}`);
 
     const response = await fetch(rssUrl);
     const xmlText = await response.text();
 
-    // Simple regex-based XML parsing to extract <title> tags from <item> blocks
-    // This avoids heavy XML parsing libraries in the edge function
     const itemRegex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<\/item>/g;
     const titles: string[] = [];
     let match;
 
     while ((match = itemRegex.exec(xmlText)) !== null) {
       if (match[1]) {
-        // Decode common XML entities
         let title = match[1]
           .replace(/&amp;/g, '&')
           .replace(/&quot;/g, '"')
           .replace(/&apos;/g, "'")
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
-          .replace(/ - Google News/g, ''); // Remove Google News suffix
-        
+          .replace(/ - Google News/g, '');
         titles.push(title);
       }
-      
-      // Limit to 15 titles
       if (titles.length >= 15) break;
     }
 
     if (titles.length === 0) {
-      // Fallback to general news if specific query yielded nothing
       console.log("No titles found, returning general placeholder");
-      titles.push(`Últimas notícias sobre ${translatedCategory}${location ? ' em ' + location : ''}`);
+      const inWord = isEn ? "in" : "em";
+      const prefix = isEn
+        ? `Latest news on ${translatedCategory}`
+        : `Últimas notícias sobre ${translatedCategory}`;
+      titles.push(`${prefix}${location ? ` ${inWord} ${location}` : ""}`);
     }
 
     return new Response(JSON.stringify({ titles }), {

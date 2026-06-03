@@ -33,6 +33,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Playlist, ClientProfile, MediaItem } from "@/hooks/useDashboardData";
+import { useTranslation, Trans } from "react-i18next";
 
 interface DeviceMonitorProps {
   playlists: Playlist[];
@@ -92,24 +93,24 @@ function SortableMediaItem({ id, mediaItem, index, onRemove }: any) {
   );
 }
 
-function getStatusInfo(lastSeen: string | null): {
+function getStatusInfo(lastSeen: string | null, t: (k: string, o?: any) => string): {
   online: boolean; label: string; color: string; bgColor: string; ago: string;
 } {
   if (!lastSeen) {
-    return { online: false, label: "Nunca conectado", color: "text-slate-400", bgColor: "bg-slate-500/10", ago: "—" };
+    return { online: false, label: t("deviceMonitor.status.neverConnected"), color: "text-slate-400", bgColor: "bg-slate-500/10", ago: "—" };
   }
   const diffMs = Date.now() - new Date(lastSeen).getTime();
   const diffMin = Math.floor(diffMs / 60000);
   const online = diffMin < 3;
 
   let ago = "";
-  if (diffMs < 60000) ago = "há menos de 1 min";
-  else if (diffMin < 60) ago = `há ${diffMin} min`;
-  else ago = `há ${Math.floor(diffMin / 60)}h`;
+  if (diffMs < 60000) ago = t("deviceMonitor.status.agoLessThanMin");
+  else if (diffMin < 60) ago = t("deviceMonitor.status.agoMin", { min: diffMin });
+  else ago = t("deviceMonitor.status.agoHours", { hours: Math.floor(diffMin / 60) });
 
   return online
-    ? { online: true, label: "Online", color: "text-emerald-400", bgColor: "bg-emerald-500/10", ago }
-    : { online: false, label: "Inativo", color: "text-red-400", bgColor: "bg-red-500/10", ago };
+    ? { online: true, label: t("deviceMonitor.status.online"), color: "text-emerald-400", bgColor: "bg-emerald-500/10", ago }
+    : { online: false, label: t("deviceMonitor.status.inactive"), color: "text-red-400", bgColor: "bg-red-500/10", ago };
 }
 
 export default function DeviceMonitor({ 
@@ -126,6 +127,7 @@ export default function DeviceMonitor({
   onReorder,
   getMediaName
 }: DeviceMonitorProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [refreshing, setRefreshing] = useState(false);
@@ -173,10 +175,12 @@ export default function DeviceMonitor({
         ...(command === "pause" && { playback_state: "paused" }),
         ...(command === "play" && { playback_state: "playing" }),
       } as any);
-      const labels = { reload: "Reload solicitado", pause: "Tela pausada", play: "Tela retomada", next: "Próxima mídia" };
-      toast({ title: labels[command], description: "Sinal enviado para a tela." });
+      toast({
+        title: t(`deviceMonitor.toasts.commands.${command}`),
+        description: t("deviceMonitor.toasts.commands.description"),
+      });
     } catch (e) {
-      toast({ title: "Erro ao enviar comando", variant: "destructive" });
+      toast({ title: t("deviceMonitor.toasts.commandErrorTitle"), variant: "destructive" });
     }
   };
 
@@ -186,15 +190,15 @@ export default function DeviceMonitor({
       setRefreshing(true);
       await onSync(selectedIds);
       toast({
-        title: "Sincronização Enviada! ⚡",
-        description: `${selectedIds.length} telas receberam o sinal de atualização.`,
+        title: t("deviceMonitor.toasts.syncSentTitle"),
+        description: t("deviceMonitor.toasts.syncSentDescription", { count: selectedIds.length }),
       });
       setSelectedIds([]);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Erro ao sincronizar",
-        description: "Não foi possível enviar o sinal para as telas selecionadas.",
+        title: t("deviceMonitor.toasts.syncErrorTitle"),
+        description: t("deviceMonitor.toasts.syncErrorDescription"),
       });
     } finally {
       setRefreshing(false);
@@ -203,14 +207,14 @@ export default function DeviceMonitor({
 
   const handleCreateScreen = async () => {
     if (!newScreenName.trim()) {
-      toast({ title: "Digite um nome para a tela", variant: "destructive" });
+      toast({ title: t("deviceMonitor.createDialog.nameRequired"), variant: "destructive" });
       return;
     }
     
     if (playlists.length >= screenLimit) {
       toast({ 
-        title: "Limite Atingido", 
-        description: `Seu plano permite no máximo ${screenLimit} tela(s). Entre em contato para upgrade.`,
+        title: t("deviceMonitor.createDialog.limitReachedTitle"), 
+        description: t("deviceMonitor.createDialog.limitReachedDescription", { limit: screenLimit }),
         variant: "destructive" 
       });
       return;
@@ -222,13 +226,13 @@ export default function DeviceMonitor({
       if (newPl) {
         setCreatedScreen(newPl);
         setNewScreenName("");
-        toast({ title: "✅ Tela cadastrada com sucesso!" });
+        toast({ title: t("deviceMonitor.createDialog.createdTitle") });
       }
     } catch (error: any) {
       console.error("❌ Erro ao cadastrar tela:", error);
       toast({ 
-        title: "Erro ao cadastrar", 
-        description: error.message || "Ocorreu um erro inesperado no banco de dados.",
+        title: t("deviceMonitor.createDialog.createErrorTitle"), 
+        description: error.message || t("deviceMonitor.createDialog.createErrorDefault"),
         variant: "destructive" 
       });
     } finally {
@@ -259,13 +263,13 @@ export default function DeviceMonitor({
       await onSync([editingPlaylist.id]);
       
       toast({
-        title: "✅ Configurações Salvas!",
-        description: "As alterações foram enviadas para o dispositivo.",
+        title: t("deviceMonitor.toasts.saveSuccessTitle"),
+        description: t("deviceMonitor.toasts.saveSuccessDescription"),
       });
       setIsSettingsOpen(false);
     } catch (error) {
       toast({
-        title: "Erro ao salvar",
+        title: t("deviceMonitor.toasts.saveErrorTitle"),
         variant: "destructive",
       });
     } finally {
@@ -290,15 +294,15 @@ export default function DeviceMonitor({
   const copyPlayerLink = (id: string) => {
     const link = `${window.location.origin}/player/${id}`;
     navigator.clipboard.writeText(link);
-    toast({ title: "Link copiado para a área de transferência!" });
+    toast({ title: t("deviceMonitor.toasts.linkCopied") });
   };
 
   const handleConfigure = (id: string) => {
     setSelectedPlaylistId(id);
     navigate("/dashboard/settings");
     toast({
-      title: "Tela Selecionada",
-      description: `Agora você está editando as configurações da tela individual.`,
+      title: t("deviceMonitor.toasts.screenSelectedTitle"),
+      description: t("deviceMonitor.toasts.screenSelectedDescription"),
     });
   };
 
@@ -319,9 +323,9 @@ export default function DeviceMonitor({
     <div className="space-y-8 animate-fade-in pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-3xl font-bold tracking-tight">Meus Dispositivos</h2>
+          <h2 className="font-display text-3xl font-bold tracking-tight">{t("deviceMonitor.title")}</h2>
           <p className="text-muted-foreground mt-1 text-base">
-            Gerencie e monitore suas telas individuais em tempo real.
+            {t("deviceMonitor.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -332,27 +336,27 @@ export default function DeviceMonitor({
             <DialogTrigger asChild>
               <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20">
                 <Plus className="w-4 h-4" />
-                Cadastrar Nova Tela
+                {t("deviceMonitor.createScreen")}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Monitor className="w-5 h-5 text-indigo-500" />
-                  Cadastrar Novo Dispositivo
+                  {t("deviceMonitor.createDialog.title")}
                 </DialogTitle>
                 <DialogDescription>
-                  Dê um nome para identificar onde esta tela será instalada.
+                  {t("deviceMonitor.createDialog.description")}
                 </DialogDescription>
               </DialogHeader>
 
               {!createdScreen ? (
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="screen-name">Nome da Tela / Localização</Label>
+                    <Label htmlFor="screen-name">{t("deviceMonitor.createDialog.nameLabel")}</Label>
                     <Input
                       id="screen-name"
-                      placeholder="Ex: Recepção, Corredor B, Vitrine..."
+                      placeholder={t("deviceMonitor.createDialog.namePlaceholder")}
                       value={newScreenName}
                       onChange={(e) => setNewScreenName(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleCreateScreen()}
@@ -362,7 +366,7 @@ export default function DeviceMonitor({
                   <div className="p-3 bg-muted/50 rounded-lg flex items-start gap-3">
                     <Info className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <p className="text-[11px] text-muted-foreground">
-                      Após o cadastro, você receberá o link que deve ser aberto no navegador da sua TV ou hardware de reprodução.
+                      {t("deviceMonitor.createDialog.infoHint")}
                     </p>
                   </div>
                 </div>
@@ -372,24 +376,24 @@ export default function DeviceMonitor({
                     <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-2">
                       <Check className="h-6 w-6 text-emerald-500" />
                     </div>
-                    <h4 className="font-bold text-lg">Tela Pronta!</h4>
-                    <p className="text-sm text-muted-foreground">Abaixo estão as informações para conexão:</p>
+                    <h4 className="font-bold text-lg">{t("deviceMonitor.createDialog.readyTitle")}</h4>
+                    <p className="text-sm text-muted-foreground">{t("deviceMonitor.createDialog.readySubtitle")}</p>
                   </div>
 
                   <div className="space-y-4">
                     <div className="p-4 bg-muted border rounded-xl space-y-3">
                       <div className="space-y-1">
-                        <Label className="text-[10px] uppercase font-black text-muted-foreground">Nome da Tela</Label>
+                        <Label className="text-[10px] uppercase font-black text-muted-foreground">{t("deviceMonitor.createDialog.screenNameLabel")}</Label>
                         <p className="font-bold text-foreground">{createdScreen.nome_da_tela}</p>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] uppercase font-black text-muted-foreground">ID do Dispositivo</Label>
+                        <Label className="text-[10px] uppercase font-black text-muted-foreground">{t("deviceMonitor.createDialog.deviceIdLabel")}</Label>
                         <p className="font-mono text-xs text-foreground bg-background p-2 rounded border border-border/50">{createdScreen.id}</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold">Link de Transmissão</Label>
+                      <Label className="text-xs font-bold">{t("deviceMonitor.createDialog.linkLabel")}</Label>
                       <div className="flex gap-2">
                         <Input 
                           readOnly 
@@ -418,11 +422,11 @@ export default function DeviceMonitor({
                     disabled={isCreating}
                     className="w-full bg-indigo-600 hover:bg-indigo-700"
                   >
-                    {isCreating ? "Cadastrando..." : "Confirmar Cadastro"}
+                    {isCreating ? t("deviceMonitor.createDialog.creating") : t("deviceMonitor.createDialog.confirm")}
                   </Button>
                 ) : (
                   <Button onClick={() => setIsDialogOpen(false)} className="w-full">
-                    Concluir e Voltar
+                    {t("deviceMonitor.createDialog.done")}
                   </Button>
                 )}
               </DialogFooter>
@@ -432,12 +436,12 @@ export default function DeviceMonitor({
           {selectedIds.length > 0 && (
             <Button onClick={handleSyncSelected} className="gap-2 bg-amber-500 hover:bg-amber-600 animate-in fade-in zoom-in duration-300">
               <Zap className={`w-4 h-4 ${refreshing ? "animate-pulse" : ""}`} />
-              Sincronizar Selecionados ({selectedIds.length})
+              {t("deviceMonitor.syncSelected", { count: selectedIds.length })}
             </Button>
           )}
           <Button variant="outline" onClick={() => window.location.reload()} className="gap-2">
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Atualizar Status</span>
+            <span className="hidden sm:inline">{t("deviceMonitor.refreshStatus")}</span>
           </Button>
         </div>
       </div>
@@ -450,15 +454,19 @@ export default function DeviceMonitor({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                <h3 className="font-bold text-lg">Cota de Telas do Plano</h3>
+                <h3 className="font-bold text-lg">{t("deviceMonitor.quota.title")}</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                Você está utilizando <span className="text-foreground font-bold">{playlists.length}</span> de <span className="text-foreground font-bold">{screenLimit}</span> telas disponíveis.
+                <Trans
+                  i18nKey="deviceMonitor.quota.usage"
+                  values={{ used: playlists.length, total: screenLimit }}
+                  components={{ strong: <span className="text-foreground font-bold" /> }}
+                />
               </p>
             </div>
             <div className="flex-1 max-w-md w-full">
               <div className="flex justify-between text-xs mb-2 font-bold tracking-tight uppercase text-muted-foreground/70">
-                <span>Uso de Banda</span>
+                <span>{t("deviceMonitor.quota.bandwidth")}</span>
                 <span>{playlists.length}/{screenLimit}</span>
               </div>
               <div className="h-3 bg-muted rounded-full overflow-hidden border border-border/50">
@@ -477,9 +485,9 @@ export default function DeviceMonitor({
         <CardContent className="p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
           <div className="text-xs space-y-1">
-            <p className="font-bold text-amber-700 dark:text-amber-400">Importante sobre os links das telas</p>
+            <p className="font-bold text-amber-700 dark:text-amber-400">{t("deviceMonitor.linkTip.title")}</p>
             <p className="text-muted-foreground leading-relaxed">
-              Para que o link <code className="bg-muted px-1 py-0.5 rounded text-[10px]">/player/...</code> funcione em qualquer dispositivo (TV, celular, outra rede), o app precisa estar <strong>publicado com visibilidade pública</strong>. Clique em <strong>Publish</strong> no topo do editor e marque como público. No preview (id-preview-...), o link só funciona para você logado.
+              {t("deviceMonitor.linkTip.body")}
             </p>
           </div>
         </CardContent>
@@ -489,11 +497,11 @@ export default function DeviceMonitor({
       <div className="grid gap-4">
         <div className="flex items-center gap-2 px-2">
           <Monitor className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Dispositivos Ativos</h3>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("deviceMonitor.activeDevices")}</h3>
         </div>
         
         {playlists.map((pl) => {
-          const status = getStatusInfo(statuses[pl.id] || null);
+          const status = getStatusInfo(statuses[pl.id] || null, t);
           const isSelected = selectedIds.includes(pl.id);
           const isCurrentEditor = selectedPlaylistId === pl.id;
 
@@ -504,7 +512,7 @@ export default function DeviceMonitor({
             >
               {isCurrentEditor && (
                 <div className="absolute top-0 right-0 px-3 py-1 bg-indigo-500 text-[10px] font-black uppercase text-white rounded-bl-lg tracking-widest animate-in slide-in-from-top-full duration-300">
-                  Editando agora
+                  {t("deviceMonitor.editingNow")}
                 </div>
               )}
               
@@ -541,7 +549,7 @@ export default function DeviceMonitor({
                     {/* Quick Stats/Actions */}
                     <div className="flex items-center gap-3 shrink-0">
                       <div className="hidden sm:flex flex-col items-end mr-4">
-                         <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Último Sinal</p>
+                         <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{t("deviceMonitor.status.lastSignal")}</p>
                          <p className="text-xs font-medium text-foreground">{status.ago}</p>
                       </div>
                       <div className="flex gap-1.5 flex-wrap justify-end">
@@ -552,14 +560,14 @@ export default function DeviceMonitor({
                           className={`gap-2 ${isCurrentEditor ? 'bg-indigo-500 hover:bg-indigo-600' : ''}`}
                         >
                           <Settings2 className="w-4 h-4" />
-                          Configurar
+                          {t("deviceMonitor.actions.configure")}
                         </Button>
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => sendRemoteCommand(pl.id, (pl as any).playback_state === "paused" ? "play" : "pause")}
                           className="text-muted-foreground hover:text-amber-500"
-                          title={(pl as any).playback_state === "paused" ? "Retomar reprodução" : "Pausar reprodução"}
+                          title={(pl as any).playback_state === "paused" ? t("deviceMonitor.actions.resume") : t("deviceMonitor.actions.pause")}
                         >
                           {(pl as any).playback_state === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                         </Button>
@@ -568,7 +576,7 @@ export default function DeviceMonitor({
                           size="icon"
                           onClick={() => sendRemoteCommand(pl.id, "reload")}
                           className="text-muted-foreground hover:text-indigo-500"
-                          title="Recarregar tela remotamente"
+                          title={t("deviceMonitor.actions.reload")}
                         >
                           <RotateCw className="w-4 h-4" />
                         </Button>
@@ -577,11 +585,11 @@ export default function DeviceMonitor({
                           size="icon"
                           onClick={() => copyPlayerLink(pl.id)}
                           className="text-muted-foreground hover:text-foreground"
-                          title="Copiar link"
+                          title={t("deviceMonitor.actions.copyLink")}
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400" title="Abrir tela">
+                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400" title={t("deviceMonitor.actions.openScreen")}>
                           <ExternalLink className="w-4 h-4" />
                         </Button>
                       </div>
@@ -596,9 +604,9 @@ export default function DeviceMonitor({
         {playlists.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-2xl bg-muted/20 text-center">
             <Monitor className="w-12 h-12 text-muted-foreground/20 mb-4" />
-            <p className="font-bold text-lg text-foreground/70">Nenhuma tela cadastrada</p>
+            <p className="font-bold text-lg text-foreground/70">{t("deviceMonitor.emptyTitle")}</p>
             <p className="text-sm text-muted-foreground max-w-xs mt-1">
-              Vá em "Playlists" para criar sua primeira tela e começar a exibir conteúdo.
+              {t("deviceMonitor.emptyDescription")}
             </p>
           </div>
         )}
@@ -614,7 +622,7 @@ export default function DeviceMonitor({
                   <Settings2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-bold">Configurações da Tela</DialogTitle>
+                  <DialogTitle className="text-xl font-bold">{t("deviceMonitor.settingsDialog.title")}</DialogTitle>
                   <DialogDescription className="text-indigo-500/60 font-medium">
                     {editingPlaylist?.nome_da_tela} • ID: {editingPlaylist?.id.split("-")[0]}
                   </DialogDescription>
@@ -622,7 +630,7 @@ export default function DeviceMonitor({
               </div>
               <Badge variant="outline" className="h-6 gap-1 bg-white/50 border-indigo-500/20 text-indigo-500">
                 <ShieldCheck className="w-3 h-3" />
-                Master Admin
+                {t("deviceMonitor.settingsDialog.masterAdmin")}
               </Badge>
             </div>
           </DialogHeader>
@@ -632,13 +640,13 @@ export default function DeviceMonitor({
               <div className="px-6 py-2 border-b bg-muted/30">
                 <TabsList className="bg-transparent gap-2 h-auto p-0">
                   <TabsTrigger value="geral" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-                    <Clock className="w-4 h-4" /> Geral
+                    <Clock className="w-4 h-4" /> {t("deviceMonitor.settingsDialog.tabs.general")}
                   </TabsTrigger>
                   <TabsTrigger value="layout" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-                    <Monitor className="w-4 h-4" /> Layout
+                    <Monitor className="w-4 h-4" /> {t("deviceMonitor.settingsDialog.tabs.layout")}
                   </TabsTrigger>
                   <TabsTrigger value="programacao" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-                    <Activity className="w-4 h-4" /> Programação
+                    <Activity className="w-4 h-4" /> {t("deviceMonitor.settingsDialog.tabs.schedule")}
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -649,7 +657,7 @@ export default function DeviceMonitor({
                     <TabsContent value="geral" className="mt-0 space-y-6">
                       <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Cidade (Clima)</Label>
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">{t("deviceMonitor.settingsDialog.fields.city")}</Label>
                           <Input 
                             value={editingPlaylist?.config_clima || ""} 
                             onChange={(e) => setEditingPlaylist(prev => prev ? { ...prev, config_clima: e.target.value } : null)}
@@ -658,7 +666,7 @@ export default function DeviceMonitor({
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Categoria de Notícias</Label>
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">{t("deviceMonitor.settingsDialog.fields.newsCategory")}</Label>
                           <Select 
                             value={editingPlaylist?.config_noticias || "technology"} 
                             onValueChange={(val) => setEditingPlaylist(prev => prev ? { ...prev, config_noticias: val } : null)}
@@ -667,14 +675,14 @@ export default function DeviceMonitor({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="technology">Tecnologia</SelectItem>
-                              <SelectItem value="business">Economia / Negócios</SelectItem>
-                              <SelectItem value="sports">Esportes</SelectItem>
+                              <SelectItem value="technology">{t("deviceMonitor.settingsDialog.categories.technology")}</SelectItem>
+                              <SelectItem value="business">{t("deviceMonitor.settingsDialog.categories.business")}</SelectItem>
+                              <SelectItem value="sports">{t("deviceMonitor.settingsDialog.categories.sports")}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Instagram (Handle)</Label>
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">{t("deviceMonitor.settingsDialog.fields.instagram")}</Label>
                           <Input 
                             value={editingPlaylist?.instagram_handle || ""} 
                             onChange={(e) => setEditingPlaylist(prev => prev ? { ...prev, instagram_handle: e.target.value } : null)}
@@ -683,13 +691,13 @@ export default function DeviceMonitor({
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Alertas Master (Cenário)</Label>
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">{t("deviceMonitor.settingsDialog.fields.alerts")}</Label>
                           <Select value="default_off">
                              <SelectTrigger className="bg-muted/30 opacity-50 cursor-not-allowed">
-                               <SelectValue placeholder="Cenário de Segmento" />
+                               <SelectValue placeholder={t("deviceMonitor.settingsDialog.fields.alertsPlaceholder")} />
                              </SelectTrigger>
                              <SelectContent>
-                               <SelectItem value="default_off">Seguir Configuração Global</SelectItem>
+                               <SelectItem value="default_off">{t("deviceMonitor.settingsDialog.fields.alertsDefault")}</SelectItem>
                              </SelectContent>
                           </Select>
                         </div>
@@ -728,7 +736,7 @@ export default function DeviceMonitor({
                         {/* Timeline */}
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                             <Activity className="w-3 h-3" /> Ordem de Exibição
+                             <Activity className="w-3 h-3" /> {t("deviceMonitor.settingsDialog.scheduleOrder")}
                           </h4>
                           <ScrollArea className="h-[300px] border rounded-xl bg-muted/10 p-4">
                             <DndContext 
@@ -760,7 +768,7 @@ export default function DeviceMonitor({
                                   })}
                                   {(editingPlaylist?.ordem_arquivos || []).length === 0 && (
                                     <div className="py-12 text-center">
-                                      <p className="text-xs text-muted-foreground italic">Nenhuma mídia na grade.</p>
+                                      <p className="text-xs text-muted-foreground italic">{t("deviceMonitor.settingsDialog.emptyMedia")}</p>
                                     </div>
                                   )}
                                 </div>
@@ -772,7 +780,7 @@ export default function DeviceMonitor({
                         {/* Media Selector */}
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                             <Plus className="w-3 h-3" /> Seu Acervo
+                             <Plus className="w-3 h-3" /> {t("deviceMonitor.settingsDialog.yourLibrary")}
                           </h4>
                           <ScrollArea className="h-[300px] border rounded-xl bg-card p-4">
                             <div className="grid grid-cols-1 gap-2">
@@ -809,17 +817,17 @@ export default function DeviceMonitor({
           <DialogFooter className="p-6 border-t bg-muted/20">
             <div className="flex w-full items-center justify-between gap-4">
                <p className="text-[10px] text-muted-foreground max-w-[200px]">
-                 Ao salvar, o hardware receberá um comando instantâneo de atualização.
+                 {t("deviceMonitor.settingsDialog.footerHint")}
                </p>
                <div className="flex gap-2">
-                 <Button variant="ghost" onClick={() => setIsSettingsOpen(false)}>Cancelar</Button>
+                 <Button variant="ghost" onClick={() => setIsSettingsOpen(false)}>{t("common.cancel")}</Button>
                  <Button 
                    onClick={handleSaveQuickConfig}
                    disabled={isSavingSettings}
                    className="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 px-8"
                  >
                    {isSavingSettings ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                   Salvar e Sincronizar
+                   {t("deviceMonitor.settingsDialog.saveAndSync")}
                  </Button>
                </div>
             </div>

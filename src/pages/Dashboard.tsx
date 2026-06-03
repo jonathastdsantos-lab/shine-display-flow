@@ -15,8 +15,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
@@ -81,16 +84,19 @@ export default function Dashboard() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b border-border bg-card px-4 gap-3">
             <SidebarTrigger />
-            <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
               <h1 className="font-display text-lg font-bold truncate">
-                {selectedPlaylist ? `Editando: ${selectedPlaylist.nome_da_tela}` : (data.profile.nome_empresa || "Digital Signage")}
+                {selectedPlaylist
+                  ? t("dashboard.header.editing", { name: selectedPlaylist.nome_da_tela })
+                  : (data.profile.nome_empresa || t("dashboard.header.defaultTitle"))}
               </h1>
               {selectedPlaylist && (
                 <div className="px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase text-indigo-500 animate-pulse shrink-0">
-                  Modo Individual
+                  {t("dashboard.header.individualMode")}
                 </div>
               )}
             </div>
+            <LanguageSwitcher />
           </header>
           <main className="flex-1 p-6 overflow-auto">
             <Routes>
