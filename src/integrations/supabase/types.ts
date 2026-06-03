@@ -148,6 +148,7 @@ export type Database = {
           playback_state: string | null
           remote_command: string | null
           remote_command_at: string | null
+          schedule_config: Json | null
           template: string | null
           updated_at: string
           widget_config: Json | null
@@ -169,6 +170,7 @@ export type Database = {
           playback_state?: string | null
           remote_command?: string | null
           remote_command_at?: string | null
+          schedule_config?: Json | null
           template?: string | null
           updated_at?: string
           widget_config?: Json | null
@@ -190,6 +192,7 @@ export type Database = {
           playback_state?: string | null
           remote_command?: string | null
           remote_command_at?: string | null
+          schedule_config?: Json | null
           template?: string | null
           updated_at?: string
           widget_config?: Json | null
