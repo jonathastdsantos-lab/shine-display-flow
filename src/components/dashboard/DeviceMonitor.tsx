@@ -622,7 +622,7 @@ export default function DeviceMonitor({
                   <Settings2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-bold">Configurações da Tela</DialogTitle>
+                  <DialogTitle className="text-xl font-bold">{t("deviceMonitor.settingsDialog.title")}</DialogTitle>
                   <DialogDescription className="text-indigo-500/60 font-medium">
                     {editingPlaylist?.nome_da_tela} • ID: {editingPlaylist?.id.split("-")[0]}
                   </DialogDescription>
@@ -630,7 +630,7 @@ export default function DeviceMonitor({
               </div>
               <Badge variant="outline" className="h-6 gap-1 bg-white/50 border-indigo-500/20 text-indigo-500">
                 <ShieldCheck className="w-3 h-3" />
-                Master Admin
+                {t("deviceMonitor.settingsDialog.masterAdmin")}
               </Badge>
             </div>
           </DialogHeader>
@@ -640,13 +640,13 @@ export default function DeviceMonitor({
               <div className="px-6 py-2 border-b bg-muted/30">
                 <TabsList className="bg-transparent gap-2 h-auto p-0">
                   <TabsTrigger value="geral" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-                    <Clock className="w-4 h-4" /> Geral
+                    <Clock className="w-4 h-4" /> {t("deviceMonitor.settingsDialog.tabs.general")}
                   </TabsTrigger>
                   <TabsTrigger value="layout" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-                    <Monitor className="w-4 h-4" /> Layout
+                    <Monitor className="w-4 h-4" /> {t("deviceMonitor.settingsDialog.tabs.layout")}
                   </TabsTrigger>
                   <TabsTrigger value="programacao" className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-                    <Activity className="w-4 h-4" /> Programação
+                    <Activity className="w-4 h-4" /> {t("deviceMonitor.settingsDialog.tabs.schedule")}
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -657,7 +657,7 @@ export default function DeviceMonitor({
                     <TabsContent value="geral" className="mt-0 space-y-6">
                       <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Cidade (Clima)</Label>
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">{t("deviceMonitor.settingsDialog.fields.city")}</Label>
                           <Input 
                             value={editingPlaylist?.config_clima || ""} 
                             onChange={(e) => setEditingPlaylist(prev => prev ? { ...prev, config_clima: e.target.value } : null)}
@@ -666,7 +666,7 @@ export default function DeviceMonitor({
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Categoria de Notícias</Label>
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">{t("deviceMonitor.settingsDialog.fields.newsCategory")}</Label>
                           <Select 
                             value={editingPlaylist?.config_noticias || "technology"} 
                             onValueChange={(val) => setEditingPlaylist(prev => prev ? { ...prev, config_noticias: val } : null)}
@@ -675,14 +675,14 @@ export default function DeviceMonitor({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="technology">Tecnologia</SelectItem>
-                              <SelectItem value="business">Economia / Negócios</SelectItem>
-                              <SelectItem value="sports">Esportes</SelectItem>
+                              <SelectItem value="technology">{t("deviceMonitor.settingsDialog.categories.technology")}</SelectItem>
+                              <SelectItem value="business">{t("deviceMonitor.settingsDialog.categories.business")}</SelectItem>
+                              <SelectItem value="sports">{t("deviceMonitor.settingsDialog.categories.sports")}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Instagram (Handle)</Label>
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">{t("deviceMonitor.settingsDialog.fields.instagram")}</Label>
                           <Input 
                             value={editingPlaylist?.instagram_handle || ""} 
                             onChange={(e) => setEditingPlaylist(prev => prev ? { ...prev, instagram_handle: e.target.value } : null)}
@@ -691,13 +691,13 @@ export default function DeviceMonitor({
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Alertas Master (Cenário)</Label>
+                          <Label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">{t("deviceMonitor.settingsDialog.fields.alerts")}</Label>
                           <Select value="default_off">
                              <SelectTrigger className="bg-muted/30 opacity-50 cursor-not-allowed">
-                               <SelectValue placeholder="Cenário de Segmento" />
+                               <SelectValue placeholder={t("deviceMonitor.settingsDialog.fields.alertsPlaceholder")} />
                              </SelectTrigger>
                              <SelectContent>
-                               <SelectItem value="default_off">Seguir Configuração Global</SelectItem>
+                               <SelectItem value="default_off">{t("deviceMonitor.settingsDialog.fields.alertsDefault")}</SelectItem>
                              </SelectContent>
                           </Select>
                         </div>
@@ -736,7 +736,7 @@ export default function DeviceMonitor({
                         {/* Timeline */}
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                             <Activity className="w-3 h-3" /> Ordem de Exibição
+                             <Activity className="w-3 h-3" /> {t("deviceMonitor.settingsDialog.scheduleOrder")}
                           </h4>
                           <ScrollArea className="h-[300px] border rounded-xl bg-muted/10 p-4">
                             <DndContext 
@@ -768,7 +768,7 @@ export default function DeviceMonitor({
                                   })}
                                   {(editingPlaylist?.ordem_arquivos || []).length === 0 && (
                                     <div className="py-12 text-center">
-                                      <p className="text-xs text-muted-foreground italic">Nenhuma mídia na grade.</p>
+                                      <p className="text-xs text-muted-foreground italic">{t("deviceMonitor.settingsDialog.emptyMedia")}</p>
                                     </div>
                                   )}
                                 </div>
@@ -780,7 +780,7 @@ export default function DeviceMonitor({
                         {/* Media Selector */}
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                             <Plus className="w-3 h-3" /> Seu Acervo
+                             <Plus className="w-3 h-3" /> {t("deviceMonitor.settingsDialog.yourLibrary")}
                           </h4>
                           <ScrollArea className="h-[300px] border rounded-xl bg-card p-4">
                             <div className="grid grid-cols-1 gap-2">
@@ -817,17 +817,17 @@ export default function DeviceMonitor({
           <DialogFooter className="p-6 border-t bg-muted/20">
             <div className="flex w-full items-center justify-between gap-4">
                <p className="text-[10px] text-muted-foreground max-w-[200px]">
-                 Ao salvar, o hardware receberá um comando instantâneo de atualização.
+                 {t("deviceMonitor.settingsDialog.footerHint")}
                </p>
                <div className="flex gap-2">
-                 <Button variant="ghost" onClick={() => setIsSettingsOpen(false)}>Cancelar</Button>
+                 <Button variant="ghost" onClick={() => setIsSettingsOpen(false)}>{t("common.cancel")}</Button>
                  <Button 
                    onClick={handleSaveQuickConfig}
                    disabled={isSavingSettings}
                    className="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 px-8"
                  >
                    {isSavingSettings ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                   Salvar e Sincronizar
+                   {t("deviceMonitor.settingsDialog.saveAndSync")}
                  </Button>
                </div>
             </div>
