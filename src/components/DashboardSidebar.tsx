@@ -107,7 +107,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
@@ -116,7 +116,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && <span>{t(`sidebar.nav.${item.key}`)}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -135,7 +135,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
           <SidebarGroupContent>
             <SidebarMenu>
               {analyticsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
@@ -144,7 +144,7 @@ export function DashboardSidebar({ onSync, playlists = [], selectedPlaylistId }:
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && <span>{t(`sidebar.nav.${item.key}`)}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
