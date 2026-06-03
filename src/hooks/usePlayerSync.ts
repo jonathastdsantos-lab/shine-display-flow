@@ -107,35 +107,66 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
     }
   }, []);
 
-  // ── fetchData principal ──
+  // ── fetchData principal (com tratamento de erro estruturado) ──
   const fetchData = useCallback(async () => {
     if (!playlist_id) return;
+    setLoading(true);
 
-    const { data: playlist } = await supabase
-      .from("playlists")
-      .select("*")
-      .eq("id", playlist_id)
-      .single();
+    // 1. Playlist
+    let playlist: any = null;
+    try {
+      const { data, error: err } = await supabase
+        .from("playlists")
+        .select("*")
+        .eq("id", playlist_id)
+        .maybeSingle();
+      if (err) throw err;
+      playlist = data;
+    } catch (err) {
+      logError("playlists.fetch", err, { playlist_id });
+      setError({
+        kind: "playlist_fetch",
+        message: "Não conseguimos contatar o servidor para carregar a tela.",
+        detail: (err as any)?.message,
+      });
+      setLoading(false);
+      return;
+    }
 
-    if (!playlist) return;
+    if (!playlist) {
+      console.warn("[Player:playlists.fetch] Tela não encontrada", { playlist_id });
+      setError({
+        kind: "playlist_not_found",
+        message: `Nenhuma tela cadastrada com o ID informado.`,
+        detail: playlist_id,
+      });
+      setLoading(false);
+      return;
+    }
 
     setClientId(playlist.client_id);
 
+    // 2. Profile (fallback de config)
     let finalCity = (playlist as any).config_clima;
     let finalNews = (playlist as any).config_noticias;
     let finalIG = (playlist as any).instagram_handle;
 
     if (!finalCity || !finalNews || !finalIG) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("config_clima, config_noticias, instagram_handle")
-        .eq("user_id", playlist.client_id)
-        .single();
-
-      if (profile) {
-        finalCity = finalCity || profile.config_clima;
-        finalNews = finalNews || profile.config_noticias;
-        finalIG = finalIG || profile.instagram_handle;
+      try {
+        const { data: profile, error: err } = await supabase
+          .from("profiles")
+          .select("config_clima, config_noticias, instagram_handle")
+          .eq("user_id", playlist.client_id)
+          .maybeSingle();
+        if (err) throw err;
+        if (profile) {
+          finalCity = finalCity || profile.config_clima;
+          finalNews = finalNews || profile.config_noticias;
+          finalIG = finalIG || profile.instagram_handle;
+        }
+      } catch (err) {
+        // Não bloqueia a renderização — apenas usa defaults
+        logError("profiles.fetch", err, { client_id: playlist.client_id });
       }
     }
 
@@ -164,24 +195,60 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
       await (supabase as any).rpc("clear_remote_command", { p_playlist_id: playlist_id });
     }
 
-    // Mídias
-    const { data: allMedia } = await supabase
-      .from("media_library")
-      .select("*")
-      .eq("client_id", playlist.client_id);
+    // 3. Mídias — retry com backoff exponencial (1s, 2s, 4s)
+    const delays = [1000, 2000, 4000];
+    let allMedia: any[] | null = null;
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < delays.length; attempt++) {
+      try {
+        const { data, error: err } = await supabase
+          .from("media_library")
+          .select("*")
+          .eq("client_id", playlist.client_id);
+        if (err) throw err;
+        allMedia = data || [];
+        lastErr = null;
+        if (attempt > 0) {
+          console.info(`[Player:media_library.fetch] sucesso na tentativa ${attempt + 1}`);
+        }
+        break;
+      } catch (err) {
+        lastErr = err;
+        logError("media_library.fetch", err, {
+          attempt: attempt + 1,
+          client_id: playlist.client_id,
+        });
+        if (attempt < delays.length - 1) {
+          await sleep(delays[attempt]);
+        }
+      }
+    }
+
+    if (lastErr) {
+      setError({
+        kind: "media_fetch",
+        message: "Não foi possível carregar as mídias após 3 tentativas.",
+        detail: (lastErr as any)?.message,
+      });
+      setLoading(false);
+      return;
+    }
 
     if (allMedia) {
       const mediaIds = playlist.ordem_arquivos as string[];
       if (mediaIds && mediaIds.length > 0) {
         const ordered = mediaIds
-          .map((mid) => allMedia.find((m: any) => m.id === mid))
+          .map((mid) => allMedia!.find((m: any) => m.id === mid))
           .filter(Boolean) as MediaItem[];
         setMediaItems(ordered);
       } else {
         setMediaItems(allMedia as any);
       }
     }
-  }, [playlist_id]);
+
+    setError(null);
+    setLoading(false);
+  }, [playlist_id, retryTick]);
 
   // ── Realtime + Polling de segurança ──
   useEffect(() => {
