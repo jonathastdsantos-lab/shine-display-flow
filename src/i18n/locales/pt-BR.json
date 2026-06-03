@@ -1,0 +1,245 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "connecting": "Conectando...",
+    "logout": "Sair"
+  },
+  "language": {
+    "label": "Idioma",
+    "pt-BR": "Português (BR)",
+    "en": "English"
+  },
+  "login": {
+    "tagline": "Plataforma de Publicidade & Propaganda",
+    "signInTitle": "Acesse sua conta",
+    "signInSubtitle": "Entre com suas credenciais",
+    "signUpTitle": "Crie sua conta",
+    "signUpSubtitle": "Preencha os dados para começar",
+    "companyPlaceholder": "Nome da Empresa",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Senha",
+    "signInButton": "Entrar",
+    "signUpButton": "Criar Conta",
+    "loadingButton": "Carregando...",
+    "toggleToSignIn": "Já tem conta? Entrar",
+    "toggleToSignUp": "Não tem conta? Criar",
+    "accountCreatedTitle": "Conta criada!",
+    "accountCreatedDescription": "Verifique seu email para confirmar.",
+    "copyright": "© 2026 DigitalSignageOS · Todos os direitos reservados"
+  },
+  "dashboard": {
+    "header": {
+      "defaultTitle": "Digital Signage",
+      "editing": "Editando: {{name}}",
+      "individualMode": "Modo Individual"
+    }
+  },
+  "sidebar": {
+    "nav": {
+      "media": "Biblioteca de Mídia",
+      "playlists": "Playlists",
+      "settings": "Config. do Canal",
+      "templates": "Templates & Cenários",
+      "devices": "Meus Dispositivos",
+      "leads": "Leads de Anúncios",
+      "reports": "Relatórios",
+      "developer": "Área Developer"
+    },
+    "groups": {
+      "monitoring": "Monitoramento",
+      "developer": "Developer"
+    },
+    "actions": {
+      "syncScreens": "Sincronizar Telas",
+      "synced": "Sincronizado!",
+      "previewPlayer": "Preview Player",
+      "logout": "Sair"
+    },
+    "toasts": {
+      "syncSuccessTitle": "Telas Sincronizadas! 🚀",
+      "syncSuccessDescription": "Todas as suas telas ativas receberam o sinal de atualização.",
+      "syncErrorTitle": "Erro na Sincronização",
+      "syncErrorDescription": "Não foi possível enviar o sinal para as telas.",
+      "noScreensTitle": "Nenhuma tela encontrada",
+      "noScreensDescription": "Crie uma playlist em 'Playlists' primeiro."
+    }
+  },
+  "channelSettings": {
+    "title": "Configurações do Canal",
+    "subtitle": "Personalize os widgets e o conteúdo informativo que aparecerá nos seus players.",
+    "weather": {
+      "title": "Previsão do Tempo",
+      "description": "O player exibirá a temperatura local e condições climáticas.",
+      "locationLabel": "Localização do Player",
+      "hint": "A temperatura será atualizada a cada 30 minutos automaticamente nos dispositivos sincronizados."
+    },
+    "news": {
+      "title": "Ticker de Notícias",
+      "description": "RSS Feed dinâmico exibido na barra inferior do player.",
+      "categoryLabel": "Categoria ou Palavra-chave",
+      "categoryPlaceholder": "Ex: tecnologia, esportes, etc",
+      "suggestionAppliedTitle": "Sugestão Aplicada",
+      "suggestionAppliedDescription": "\"{{keyword}}\" adicionado à lista."
+    },
+    "instagram": {
+      "title": "Mural Social — Instagram",
+      "description": "Exiba posts recentes do seu Instagram no widget lateral do player.",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "activeLabel": "Mural Social ativo nos players",
+      "postsSynced": "● Posts sincronizados",
+      "public": "Público",
+      "rotateHint": "Os 3 posts mais recentes serão rotacionados no player.",
+      "disconnectButton": "Desconectar Instagram",
+      "handleLabel": "Usuário do Instagram",
+      "handlePlaceholder": "suaempresa",
+      "publicHint": "O perfil precisa ser <strong>público</strong> para que os posts sejam exibidos.",
+      "privacyTitle": "Aviso de Privacidade Instagram",
+      "privacyBody": "O Mural Social exibe posts públicos do perfil informado. A integração com OAuth completo (acesso privado) estará disponível em breve.",
+      "informHandleError": "Informe o @usuário do Instagram",
+      "connectedTitle": "Instagram Conectado! 🎉",
+      "connectedDescription": "O perfil @{{handle}} foi vinculado ao Mural Social.",
+      "disconnectedTitle": "Instagram desconectado",
+      "disconnectedDescription": "O Mural Social foi desativado."
+    },
+    "footer": {
+      "hint": "Todas as alterações são aplicadas em tempo real via Cloud Sync.",
+      "saveButton": "Salvar Configurações",
+      "saveSuccess": "✅ Configurações salvas com sucesso!",
+      "saveError": "❌ Erro ao salvar",
+      "saveErrorDefault": "Verifique o console para mais detalhes."
+    }
+  },
+  "deviceMonitor": {
+    "title": "Meus Dispositivos",
+    "subtitle": "Gerencie e monitore suas telas individuais em tempo real.",
+    "createScreen": "Cadastrar Nova Tela",
+    "syncSelected": "Sincronizar Selecionados ({{count}})",
+    "refreshStatus": "Atualizar Status",
+    "activeDevices": "Dispositivos Ativos",
+    "editingNow": "Editando agora",
+    "emptyTitle": "Nenhuma tela cadastrada",
+    "emptyDescription": "Vá em \"Playlists\" para criar sua primeira tela e começar a exibir conteúdo.",
+    "status": {
+      "neverConnected": "Nunca conectado",
+      "online": "Online",
+      "inactive": "Inativo",
+      "agoLessThanMin": "há menos de 1 min",
+      "agoMin": "há {{min}} min",
+      "agoHours": "há {{hours}}h",
+      "lastSignal": "Último Sinal"
+    },
+    "quota": {
+      "title": "Cota de Telas do Plano",
+      "usage": "Você está utilizando <strong>{{used}}</strong> de <strong>{{total}}</strong> telas disponíveis.",
+      "bandwidth": "Uso de Banda"
+    },
+    "linkTip": {
+      "title": "Importante sobre os links das telas",
+      "body": "Para que o link funcione em qualquer dispositivo, o app precisa estar publicado com visibilidade pública."
+    },
+    "actions": {
+      "configure": "Configurar",
+      "pause": "Pausar reprodução",
+      "resume": "Retomar reprodução",
+      "reload": "Recarregar tela remotamente",
+      "copyLink": "Copiar link",
+      "openScreen": "Abrir tela"
+    },
+    "createDialog": {
+      "title": "Cadastrar Novo Dispositivo",
+      "description": "Dê um nome para identificar onde esta tela será instalada.",
+      "nameLabel": "Nome da Tela / Localização",
+      "namePlaceholder": "Ex: Recepção, Corredor B, Vitrine...",
+      "infoHint": "Após o cadastro, você receberá o link que deve ser aberto no navegador da sua TV ou hardware de reprodução.",
+      "readyTitle": "Tela Pronta!",
+      "readySubtitle": "Abaixo estão as informações para conexão:",
+      "screenNameLabel": "Nome da Tela",
+      "deviceIdLabel": "ID do Dispositivo",
+      "linkLabel": "Link de Transmissão",
+      "creating": "Cadastrando...",
+      "confirm": "Confirmar Cadastro",
+      "done": "Concluir e Voltar",
+      "nameRequired": "Digite um nome para a tela",
+      "limitReachedTitle": "Limite Atingido",
+      "limitReachedDescription": "Seu plano permite no máximo {{limit}} tela(s). Entre em contato para upgrade.",
+      "createdTitle": "✅ Tela cadastrada com sucesso!",
+      "createErrorTitle": "Erro ao cadastrar",
+      "createErrorDefault": "Ocorreu um erro inesperado no banco de dados."
+    },
+    "settingsDialog": {
+      "title": "Configurações da Tela",
+      "masterAdmin": "Master Admin",
+      "tabs": {
+        "general": "Geral",
+        "layout": "Layout",
+        "schedule": "Programação"
+      },
+      "fields": {
+        "city": "Cidade (Clima)",
+        "newsCategory": "Categoria de Notícias",
+        "instagram": "Instagram (Handle)",
+        "alerts": "Alertas Master (Cenário)",
+        "alertsPlaceholder": "Cenário de Segmento",
+        "alertsDefault": "Seguir Configuração Global"
+      },
+      "categories": {
+        "technology": "Tecnologia",
+        "business": "Economia / Negócios",
+        "sports": "Esportes"
+      },
+      "scheduleOrder": "Ordem de Exibição",
+      "yourLibrary": "Seu Acervo",
+      "emptyMedia": "Nenhuma mídia na grade.",
+      "footerHint": "Ao salvar, o hardware receberá um comando instantâneo de atualização.",
+      "saveAndSync": "Salvar e Sincronizar"
+    },
+    "toasts": {
+      "linkCopied": "Link copiado para a área de transferência!",
+      "screenSelectedTitle": "Tela Selecionada",
+      "screenSelectedDescription": "Agora você está editando as configurações da tela individual.",
+      "syncSentTitle": "Sincronização Enviada! ⚡",
+      "syncSentDescription": "{{count}} telas receberam o sinal de atualização.",
+      "syncErrorTitle": "Erro ao sincronizar",
+      "syncErrorDescription": "Não foi possível enviar o sinal para as telas selecionadas.",
+      "saveSuccessTitle": "✅ Configurações Salvas!",
+      "saveSuccessDescription": "As alterações foram enviadas para o dispositivo.",
+      "saveErrorTitle": "Erro ao salvar",
+      "commandErrorTitle": "Erro ao enviar comando",
+      "commands": {
+        "reload": "Reload solicitado",
+        "pause": "Tela pausada",
+        "play": "Tela retomada",
+        "next": "Próxima mídia",
+        "description": "Sinal enviado para a tela."
+      }
+    }
+  },
+  "player": {
+    "empty": {
+      "title": "Signage OS",
+      "loading": "Carregando programação...",
+      "waiting": "Aguardando Programação Local"
+    },
+    "paused": {
+      "label": "Pausado"
+    },
+    "alert": {
+      "title": "Atenção!",
+      "defaultMessage": "Mensagem de Alerta da Administração Master"
+    },
+    "error": {
+      "playlistNotFound": "Playlist não encontrada",
+      "loadingFailed": "Falha ao carregar conteúdo",
+      "retry": "Tentar novamente",
+      "retryingIn": "Tentando novamente em {{seconds}}s..."
+    }
+  }
+}

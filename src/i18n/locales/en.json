@@ -1,0 +1,245 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "connecting": "Connecting...",
+    "logout": "Log out"
+  },
+  "language": {
+    "label": "Language",
+    "pt-BR": "Português (BR)",
+    "en": "English"
+  },
+  "login": {
+    "tagline": "Advertising & Marketing Platform",
+    "signInTitle": "Sign in to your account",
+    "signInSubtitle": "Enter your credentials",
+    "signUpTitle": "Create your account",
+    "signUpSubtitle": "Fill in the details to get started",
+    "companyPlaceholder": "Company Name",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "signInButton": "Sign In",
+    "signUpButton": "Create Account",
+    "loadingButton": "Loading...",
+    "toggleToSignIn": "Already have an account? Sign in",
+    "toggleToSignUp": "No account? Create one",
+    "accountCreatedTitle": "Account created!",
+    "accountCreatedDescription": "Check your email to confirm.",
+    "copyright": "© 2026 DigitalSignageOS · All rights reserved"
+  },
+  "dashboard": {
+    "header": {
+      "defaultTitle": "Digital Signage",
+      "editing": "Editing: {{name}}",
+      "individualMode": "Individual Mode"
+    }
+  },
+  "sidebar": {
+    "nav": {
+      "media": "Media Library",
+      "playlists": "Playlists",
+      "settings": "Channel Settings",
+      "templates": "Templates & Scenarios",
+      "devices": "My Devices",
+      "leads": "Ad Leads",
+      "reports": "Reports",
+      "developer": "Developer Area"
+    },
+    "groups": {
+      "monitoring": "Monitoring",
+      "developer": "Developer"
+    },
+    "actions": {
+      "syncScreens": "Sync Screens",
+      "synced": "Synced!",
+      "previewPlayer": "Preview Player",
+      "logout": "Log out"
+    },
+    "toasts": {
+      "syncSuccessTitle": "Screens synced! 🚀",
+      "syncSuccessDescription": "All your active screens received the update signal.",
+      "syncErrorTitle": "Sync error",
+      "syncErrorDescription": "Could not send the signal to the screens.",
+      "noScreensTitle": "No screens found",
+      "noScreensDescription": "Create a playlist in 'Playlists' first."
+    }
+  },
+  "channelSettings": {
+    "title": "Channel Settings",
+    "subtitle": "Customize the widgets and informational content shown on your players.",
+    "weather": {
+      "title": "Weather Forecast",
+      "description": "The player will display local temperature and weather conditions.",
+      "locationLabel": "Player Location",
+      "hint": "Temperature is automatically refreshed every 30 minutes on synced devices."
+    },
+    "news": {
+      "title": "News Ticker",
+      "description": "Dynamic RSS feed shown on the player's bottom bar.",
+      "categoryLabel": "Category or Keyword",
+      "categoryPlaceholder": "e.g. technology, sports, etc",
+      "suggestionAppliedTitle": "Suggestion Applied",
+      "suggestionAppliedDescription": "\"{{keyword}}\" added to the list."
+    },
+    "instagram": {
+      "title": "Social Wall — Instagram",
+      "description": "Show recent Instagram posts on the player's side widget.",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "activeLabel": "Social Wall active on players",
+      "postsSynced": "● Posts synced",
+      "public": "Public",
+      "rotateHint": "The 3 most recent posts will be rotated on the player.",
+      "disconnectButton": "Disconnect Instagram",
+      "handleLabel": "Instagram username",
+      "handlePlaceholder": "yourcompany",
+      "publicHint": "The profile must be <strong>public</strong> for posts to be displayed.",
+      "privacyTitle": "Instagram Privacy Notice",
+      "privacyBody": "The Social Wall shows public posts from the given profile. Full OAuth integration (private access) is coming soon.",
+      "informHandleError": "Enter the Instagram @username",
+      "connectedTitle": "Instagram Connected! 🎉",
+      "connectedDescription": "The @{{handle}} profile has been linked to the Social Wall.",
+      "disconnectedTitle": "Instagram disconnected",
+      "disconnectedDescription": "The Social Wall has been disabled."
+    },
+    "footer": {
+      "hint": "All changes are applied in real time via Cloud Sync.",
+      "saveButton": "Save Settings",
+      "saveSuccess": "✅ Settings saved successfully!",
+      "saveError": "❌ Save failed",
+      "saveErrorDefault": "Check the console for more details."
+    }
+  },
+  "deviceMonitor": {
+    "title": "My Devices",
+    "subtitle": "Manage and monitor your individual screens in real time.",
+    "createScreen": "Register New Screen",
+    "syncSelected": "Sync Selected ({{count}})",
+    "refreshStatus": "Refresh Status",
+    "activeDevices": "Active Devices",
+    "editingNow": "Editing now",
+    "emptyTitle": "No screens registered",
+    "emptyDescription": "Go to \"Playlists\" to create your first screen and start displaying content.",
+    "status": {
+      "neverConnected": "Never connected",
+      "online": "Online",
+      "inactive": "Inactive",
+      "agoLessThanMin": "less than 1 min ago",
+      "agoMin": "{{min}} min ago",
+      "agoHours": "{{hours}}h ago",
+      "lastSignal": "Last Signal"
+    },
+    "quota": {
+      "title": "Plan Screen Quota",
+      "usage": "You are using <strong>{{used}}</strong> of <strong>{{total}}</strong> available screens.",
+      "bandwidth": "Bandwidth Usage"
+    },
+    "linkTip": {
+      "title": "About screen links",
+      "body": "For the link to work on any device, the app must be published with public visibility."
+    },
+    "actions": {
+      "configure": "Configure",
+      "pause": "Pause playback",
+      "resume": "Resume playback",
+      "reload": "Reload screen remotely",
+      "copyLink": "Copy link",
+      "openScreen": "Open screen"
+    },
+    "createDialog": {
+      "title": "Register New Device",
+      "description": "Give a name to identify where this screen will be installed.",
+      "nameLabel": "Screen Name / Location",
+      "namePlaceholder": "e.g. Reception, Hallway B, Storefront...",
+      "infoHint": "After registration you'll receive a link to open on your TV or playback hardware browser.",
+      "readyTitle": "Screen Ready!",
+      "readySubtitle": "Below is the connection information:",
+      "screenNameLabel": "Screen Name",
+      "deviceIdLabel": "Device ID",
+      "linkLabel": "Stream Link",
+      "creating": "Creating...",
+      "confirm": "Confirm Registration",
+      "done": "Done",
+      "nameRequired": "Enter a name for the screen",
+      "limitReachedTitle": "Limit Reached",
+      "limitReachedDescription": "Your plan allows up to {{limit}} screen(s). Contact us to upgrade.",
+      "createdTitle": "✅ Screen registered successfully!",
+      "createErrorTitle": "Registration failed",
+      "createErrorDefault": "An unexpected database error occurred."
+    },
+    "settingsDialog": {
+      "title": "Screen Settings",
+      "masterAdmin": "Master Admin",
+      "tabs": {
+        "general": "General",
+        "layout": "Layout",
+        "schedule": "Schedule"
+      },
+      "fields": {
+        "city": "City (Weather)",
+        "newsCategory": "News Category",
+        "instagram": "Instagram (Handle)",
+        "alerts": "Master Alerts (Scenario)",
+        "alertsPlaceholder": "Segment Scenario",
+        "alertsDefault": "Follow Global Configuration"
+      },
+      "categories": {
+        "technology": "Technology",
+        "business": "Business / Economy",
+        "sports": "Sports"
+      },
+      "scheduleOrder": "Display Order",
+      "yourLibrary": "Your Library",
+      "emptyMedia": "No media in the grid.",
+      "footerHint": "On save, the hardware will receive an instant update command.",
+      "saveAndSync": "Save and Sync"
+    },
+    "toasts": {
+      "linkCopied": "Link copied to clipboard!",
+      "screenSelectedTitle": "Screen Selected",
+      "screenSelectedDescription": "You are now editing the individual screen settings.",
+      "syncSentTitle": "Sync Sent! ⚡",
+      "syncSentDescription": "{{count}} screens received the update signal.",
+      "syncErrorTitle": "Sync error",
+      "syncErrorDescription": "Could not send the signal to the selected screens.",
+      "saveSuccessTitle": "✅ Settings Saved!",
+      "saveSuccessDescription": "Changes were sent to the device.",
+      "saveErrorTitle": "Save failed",
+      "commandErrorTitle": "Failed to send command",
+      "commands": {
+        "reload": "Reload requested",
+        "pause": "Screen paused",
+        "play": "Screen resumed",
+        "next": "Next media",
+        "description": "Signal sent to the screen."
+      }
+    }
+  },
+  "player": {
+    "empty": {
+      "title": "Signage OS",
+      "loading": "Loading schedule...",
+      "waiting": "Awaiting Local Schedule"
+    },
+    "paused": {
+      "label": "Paused"
+    },
+    "alert": {
+      "title": "Attention!",
+      "defaultMessage": "Master administration alert message"
+    },
+    "error": {
+      "playlistNotFound": "Playlist not found",
+      "loadingFailed": "Failed to load content",
+      "retry": "Try again",
+      "retryingIn": "Retrying in {{seconds}}s..."
+    }
+  }
+}
