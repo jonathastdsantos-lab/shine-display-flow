@@ -41,7 +41,7 @@ export interface CameraConfig {
 }
 export interface ContentFeedConfig {
   enabled: boolean;
-  segment: string;
+  segment: BusinessSegment;
 }
 
 export interface WidgetConfig {
@@ -55,8 +55,11 @@ export interface WidgetConfig {
   content_feed: ContentFeedConfig;
 }
 
+/** Versão tolerante para dados vindos do banco (campos podem faltar). */
+export type StoredWidgetConfig = Partial<WidgetConfig>;
+
 // ─────────────────────────── Layout ───────────────────────────
-// Mantemos `string` para tolerar tipos novos definidos noutros módulos
+// `string` para tolerar tipos novos definidos noutros módulos
 // (ex.: AILayoutAssistant cria "content_feed", "kpi_dashboard"…).
 export type ZoneType = string;
 
@@ -87,11 +90,11 @@ export interface LayoutConfig {
 }
 
 // ─── Helpers para converter Json ↔ tipos fortes ───
-export const asWidgetConfig = (v: Json | null | undefined): WidgetConfig | null =>
-  v && typeof v === "object" && !Array.isArray(v) ? (v as WidgetConfig) : null;
+export const asWidgetConfig = (v: Json | null | undefined): StoredWidgetConfig | null =>
+  v && typeof v === "object" && !Array.isArray(v) ? (v as unknown as StoredWidgetConfig) : null;
 
 export const asLayoutConfig = (v: Json | null | undefined): LayoutConfig | null =>
-  v && typeof v === "object" && !Array.isArray(v) ? (v as LayoutConfig) : null;
+  v && typeof v === "object" && !Array.isArray(v) ? (v as unknown as LayoutConfig) : null;
 
 // ─────────────── Row types fortemente tipados ───────────────
 type PlaylistRowRaw = Database["public"]["Tables"]["playlists"]["Row"];
@@ -99,13 +102,13 @@ type ProfileRowRaw = Database["public"]["Tables"]["profiles"]["Row"];
 type MediaRowRaw = Database["public"]["Tables"]["media_library"]["Row"];
 
 export type Playlist = Omit<PlaylistRowRaw, "widget_config" | "layout_config" | "ordem_arquivos"> & {
-  widget_config: WidgetConfig | null;
+  widget_config: StoredWidgetConfig | null;
   layout_config: LayoutConfig | null;
   ordem_arquivos: string[];
 };
 
 export type ClientProfile = Omit<ProfileRowRaw, "widget_config" | "layout_config"> & {
-  widget_config: WidgetConfig | null;
+  widget_config: StoredWidgetConfig | null;
   layout_config: LayoutConfig | null;
 };
 
