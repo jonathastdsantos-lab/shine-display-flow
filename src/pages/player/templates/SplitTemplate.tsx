@@ -19,7 +19,7 @@ export default function SplitTemplate(p: TemplateProps) {
           className="relative bg-black overflow-hidden"
           style={{ flex: p.layoutConfig?.split_ratio || 60 }}
         >
-          <MediaZone current={p.current} fading={p.fading} videoRef={p.videoRef} />
+          <MediaZone current={p.current} fading={p.fading} videoRef={p.videoRef} onEnded={p.goToNext} />
           <div className="absolute top-0 left-0 right-0 h-1 bg-black/20 z-20">
             <div
               className="h-full bg-orange-500 transition-all duration-1000 ease-linear"

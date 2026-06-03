@@ -27,7 +27,7 @@ export default function CorporateTemplate(p: TemplateProps) {
 
       <div className="flex-1 flex min-h-0 relative">
         <div className="flex-1 relative player-zone-main bg-black shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-10 overflow-hidden">
-          <MediaZone current={p.current} fading={p.fading} videoRef={p.videoRef} />
+          <MediaZone current={p.current} fading={p.fading} videoRef={p.videoRef} onEnded={p.goToNext} />
           <div className="absolute top-0 left-0 right-0 h-1 bg-black/20 z-20 flex">
             <div
               className="h-full bg-indigo-500 transition-all duration-1000 ease-linear"
