@@ -454,15 +454,19 @@ export default function DeviceMonitor({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                <h3 className="font-bold text-lg">Cota de Telas do Plano</h3>
+                <h3 className="font-bold text-lg">{t("deviceMonitor.quota.title")}</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                Você está utilizando <span className="text-foreground font-bold">{playlists.length}</span> de <span className="text-foreground font-bold">{screenLimit}</span> telas disponíveis.
+                <Trans
+                  i18nKey="deviceMonitor.quota.usage"
+                  values={{ used: playlists.length, total: screenLimit }}
+                  components={{ strong: <span className="text-foreground font-bold" /> }}
+                />
               </p>
             </div>
             <div className="flex-1 max-w-md w-full">
               <div className="flex justify-between text-xs mb-2 font-bold tracking-tight uppercase text-muted-foreground/70">
-                <span>Uso de Banda</span>
+                <span>{t("deviceMonitor.quota.bandwidth")}</span>
                 <span>{playlists.length}/{screenLimit}</span>
               </div>
               <div className="h-3 bg-muted rounded-full overflow-hidden border border-border/50">
@@ -481,9 +485,9 @@ export default function DeviceMonitor({
         <CardContent className="p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
           <div className="text-xs space-y-1">
-            <p className="font-bold text-amber-700 dark:text-amber-400">Importante sobre os links das telas</p>
+            <p className="font-bold text-amber-700 dark:text-amber-400">{t("deviceMonitor.linkTip.title")}</p>
             <p className="text-muted-foreground leading-relaxed">
-              Para que o link <code className="bg-muted px-1 py-0.5 rounded text-[10px]">/player/...</code> funcione em qualquer dispositivo (TV, celular, outra rede), o app precisa estar <strong>publicado com visibilidade pública</strong>. Clique em <strong>Publish</strong> no topo do editor e marque como público. No preview (id-preview-...), o link só funciona para você logado.
+              {t("deviceMonitor.linkTip.body")}
             </p>
           </div>
         </CardContent>
@@ -493,7 +497,7 @@ export default function DeviceMonitor({
       <div className="grid gap-4">
         <div className="flex items-center gap-2 px-2">
           <Monitor className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Dispositivos Ativos</h3>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t("deviceMonitor.activeDevices")}</h3>
         </div>
         
         {playlists.map((pl) => {
@@ -508,7 +512,7 @@ export default function DeviceMonitor({
             >
               {isCurrentEditor && (
                 <div className="absolute top-0 right-0 px-3 py-1 bg-indigo-500 text-[10px] font-black uppercase text-white rounded-bl-lg tracking-widest animate-in slide-in-from-top-full duration-300">
-                  Editando agora
+                  {t("deviceMonitor.editingNow")}
                 </div>
               )}
               
@@ -545,7 +549,7 @@ export default function DeviceMonitor({
                     {/* Quick Stats/Actions */}
                     <div className="flex items-center gap-3 shrink-0">
                       <div className="hidden sm:flex flex-col items-end mr-4">
-                         <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Último Sinal</p>
+                         <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{t("deviceMonitor.status.lastSignal")}</p>
                          <p className="text-xs font-medium text-foreground">{status.ago}</p>
                       </div>
                       <div className="flex gap-1.5 flex-wrap justify-end">
@@ -556,14 +560,14 @@ export default function DeviceMonitor({
                           className={`gap-2 ${isCurrentEditor ? 'bg-indigo-500 hover:bg-indigo-600' : ''}`}
                         >
                           <Settings2 className="w-4 h-4" />
-                          Configurar
+                          {t("deviceMonitor.actions.configure")}
                         </Button>
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => sendRemoteCommand(pl.id, (pl as any).playback_state === "paused" ? "play" : "pause")}
                           className="text-muted-foreground hover:text-amber-500"
-                          title={(pl as any).playback_state === "paused" ? "Retomar reprodução" : "Pausar reprodução"}
+                          title={(pl as any).playback_state === "paused" ? t("deviceMonitor.actions.resume") : t("deviceMonitor.actions.pause")}
                         >
                           {(pl as any).playback_state === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                         </Button>
@@ -572,7 +576,7 @@ export default function DeviceMonitor({
                           size="icon"
                           onClick={() => sendRemoteCommand(pl.id, "reload")}
                           className="text-muted-foreground hover:text-indigo-500"
-                          title="Recarregar tela remotamente"
+                          title={t("deviceMonitor.actions.reload")}
                         >
                           <RotateCw className="w-4 h-4" />
                         </Button>
@@ -581,11 +585,11 @@ export default function DeviceMonitor({
                           size="icon"
                           onClick={() => copyPlayerLink(pl.id)}
                           className="text-muted-foreground hover:text-foreground"
-                          title="Copiar link"
+                          title={t("deviceMonitor.actions.copyLink")}
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400" title="Abrir tela">
+                        <Button variant="ghost" size="icon" onClick={() => window.open(`${window.location.origin}/player/${pl.id}`, '_blank')} className="text-muted-foreground hover:text-indigo-400" title={t("deviceMonitor.actions.openScreen")}>
                           <ExternalLink className="w-4 h-4" />
                         </Button>
                       </div>
@@ -600,9 +604,9 @@ export default function DeviceMonitor({
         {playlists.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-2xl bg-muted/20 text-center">
             <Monitor className="w-12 h-12 text-muted-foreground/20 mb-4" />
-            <p className="font-bold text-lg text-foreground/70">Nenhuma tela cadastrada</p>
+            <p className="font-bold text-lg text-foreground/70">{t("deviceMonitor.emptyTitle")}</p>
             <p className="text-sm text-muted-foreground max-w-xs mt-1">
-              Vá em "Playlists" para criar sua primeira tela e começar a exibir conteúdo.
+              {t("deviceMonitor.emptyDescription")}
             </p>
           </div>
         )}
