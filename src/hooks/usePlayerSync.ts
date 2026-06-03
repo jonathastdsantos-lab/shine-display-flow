@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaItem, RemoteIntervention, mockNews } from "@/pages/player/shared";
 import type { PlayerErrorInfo } from "@/pages/player/PlayerError";
+import type { Playlist, StoredWidgetConfig, LayoutConfig } from "@/types/player";
+import { toPlaylist } from "@/types/player";
 
 export interface PlayerSyncState {
   mediaItems: MediaItem[];
@@ -10,8 +12,8 @@ export interface PlayerSyncState {
   template: string;
   newsCategory: string;
   headlines: string[];
-  widgetConfig: any;
-  layoutConfig: any;
+  widgetConfig: StoredWidgetConfig | null;
+  layoutConfig: LayoutConfig | null;
   igHandle: string;
   paused: boolean;
   adWidgetEnabled: boolean;
@@ -30,7 +32,7 @@ export interface PlayerSyncState {
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 function logError(scope: string, err: unknown, ctx: Record<string, unknown> = {}) {
-  const e = err as any;
+  const e = err as { message?: string; code?: string; details?: string; hint?: string };
   console.error(`[Player:${scope}]`, {
     message: e?.message || String(err),
     code: e?.code,
@@ -39,6 +41,9 @@ function logError(scope: string, err: unknown, ctx: Record<string, unknown> = {}
     ...ctx,
   });
 }
+
+const errMsg = (err: unknown): string | undefined =>
+  (err as { message?: string })?.message;
 
 /**
  * Hook responsável por:
@@ -56,8 +61,8 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
   const [template, setTemplate] = useState("corporativo");
   const [newsCategory, setNewsCategory] = useState("technology");
   const [headlines, setHeadlines] = useState<string[]>([]);
-  const [widgetConfig, setWidgetConfig] = useState<any>(null);
-  const [layoutConfig, setLayoutConfig] = useState<any>(null);
+  const [widgetConfig, setWidgetConfig] = useState<StoredWidgetConfig | null>(null);
+  const [layoutConfig, setLayoutConfig] = useState<LayoutConfig | null>(null);
   const [igHandle, setIgHandle] = useState("");
   const [paused, setPaused] = useState(false);
   const [adWidgetEnabled, setAdWidgetEnabled] = useState(true);
