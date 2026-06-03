@@ -343,20 +343,20 @@ export default function DeviceMonitor({
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Monitor className="w-5 h-5 text-indigo-500" />
-                  Cadastrar Novo Dispositivo
+                  {t("deviceMonitor.createDialog.title")}
                 </DialogTitle>
                 <DialogDescription>
-                  Dê um nome para identificar onde esta tela será instalada.
+                  {t("deviceMonitor.createDialog.description")}
                 </DialogDescription>
               </DialogHeader>
 
               {!createdScreen ? (
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="screen-name">Nome da Tela / Localização</Label>
+                    <Label htmlFor="screen-name">{t("deviceMonitor.createDialog.nameLabel")}</Label>
                     <Input
                       id="screen-name"
-                      placeholder="Ex: Recepção, Corredor B, Vitrine..."
+                      placeholder={t("deviceMonitor.createDialog.namePlaceholder")}
                       value={newScreenName}
                       onChange={(e) => setNewScreenName(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleCreateScreen()}
@@ -366,7 +366,7 @@ export default function DeviceMonitor({
                   <div className="p-3 bg-muted/50 rounded-lg flex items-start gap-3">
                     <Info className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <p className="text-[11px] text-muted-foreground">
-                      Após o cadastro, você receberá o link que deve ser aberto no navegador da sua TV ou hardware de reprodução.
+                      {t("deviceMonitor.createDialog.infoHint")}
                     </p>
                   </div>
                 </div>
@@ -376,24 +376,24 @@ export default function DeviceMonitor({
                     <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-2">
                       <Check className="h-6 w-6 text-emerald-500" />
                     </div>
-                    <h4 className="font-bold text-lg">Tela Pronta!</h4>
-                    <p className="text-sm text-muted-foreground">Abaixo estão as informações para conexão:</p>
+                    <h4 className="font-bold text-lg">{t("deviceMonitor.createDialog.readyTitle")}</h4>
+                    <p className="text-sm text-muted-foreground">{t("deviceMonitor.createDialog.readySubtitle")}</p>
                   </div>
 
                   <div className="space-y-4">
                     <div className="p-4 bg-muted border rounded-xl space-y-3">
                       <div className="space-y-1">
-                        <Label className="text-[10px] uppercase font-black text-muted-foreground">Nome da Tela</Label>
+                        <Label className="text-[10px] uppercase font-black text-muted-foreground">{t("deviceMonitor.createDialog.screenNameLabel")}</Label>
                         <p className="font-bold text-foreground">{createdScreen.nome_da_tela}</p>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] uppercase font-black text-muted-foreground">ID do Dispositivo</Label>
+                        <Label className="text-[10px] uppercase font-black text-muted-foreground">{t("deviceMonitor.createDialog.deviceIdLabel")}</Label>
                         <p className="font-mono text-xs text-foreground bg-background p-2 rounded border border-border/50">{createdScreen.id}</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold">Link de Transmissão</Label>
+                      <Label className="text-xs font-bold">{t("deviceMonitor.createDialog.linkLabel")}</Label>
                       <div className="flex gap-2">
                         <Input 
                           readOnly 
@@ -422,11 +422,11 @@ export default function DeviceMonitor({
                     disabled={isCreating}
                     className="w-full bg-indigo-600 hover:bg-indigo-700"
                   >
-                    {isCreating ? "Cadastrando..." : "Confirmar Cadastro"}
+                    {isCreating ? t("deviceMonitor.createDialog.creating") : t("deviceMonitor.createDialog.confirm")}
                   </Button>
                 ) : (
                   <Button onClick={() => setIsDialogOpen(false)} className="w-full">
-                    Concluir e Voltar
+                    {t("deviceMonitor.createDialog.done")}
                   </Button>
                 )}
               </DialogFooter>
@@ -436,12 +436,12 @@ export default function DeviceMonitor({
           {selectedIds.length > 0 && (
             <Button onClick={handleSyncSelected} className="gap-2 bg-amber-500 hover:bg-amber-600 animate-in fade-in zoom-in duration-300">
               <Zap className={`w-4 h-4 ${refreshing ? "animate-pulse" : ""}`} />
-              Sincronizar Selecionados ({selectedIds.length})
+              {t("deviceMonitor.syncSelected", { count: selectedIds.length })}
             </Button>
           )}
           <Button variant="outline" onClick={() => window.location.reload()} className="gap-2">
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Atualizar Status</span>
+            <span className="hidden sm:inline">{t("deviceMonitor.refreshStatus")}</span>
           </Button>
         </div>
       </div>
