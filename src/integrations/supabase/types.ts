@@ -125,8 +125,8 @@ export type Database = {
             foreignKeyName: "play_logs_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
           },
         ]
       }
