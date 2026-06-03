@@ -143,7 +143,7 @@ export function useDashboardData() {
     }
     
     await fetchData();
-    return data as Playlist;
+    return data ? toPlaylist(data) : null;
   };
 
   const addToPlaylist = async (playlistId: string, mediaId: string) => {
@@ -205,9 +205,11 @@ export function useDashboardData() {
   };
 
   const savePlaylistConfig = async (playlistId: string, updates: Partial<Playlist>) => {
+    // O Update type esperado pelo Supabase aceita Json; nosso Playlist usa tipos fortes.
+    const payload = updates as Record<string, unknown>;
     const { error } = await supabase
       .from("playlists")
-      .update(updates as any)
+      .update(payload)
       .eq("id", playlistId);
 
     if (error) {
@@ -228,7 +230,7 @@ export function useDashboardData() {
 
     const { error } = await supabase
       .from("playlists")
-      .update({ last_sync_at: timestamp } as any)
+      .update({ last_sync_at: timestamp })
       .in("id", targetIds);
 
     if (error) {
