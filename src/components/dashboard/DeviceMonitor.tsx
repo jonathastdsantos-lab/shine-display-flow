@@ -175,10 +175,12 @@ export default function DeviceMonitor({
         ...(command === "pause" && { playback_state: "paused" }),
         ...(command === "play" && { playback_state: "playing" }),
       } as any);
-      const labels = { reload: "Reload solicitado", pause: "Tela pausada", play: "Tela retomada", next: "Próxima mídia" };
-      toast({ title: labels[command], description: "Sinal enviado para a tela." });
+      toast({
+        title: t(`deviceMonitor.toasts.commands.${command}`),
+        description: t("deviceMonitor.toasts.commands.description"),
+      });
     } catch (e) {
-      toast({ title: "Erro ao enviar comando", variant: "destructive" });
+      toast({ title: t("deviceMonitor.toasts.commandErrorTitle"), variant: "destructive" });
     }
   };
 
@@ -188,15 +190,15 @@ export default function DeviceMonitor({
       setRefreshing(true);
       await onSync(selectedIds);
       toast({
-        title: "Sincronização Enviada! ⚡",
-        description: `${selectedIds.length} telas receberam o sinal de atualização.`,
+        title: t("deviceMonitor.toasts.syncSentTitle"),
+        description: t("deviceMonitor.toasts.syncSentDescription", { count: selectedIds.length }),
       });
       setSelectedIds([]);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Erro ao sincronizar",
-        description: "Não foi possível enviar o sinal para as telas selecionadas.",
+        title: t("deviceMonitor.toasts.syncErrorTitle"),
+        description: t("deviceMonitor.toasts.syncErrorDescription"),
       });
     } finally {
       setRefreshing(false);
@@ -205,14 +207,14 @@ export default function DeviceMonitor({
 
   const handleCreateScreen = async () => {
     if (!newScreenName.trim()) {
-      toast({ title: "Digite um nome para a tela", variant: "destructive" });
+      toast({ title: t("deviceMonitor.createDialog.nameRequired"), variant: "destructive" });
       return;
     }
     
     if (playlists.length >= screenLimit) {
       toast({ 
-        title: "Limite Atingido", 
-        description: `Seu plano permite no máximo ${screenLimit} tela(s). Entre em contato para upgrade.`,
+        title: t("deviceMonitor.createDialog.limitReachedTitle"), 
+        description: t("deviceMonitor.createDialog.limitReachedDescription", { limit: screenLimit }),
         variant: "destructive" 
       });
       return;
@@ -224,13 +226,13 @@ export default function DeviceMonitor({
       if (newPl) {
         setCreatedScreen(newPl);
         setNewScreenName("");
-        toast({ title: "✅ Tela cadastrada com sucesso!" });
+        toast({ title: t("deviceMonitor.createDialog.createdTitle") });
       }
     } catch (error: any) {
       console.error("❌ Erro ao cadastrar tela:", error);
       toast({ 
-        title: "Erro ao cadastrar", 
-        description: error.message || "Ocorreu um erro inesperado no banco de dados.",
+        title: t("deviceMonitor.createDialog.createErrorTitle"), 
+        description: error.message || t("deviceMonitor.createDialog.createErrorDefault"),
         variant: "destructive" 
       });
     } finally {
@@ -261,13 +263,13 @@ export default function DeviceMonitor({
       await onSync([editingPlaylist.id]);
       
       toast({
-        title: "✅ Configurações Salvas!",
-        description: "As alterações foram enviadas para o dispositivo.",
+        title: t("deviceMonitor.toasts.saveSuccessTitle"),
+        description: t("deviceMonitor.toasts.saveSuccessDescription"),
       });
       setIsSettingsOpen(false);
     } catch (error) {
       toast({
-        title: "Erro ao salvar",
+        title: t("deviceMonitor.toasts.saveErrorTitle"),
         variant: "destructive",
       });
     } finally {
@@ -292,15 +294,15 @@ export default function DeviceMonitor({
   const copyPlayerLink = (id: string) => {
     const link = `${window.location.origin}/player/${id}`;
     navigator.clipboard.writeText(link);
-    toast({ title: "Link copiado para a área de transferência!" });
+    toast({ title: t("deviceMonitor.toasts.linkCopied") });
   };
 
   const handleConfigure = (id: string) => {
     setSelectedPlaylistId(id);
     navigate("/dashboard/settings");
     toast({
-      title: "Tela Selecionada",
-      description: `Agora você está editando as configurações da tela individual.`,
+      title: t("deviceMonitor.toasts.screenSelectedTitle"),
+      description: t("deviceMonitor.toasts.screenSelectedDescription"),
     });
   };
 
