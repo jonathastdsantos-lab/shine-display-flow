@@ -207,6 +207,7 @@ export type Database = {
           layout_config: Json | null
           logo_url: string | null
           nome_empresa: string
+          screen_limit: number | null
           template: string
           updated_at: string
           user_id: string
@@ -222,6 +223,7 @@ export type Database = {
           layout_config?: Json | null
           logo_url?: string | null
           nome_empresa?: string
+          screen_limit?: number | null
           template?: string
           updated_at?: string
           user_id: string
@@ -237,6 +239,7 @@ export type Database = {
           layout_config?: Json | null
           logo_url?: string | null
           nome_empresa?: string
+          screen_limit?: number | null
           template?: string
           updated_at?: string
           user_id?: string

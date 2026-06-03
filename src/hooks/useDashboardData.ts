@@ -1,45 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Playlist,
+  ClientProfile,
+  MediaItem,
+  toPlaylist,
+  toClientProfile,
+} from "@/types/player";
 
-export interface MediaItem {
-  id: string;
-  url_arquivo: string;
-  tipo: string;
-  nome: string;
-  duracao: number;
-}
-
-export interface Playlist {
-  id: string;
-  nome_da_tela: string;
-  ordem_arquivos: string[];
-  template?: string;
-  layout_config?: any;
-  widget_config?: any;
-  config_clima?: string;
-  config_noticias?: string;
-  instagram_handle?: string;
-  last_sync_at?: string;
-  last_heartbeat?: string;
-  remote_command?: string | null;
-  remote_command_at?: string | null;
-  playback_state?: string;
-  ad_widget_enabled?: boolean;
-  ad_widget_url?: string | null;
-}
-
-export interface ClientProfile {
-  config_clima: string;
-  config_noticias: string;
-  nome_empresa: string;
-  template: string;
-  instagram_handle: string;
-  widget_config: any;
-  layout_config?: any;
-  user_id?: string;
-  screen_limit?: number;
-}
+// Re-export para manter API pública (consumidores existentes)
+export type { Playlist, ClientProfile, MediaItem } from "@/types/player";
 
 export function useDashboardData() {
   const { user } = useAuth();
@@ -52,7 +23,8 @@ export function useDashboardData() {
     template: "corporativo",
     instagram_handle: "",
     widget_config: null,
-  });
+    layout_config: null,
+  } as ClientProfile);
   const [uploading, setUploading] = useState(false);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(() => {
     return localStorage.getItem("selectedPlaylistId");
@@ -81,10 +53,10 @@ export function useDashboardData() {
 
     if (mediaRes.data) {
       console.log("✅ Mídias encontradas:", mediaRes.data.length);
-      setMedia(mediaRes.data as any);
+      setMedia(mediaRes.data);
     }
-    if (playlistRes.data) setPlaylists(playlistRes.data as any);
-    if (profileRes.data) setProfile(profileRes.data as any);
+    if (playlistRes.data) setPlaylists(playlistRes.data.map(toPlaylist));
+    if (profileRes.data) setProfile(toClientProfile(profileRes.data));
   }, [user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -171,7 +143,7 @@ export function useDashboardData() {
     }
     
     await fetchData();
-    return data as Playlist;
+    return data ? toPlaylist(data) : null;
   };
 
   const addToPlaylist = async (playlistId: string, mediaId: string) => {
@@ -233,9 +205,11 @@ export function useDashboardData() {
   };
 
   const savePlaylistConfig = async (playlistId: string, updates: Partial<Playlist>) => {
+    // O Update type esperado pelo Supabase aceita Json; nosso Playlist usa tipos fortes.
+    const payload = updates as Record<string, unknown>;
     const { error } = await supabase
       .from("playlists")
-      .update(updates as any)
+      .update(payload)
       .eq("id", playlistId);
 
     if (error) {
@@ -256,7 +230,7 @@ export function useDashboardData() {
 
     const { error } = await supabase
       .from("playlists")
-      .update({ last_sync_at: timestamp } as any)
+      .update({ last_sync_at: timestamp })
       .in("id", targetIds);
 
     if (error) {

@@ -28,7 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ClientProfile } from "@/hooks/useDashboardData";
 import ScenarioWizard from "./ScenarioWizard";
 import WidgetStore from "./WidgetStore";
-import type { WidgetConfig } from "./WidgetStore";
+import type { StoredWidgetConfig } from "@/types/player";
 
 interface TemplateSelectorProps {
   profile: ClientProfile;
@@ -171,7 +171,7 @@ export default function TemplateSelector({
     }, 2500);
   };
 
-  const handleWidgetSave = async (wc: WidgetConfig, extras: { 
+  const handleWidgetSave = async (wc: StoredWidgetConfig, extras: { 
     instagram_handle?: string;
     config_clima?: string;
     config_noticias?: string;
