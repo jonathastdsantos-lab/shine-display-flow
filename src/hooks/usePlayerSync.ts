@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaItem, RemoteIntervention, mockNews } from "@/pages/player/shared";
+import type { PlayerErrorInfo } from "@/pages/player/PlayerError";
 
 export interface PlayerSyncState {
   mediaItems: MediaItem[];
@@ -18,6 +19,25 @@ export interface PlayerSyncState {
   remoteIntervention: RemoteIntervention;
   /** Incrementa quando um comando remoto "next" é recebido. */
   nextCommandSignal: number;
+  /** Erro atual da sincronização, se houver. */
+  error: PlayerErrorInfo | null;
+  /** Carregamento inicial em andamento. */
+  loading: boolean;
+  /** Força nova tentativa de fetchData. */
+  retry: () => void;
+}
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+function logError(scope: string, err: unknown, ctx: Record<string, unknown> = {}) {
+  const e = err as any;
+  console.error(`[Player:${scope}]`, {
+    message: e?.message || String(err),
+    code: e?.code,
+    details: e?.details,
+    hint: e?.hint,
+    ...ctx,
+  });
 }
 
 /**
