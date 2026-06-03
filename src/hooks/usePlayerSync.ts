@@ -352,5 +352,8 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
     adWidgetUrl,
     remoteIntervention,
     nextCommandSignal,
+    error,
+    loading,
+    retry,
   };
 }
