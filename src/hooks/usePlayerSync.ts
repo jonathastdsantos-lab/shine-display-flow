@@ -86,7 +86,7 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
     if (!playlist_id) return;
     const sendHeartbeat = async () => {
       try {
-        await (supabase as any).rpc("update_playlist_heartbeat", { p_playlist_id: playlist_id });
+        await supabase.rpc("update_playlist_heartbeat", { p_playlist_id: playlist_id });
       } catch (err) {
         console.warn("Heartbeat falhou:", err);
       }
@@ -118,7 +118,7 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
     setLoading(true);
 
     // 1. Playlist
-    let playlist: any = null;
+    let playlist: Playlist | null = null;
     try {
       const { data, error: err } = await supabase
         .from("playlists")
@@ -126,13 +126,13 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
         .eq("id", playlist_id)
         .maybeSingle();
       if (err) throw err;
-      playlist = data;
+      playlist = data ? toPlaylist(data) : null;
     } catch (err) {
       logError("playlists.fetch", err, { playlist_id });
       setError({
         kind: "playlist_fetch",
         message: "Não conseguimos contatar o servidor para carregar a tela.",
-        detail: (err as any)?.message,
+        detail: errMsg(err),
       });
       setLoading(false);
       return;
@@ -152,9 +152,9 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
     setClientId(playlist.client_id);
 
     // 2. Profile (fallback de config)
-    let finalCity = (playlist as any).config_clima;
-    let finalNews = (playlist as any).config_noticias;
-    let finalIG = (playlist as any).instagram_handle;
+    let finalCity = playlist.config_clima;
+    let finalNews = playlist.config_noticias;
+    let finalIG = playlist.instagram_handle;
 
     if (!finalCity || !finalNews || !finalIG) {
       try {
@@ -176,33 +176,33 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
     }
 
     setCity(finalCity || "São Paulo");
-    setTemplate((playlist as any).template || "corporativo");
+    setTemplate(playlist.template || "corporativo");
     setNewsCategory(finalNews || "technology");
-    setWidgetConfig((playlist as any).widget_config || null);
-    setLayoutConfig((playlist as any).layout_config || null);
+    setWidgetConfig(playlist.widget_config);
+    setLayoutConfig(playlist.layout_config);
     setIgHandle(finalIG || "");
 
-    setAdWidgetEnabled((playlist as any).ad_widget_enabled !== false);
-    setAdWidgetUrl((playlist as any).ad_widget_url || undefined);
-    setPaused((playlist as any).playback_state === "paused");
+    setAdWidgetEnabled(playlist.ad_widget_enabled !== false);
+    setAdWidgetUrl(playlist.ad_widget_url || undefined);
+    setPaused(playlist.playback_state === "paused");
 
     // Comandos remotos
-    const cmd = (playlist as any).remote_command;
+    const cmd = playlist.remote_command;
     if (cmd) {
       if (cmd === "reload") {
-        await (supabase as any).rpc("clear_remote_command", { p_playlist_id: playlist_id });
+        await supabase.rpc("clear_remote_command", { p_playlist_id: playlist_id });
         setTimeout(() => window.location.reload(), 300);
         return;
       }
       if (cmd === "pause") setPaused(true);
       if (cmd === "play") setPaused(false);
       if (cmd === "next") setNextCommandSignal((n) => n + 1);
-      await (supabase as any).rpc("clear_remote_command", { p_playlist_id: playlist_id });
+      await supabase.rpc("clear_remote_command", { p_playlist_id: playlist_id });
     }
 
     // 3. Mídias — retry com backoff exponencial (1s, 2s, 4s)
     const delays = [1000, 2000, 4000];
-    let allMedia: any[] | null = null;
+    let allMedia: MediaItem[] | null = null;
     let lastErr: unknown = null;
     for (let attempt = 0; attempt < delays.length; attempt++) {
       try {
@@ -211,7 +211,7 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
           .select("*")
           .eq("client_id", playlist.client_id);
         if (err) throw err;
-        allMedia = data || [];
+        allMedia = (data as MediaItem[]) || [];
         lastErr = null;
         if (attempt > 0) {
           console.info(`[Player:media_library.fetch] sucesso na tentativa ${attempt + 1}`);
@@ -233,21 +233,21 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
       setError({
         kind: "media_fetch",
         message: "Não foi possível carregar as mídias após 3 tentativas.",
-        detail: (lastErr as any)?.message,
+        detail: errMsg(lastErr),
       });
       setLoading(false);
       return;
     }
 
     if (allMedia) {
-      const mediaIds = playlist.ordem_arquivos as string[];
+      const mediaIds = playlist.ordem_arquivos;
       if (mediaIds && mediaIds.length > 0) {
         const ordered = mediaIds
-          .map((mid) => allMedia!.find((m: any) => m.id === mid))
-          .filter(Boolean) as MediaItem[];
+          .map((mid) => allMedia!.find((m) => m.id === mid))
+          .filter((m): m is MediaItem => Boolean(m));
         setMediaItems(ordered);
       } else {
-        setMediaItems(allMedia as any);
+        setMediaItems(allMedia);
       }
     }
 
