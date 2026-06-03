@@ -323,9 +323,9 @@ export default function DeviceMonitor({
     <div className="space-y-8 animate-fade-in pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-3xl font-bold tracking-tight">Meus Dispositivos</h2>
+          <h2 className="font-display text-3xl font-bold tracking-tight">{t("deviceMonitor.title")}</h2>
           <p className="text-muted-foreground mt-1 text-base">
-            Gerencie e monitore suas telas individuais em tempo real.
+            {t("deviceMonitor.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -336,7 +336,7 @@ export default function DeviceMonitor({
             <DialogTrigger asChild>
               <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20">
                 <Plus className="w-4 h-4" />
-                Cadastrar Nova Tela
+                {t("deviceMonitor.createScreen")}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
