@@ -26,15 +26,7 @@ export function useDashboardData() {
     layout_config: null,
   } as ClientProfile);
   const [uploading, setUploading] = useState(false);
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(() => {
-    return localStorage.getItem("selectedPlaylistId");
-  });
-
-  useEffect(() => {
-    if (selectedPlaylistId) {
-      localStorage.setItem("selectedPlaylistId", selectedPlaylistId);
-    }
-  }, [selectedPlaylistId]);
+  const [playlistsLoaded, setPlaylistsLoaded] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
