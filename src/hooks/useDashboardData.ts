@@ -53,10 +53,10 @@ export function useDashboardData() {
 
     if (mediaRes.data) {
       console.log("✅ Mídias encontradas:", mediaRes.data.length);
-      setMedia(mediaRes.data as any);
+      setMedia(mediaRes.data);
     }
-    if (playlistRes.data) setPlaylists(playlistRes.data as any);
-    if (profileRes.data) setProfile(profileRes.data as any);
+    if (playlistRes.data) setPlaylists(playlistRes.data.map(toPlaylist));
+    if (profileRes.data) setProfile(toClientProfile(profileRes.data));
   }, [user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
