@@ -165,7 +165,9 @@ Deno.serve(async (req) => {
     const isNight = localHour >= 18 || localHour < 6;
 
     const windDirectionLabel = (deg: number) => {
-      const dirs = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
+      const dirsPt = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
+      const dirsEn = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+      const dirs = isEn ? dirsEn : dirsPt;
       return dirs[Math.round(deg / 45) % 8];
     };
 
@@ -179,15 +181,17 @@ Deno.serve(async (req) => {
       wind_direction: windDirectionLabel(cur.wind_direction_10m),
       pressure: Math.round(cur.pressure_msl),
       city: displayCity,
+      locale: lng,
     };
 
-    console.log(`✅ Weather: ${weather.temp}°C, ${weather.condition}, Humidity: ${weather.humidity}%`);
+    console.log(`✅ Weather (${lng}): ${weather.temp}°C, ${weather.condition}, Humidity: ${weather.humidity}%`);
 
     return new Response(JSON.stringify(weather), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Erro interno: " + (err as Error).message }), {
+    const prefix = "Erro interno: ";
+    return new Response(JSON.stringify({ error: prefix + (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
