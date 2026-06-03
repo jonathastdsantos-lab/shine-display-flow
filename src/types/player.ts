@@ -9,54 +9,49 @@
 import type { Database, Json } from "@/integrations/supabase/types";
 
 // ─────────────────────────── Widgets ───────────────────────────
+// Mantemos esta tipagem alinhada com `src/components/dashboard/WidgetStore.tsx`
+// (que reexporta `WidgetConfig` daqui). Campos opcionais para permitir
+// configurações parciais vindas do banco (Json).
+
 export interface ClockConfig {
-  enabled?: boolean;
-  format?: "12h" | "24h";
-  show_seconds?: boolean;
-  show_date?: boolean;
+  enabled: boolean;
+  showWeather: boolean;
 }
-
 export interface WeatherConfig {
-  enabled?: boolean;
-  city?: string;
-  unit?: "C" | "F";
+  enabled: boolean;
 }
-
+export interface NewsConfig {
+  enabled: boolean;
+}
 export interface FinanceConfig {
-  enabled?: boolean;
-  tickers?: string[];
-  currencies?: string[];
+  enabled: boolean;
 }
-
 export interface SocialConfig {
-  enabled?: boolean;
-  instagram_handle?: string;
-  refresh_minutes?: number;
+  enabled: boolean;
 }
-
 export interface QrConfig {
-  enabled?: boolean;
-  default_url?: string;
-  label?: string;
+  enabled: boolean;
+  default_url: string;
 }
-
 export interface CameraConfig {
-  enabled?: boolean;
-  stream_url?: string;
-  fit?: "cover" | "contain";
+  enabled: boolean;
+  label: string;
+  url: string;
+}
+export interface ContentFeedConfig {
+  enabled: boolean;
+  segment: string;
 }
 
 export interface WidgetConfig {
-  clock?: ClockConfig | Record<string, any>;
-  weather?: WeatherConfig | Record<string, any>;
-  finance?: FinanceConfig | Record<string, any>;
-  social?: SocialConfig | Record<string, any>;
-  qr?: QrConfig | Record<string, any>;
-  camera?: CameraConfig | Record<string, any>;
-  news?: Record<string, any>;
-  content_feed?: Record<string, any>;
-  // Widgets futuros não quebram o tipo
-  [key: string]: any;
+  clock: ClockConfig;
+  weather: WeatherConfig;
+  news: NewsConfig;
+  finance: FinanceConfig;
+  social: SocialConfig;
+  qr: QrConfig;
+  camera: CameraConfig;
+  content_feed: ContentFeedConfig;
 }
 
 // ─────────────────────────── Layout ───────────────────────────
