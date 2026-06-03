@@ -7,6 +7,7 @@
  * tipadas e fazemos a interseção com os Row types gerados.
  */
 import type { Database, Json } from "@/integrations/supabase/types";
+import type { BusinessSegment } from "@/utils/ContentFeed";
 
 // ─────────────────────────── Widgets ───────────────────────────
 // Mantemos esta tipagem alinhada com `src/components/dashboard/WidgetStore.tsx`
