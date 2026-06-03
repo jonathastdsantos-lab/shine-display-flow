@@ -68,6 +68,13 @@ export function usePlayerSync(playlist_id: string | undefined): PlayerSyncState 
     type: null,
   });
   const [nextCommandSignal, setNextCommandSignal] = useState(0);
+  const [error, setError] = useState<PlayerErrorInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [retryTick, setRetryTick] = useState(0);
+  const retry = useCallback(() => {
+    setError(null);
+    setRetryTick((n) => n + 1);
+  }, []);
 
   // ── Heartbeat por TELA (playlist) ──
   useEffect(() => {
