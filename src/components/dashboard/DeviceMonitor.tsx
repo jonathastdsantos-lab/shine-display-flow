@@ -33,6 +33,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Playlist, ClientProfile, MediaItem } from "@/hooks/useDashboardData";
+import { useTranslation } from "react-i18next";
 
 interface DeviceMonitorProps {
   playlists: Playlist[];
@@ -92,24 +93,24 @@ function SortableMediaItem({ id, mediaItem, index, onRemove }: any) {
   );
 }
 
-function getStatusInfo(lastSeen: string | null): {
+function getStatusInfo(lastSeen: string | null, t: (k: string, o?: any) => string): {
   online: boolean; label: string; color: string; bgColor: string; ago: string;
 } {
   if (!lastSeen) {
-    return { online: false, label: "Nunca conectado", color: "text-slate-400", bgColor: "bg-slate-500/10", ago: "—" };
+    return { online: false, label: t("deviceMonitor.status.neverConnected"), color: "text-slate-400", bgColor: "bg-slate-500/10", ago: "—" };
   }
   const diffMs = Date.now() - new Date(lastSeen).getTime();
   const diffMin = Math.floor(diffMs / 60000);
   const online = diffMin < 3;
 
   let ago = "";
-  if (diffMs < 60000) ago = "há menos de 1 min";
-  else if (diffMin < 60) ago = `há ${diffMin} min`;
-  else ago = `há ${Math.floor(diffMin / 60)}h`;
+  if (diffMs < 60000) ago = t("deviceMonitor.status.agoLessThanMin");
+  else if (diffMin < 60) ago = t("deviceMonitor.status.agoMin", { min: diffMin });
+  else ago = t("deviceMonitor.status.agoHours", { hours: Math.floor(diffMin / 60) });
 
   return online
-    ? { online: true, label: "Online", color: "text-emerald-400", bgColor: "bg-emerald-500/10", ago }
-    : { online: false, label: "Inativo", color: "text-red-400", bgColor: "bg-red-500/10", ago };
+    ? { online: true, label: t("deviceMonitor.status.online"), color: "text-emerald-400", bgColor: "bg-emerald-500/10", ago }
+    : { online: false, label: t("deviceMonitor.status.inactive"), color: "text-red-400", bgColor: "bg-red-500/10", ago };
 }
 
 export default function DeviceMonitor({ 
@@ -126,6 +127,7 @@ export default function DeviceMonitor({
   onReorder,
   getMediaName
 }: DeviceMonitorProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [refreshing, setRefreshing] = useState(false);
