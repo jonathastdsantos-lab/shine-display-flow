@@ -47,28 +47,22 @@ export interface CameraConfig {
 }
 
 export interface WidgetConfig {
-  clock?: ClockConfig;
-  weather?: WeatherConfig;
-  finance?: FinanceConfig;
-  social?: SocialConfig;
-  qr?: QrConfig;
-  camera?: CameraConfig;
-  // Permite chaves futuras sem quebrar o tipo
-  [key: string]: unknown;
+  clock?: ClockConfig | Record<string, any>;
+  weather?: WeatherConfig | Record<string, any>;
+  finance?: FinanceConfig | Record<string, any>;
+  social?: SocialConfig | Record<string, any>;
+  qr?: QrConfig | Record<string, any>;
+  camera?: CameraConfig | Record<string, any>;
+  news?: Record<string, any>;
+  content_feed?: Record<string, any>;
+  // Widgets futuros não quebram o tipo
+  [key: string]: any;
 }
 
 // ─────────────────────────── Layout ───────────────────────────
-export type ZoneType =
-  | "media"
-  | "news"
-  | "weather"
-  | "clock"
-  | "social"
-  | "qr"
-  | "finance"
-  | "camera"
-  | "ad"
-  | "custom";
+// Mantemos `string` para tolerar tipos novos definidos noutros módulos
+// (ex.: AILayoutAssistant cria "content_feed", "kpi_dashboard"…).
+export type ZoneType = string;
 
 export interface Zone {
   id: string;
@@ -82,7 +76,7 @@ export interface Zone {
   z_index?: number;
   rotation?: number;
   background?: string;
-  config?: Record<string, unknown>;
+  config?: Record<string, any>;
 }
 
 export interface LayoutConfig {
