@@ -47,7 +47,10 @@ export function useDashboardData() {
       console.log("✅ Mídias encontradas:", mediaRes.data.length);
       setMedia(mediaRes.data);
     }
-    if (playlistRes.data) setPlaylists(playlistRes.data.map(toPlaylist));
+    if (playlistRes.data) {
+      setPlaylists(playlistRes.data.map(toPlaylist));
+      setPlaylistsLoaded(true);
+    }
     if (profileRes.data) setProfile(toClientProfile(profileRes.data));
   }, [user]);
 
