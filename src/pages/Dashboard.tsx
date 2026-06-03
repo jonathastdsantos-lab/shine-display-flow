@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useSelectedPlaylist } from "@/hooks/useSelectedPlaylist";
 import MediaLibrary from "@/components/dashboard/MediaLibrary";
 import PlaylistManager from "@/components/dashboard/PlaylistManager";
 import ChannelSettings from "@/components/dashboard/ChannelSettings";
@@ -20,6 +21,10 @@ export default function Dashboard() {
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const data = useDashboardData();
+  const { selectedPlaylistId, setSelectedPlaylistId } = useSelectedPlaylist(
+    data.playlists,
+    data.playlistsLoaded
+  );
 
   useEffect(() => {
     if (!loading && !user) navigate("/login", { replace: true });
@@ -27,7 +32,7 @@ export default function Dashboard() {
 
   if (loading) return null;
 
-  const selectedPlaylist = data.playlists.find(p => p.id === data.selectedPlaylistId);
+  const selectedPlaylist = data.playlists.find(p => p.id === selectedPlaylistId);
   
   // Objeto de configuração para os editores: usa a tela selecionada ou o perfil global
   const activeConfig = selectedPlaylist ? {
