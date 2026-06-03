@@ -68,6 +68,7 @@ export default function Player() {
     paused: sync.paused,
     showAdOverlay: play.showAdOverlay,
     adWidgetUrl: sync.adWidgetUrl,
+    goToNext: play.goToNext,
   };
 
   if (sync.layoutConfig?.is_custom && Array.isArray(sync.layoutConfig?.zones) && sync.layoutConfig.zones.length > 0) {

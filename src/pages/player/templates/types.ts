@@ -18,4 +18,5 @@ export interface TemplateProps {
   paused: boolean;
   showAdOverlay: boolean;
   adWidgetUrl: string | undefined;
+  goToNext: () => void;
 }

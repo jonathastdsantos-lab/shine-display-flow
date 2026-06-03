@@ -42,7 +42,7 @@ export default function CustomTemplate(p: TemplateProps) {
         return (
           <div key={zone.id} style={style} className="bg-black">
             {isYoutubeUrl(p.current?.url_arquivo) ? (
-              <YoutubeWidget key={p.current?.id} url={p.current?.url_arquivo} />
+              <YoutubeWidget key={p.current?.id} url={p.current?.url_arquivo} onEnded={p.goToNext} duracao={p.current?.duracao} />
             ) : p.current?.tipo === "video" ? (
               <video
                 ref={p.videoRef}

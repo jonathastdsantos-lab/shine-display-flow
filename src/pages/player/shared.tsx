@@ -32,7 +32,9 @@ export const mockNews: Record<string, string[]> = {
 
 export function isYoutubeUrl(url?: string) {
   if (!url) return false;
-  return /(?:youtube\.com|youtu\.be)/i.test(url);
+  // Aceita youtube.com, www.youtube.com, m.youtube.com, music.youtube.com, youtu.be
+  // Tolera query params extras como ?t=30, &list=...
+  return /(?:^|\/\/)((?:[\w-]+\.)?youtube\.com|youtu\.be)\//i.test(url);
 }
 
 export function isWidgetEnabled(wc: any, key: string): boolean {
@@ -142,10 +144,12 @@ export function MediaZone({
   current,
   fading,
   videoRef,
+  onEnded,
 }: {
   current: MediaItem | undefined;
   fading: boolean;
   videoRef: React.RefObject<HTMLVideoElement>;
+  onEnded?: () => void;
 }) {
   const youtube = isYoutubeUrl(current?.url_arquivo);
   return (
@@ -155,7 +159,12 @@ export function MediaZone({
       }`}
     >
       {youtube ? (
-        <YoutubeWidget key={current?.id} url={current?.url_arquivo} />
+        <YoutubeWidget
+          key={current?.id}
+          url={current?.url_arquivo}
+          onEnded={onEnded}
+          duracao={current?.duracao}
+        />
       ) : current?.tipo === "video" ? (
         <video
           ref={videoRef}
