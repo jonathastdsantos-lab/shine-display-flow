@@ -33,7 +33,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Playlist, ClientProfile, MediaItem } from "@/hooks/useDashboardData";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 
 interface DeviceMonitorProps {
   playlists: Playlist[];
