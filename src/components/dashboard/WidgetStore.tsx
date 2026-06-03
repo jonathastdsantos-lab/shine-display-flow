@@ -8,17 +8,10 @@ import { Save, CloudSun, TrendingUp, Rss, Clock, Instagram, QrCode, Camera, Exte
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { SEGMENT_LABELS, type BusinessSegment } from "@/utils/ContentFeed";
+import type { WidgetConfig, StoredWidgetConfig } from "@/types/player";
 
-export interface WidgetConfig {
-  clock: { enabled: boolean; showWeather: boolean };
-  weather: { enabled: boolean };
-  news: { enabled: boolean };
-  finance: { enabled: boolean };
-  social: { enabled: boolean };
-  qr: { enabled: boolean; default_url: string };
-  camera: { enabled: boolean; label: string; url: string };
-  content_feed: { enabled: boolean; segment: BusinessSegment };
-}
+// Re-export para manter compatibilidade com imports existentes
+export type { WidgetConfig } from "@/types/player";
 
 const DEFAULT_CONFIG: WidgetConfig = {
   clock: { enabled: true, showWeather: true },
@@ -32,11 +25,11 @@ const DEFAULT_CONFIG: WidgetConfig = {
 };
 
 interface WidgetStoreProps {
-  widgetConfig: WidgetConfig | null;
+  widgetConfig: StoredWidgetConfig | null;
   instagramHandle: string;
   configClima: string;
   configNoticias: string;
-  onSave: (wc: WidgetConfig, extras: {
+  onSave: (wc: StoredWidgetConfig, extras: {
     instagram_handle?: string;
     config_clima?: string;
     config_noticias?: string;
