@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useSelectedPlaylist } from "@/hooks/useSelectedPlaylist";
 import MediaLibrary from "@/components/dashboard/MediaLibrary";
 import PlaylistManager from "@/components/dashboard/PlaylistManager";
 import ChannelSettings from "@/components/dashboard/ChannelSettings";
@@ -20,6 +21,10 @@ export default function Dashboard() {
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const data = useDashboardData();
+  const { selectedPlaylistId, setSelectedPlaylistId } = useSelectedPlaylist(
+    data.playlists,
+    data.playlistsLoaded
+  );
 
   useEffect(() => {
     if (!loading && !user) navigate("/login", { replace: true });
@@ -27,7 +32,7 @@ export default function Dashboard() {
 
   if (loading) return null;
 
-  const selectedPlaylist = data.playlists.find(p => p.id === data.selectedPlaylistId);
+  const selectedPlaylist = data.playlists.find(p => p.id === selectedPlaylistId);
   
   // Objeto de configuração para os editores: usa a tela selecionada ou o perfil global
   const activeConfig = selectedPlaylist ? {
@@ -71,7 +76,7 @@ export default function Dashboard() {
         <DashboardSidebar 
           onSync={data.triggerSync} 
           playlists={data.playlists} 
-          selectedPlaylistId={data.selectedPlaylistId} 
+          selectedPlaylistId={selectedPlaylistId} 
         />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b border-border bg-card px-4 gap-3">
@@ -119,8 +124,8 @@ export default function Dashboard() {
                   profile={activeConfig as any} 
                   onSave={handleSaveEditor}
                   playlists={data.playlists}
-                  selectedPlaylistId={data.selectedPlaylistId}
-                  setSelectedPlaylistId={data.setSelectedPlaylistId}
+                  selectedPlaylistId={selectedPlaylistId}
+                  setSelectedPlaylistId={setSelectedPlaylistId}
                 />
               } />
               <Route path="devices" element={
@@ -128,8 +133,8 @@ export default function Dashboard() {
                     playlists={data.playlists} 
                     profile={data.profile}
                     media={data.media}
-                    selectedPlaylistId={data.selectedPlaylistId}
-                    setSelectedPlaylistId={data.setSelectedPlaylistId}
+                    selectedPlaylistId={selectedPlaylistId}
+                    setSelectedPlaylistId={setSelectedPlaylistId}
                     onSync={data.triggerSync}
                     onCreate={data.createPlaylist}
                     onUpdatePlaylist={data.savePlaylistConfig}
