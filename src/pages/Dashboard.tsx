@@ -76,7 +76,7 @@ export default function Dashboard() {
         <DashboardSidebar 
           onSync={data.triggerSync} 
           playlists={data.playlists} 
-          selectedPlaylistId={data.selectedPlaylistId} 
+          selectedPlaylistId={selectedPlaylistId} 
         />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b border-border bg-card px-4 gap-3">
@@ -124,8 +124,8 @@ export default function Dashboard() {
                   profile={activeConfig as any} 
                   onSave={handleSaveEditor}
                   playlists={data.playlists}
-                  selectedPlaylistId={data.selectedPlaylistId}
-                  setSelectedPlaylistId={data.setSelectedPlaylistId}
+                  selectedPlaylistId={selectedPlaylistId}
+                  setSelectedPlaylistId={setSelectedPlaylistId}
                 />
               } />
               <Route path="devices" element={
@@ -133,8 +133,8 @@ export default function Dashboard() {
                     playlists={data.playlists} 
                     profile={data.profile}
                     media={data.media}
-                    selectedPlaylistId={data.selectedPlaylistId}
-                    setSelectedPlaylistId={data.setSelectedPlaylistId}
+                    selectedPlaylistId={selectedPlaylistId}
+                    setSelectedPlaylistId={setSelectedPlaylistId}
                     onSync={data.triggerSync}
                     onCreate={data.createPlaylist}
                     onUpdatePlaylist={data.savePlaylistConfig}
