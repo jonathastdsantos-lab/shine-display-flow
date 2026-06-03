@@ -495,7 +495,7 @@ export default function DeviceMonitor({
         </div>
         
         {playlists.map((pl) => {
-          const status = getStatusInfo(statuses[pl.id] || null);
+          const status = getStatusInfo(statuses[pl.id] || null, t);
           const isSelected = selectedIds.includes(pl.id);
           const isCurrentEditor = selectedPlaylistId === pl.id;
 
