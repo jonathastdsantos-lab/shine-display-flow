@@ -7,6 +7,7 @@ import RetailTemplate from "@/pages/player/templates/RetailTemplate";
 import LBarTemplate from "@/pages/player/templates/LBarTemplate";
 import SplitTemplate from "@/pages/player/templates/SplitTemplate";
 import CustomTemplate from "@/pages/player/templates/CustomTemplate";
+import PlayerError from "@/pages/player/PlayerError";
 import type { TemplateProps } from "@/pages/player/templates/types";
 
 export default function Player() {
@@ -21,6 +22,16 @@ export default function Player() {
     nextCommandSignal: sync.nextCommandSignal,
   });
 
+  if (sync.error) {
+    return (
+      <PlayerError
+        error={sync.error}
+        onRetry={sync.retry}
+        autoRetrySeconds={sync.error.kind === "playlist_not_found" ? 0 : 15}
+      />
+    );
+  }
+
   if (sync.mediaItems.length === 0) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-black">
@@ -30,7 +41,9 @@ export default function Player() {
           </div>
           <div>
             <p className="font-display text-2xl font-bold tracking-widest uppercase text-white/40">Signage OS</p>
-            <p className="text-xs text-white/20 mt-1 uppercase tracking-widest">Aguardando Programação Local</p>
+            <p className="text-xs text-white/20 mt-1 uppercase tracking-widest">
+              {sync.loading ? "Carregando programação..." : "Aguardando Programação Local"}
+            </p>
           </div>
         </div>
       </div>
