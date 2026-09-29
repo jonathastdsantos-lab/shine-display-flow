@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import WeatherWidget from "./WeatherWidget";
+import { Clock } from "lucide-react";
 
 interface ClockWidgetProps {
   compact?: boolean;
   weatherCity?: string;
   fontSize?: number;
-  variant?: 'standard' | 'glass' | 'bold' | 'split';
+  variant?: 'standard' | 'glass' | 'bold' | 'split' | 'premium';
   showWeather?: boolean;
 }
 
@@ -25,8 +26,48 @@ export default function ClockWidget({
     return () => clearInterval(interval);
   }, []);
 
-  // Is weather enabled and do we have a city/auto?
   const displayWeather = showWeather && !!weatherCity;
+
+  // Variant: PREMIUM (Ultra-modern, glassmorphism, vibrant gradients)
+  if (variant === 'premium') {
+    return (
+      <div className="relative w-full h-full p-6 flex flex-col items-center justify-center overflow-hidden rounded-3xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] group">
+        {/* Animated background glows */}
+        <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/20 rounded-full blur-[3rem] -translate-y-1/2 translate-x-1/2 group-hover:bg-indigo-400/30 transition-all duration-700" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-fuchsia-500/20 rounded-full blur-[3rem] translate-y-1/2 -translate-x-1/2 group-hover:bg-fuchsia-400/30 transition-all duration-700" />
+        
+        {/* Time display */}
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="flex items-center gap-2 mb-2 bg-white/10 px-3 py-1 rounded-full border border-white/5">
+            <Clock className="w-3.5 h-3.5 text-indigo-300" />
+            <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-indigo-100">Horário Local</span>
+          </div>
+          
+          <p className="font-display font-black tracking-tighter tabular-nums bg-gradient-to-br from-white via-indigo-50 to-indigo-200 bg-clip-text text-transparent drop-shadow-sm"
+             style={{ fontSize: fontSize ? `${fontSize}px` : "4.5rem", lineHeight: 0.85 }}>
+            {format(now, "HH:mm")}
+            <span className="text-3xl ml-1 animate-pulse text-indigo-400/60">:</span>
+            <span className="text-4xl">{format(now, "ss")}</span>
+          </p>
+          
+          <div className="mt-4 flex flex-col items-center">
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-white/70">
+              {format(now, "EEEE", { locale: ptBR })}
+            </p>
+            <p className="text-sm font-semibold text-white/50 tracking-widest mt-0.5">
+              {format(now, "dd 'de' MMMM", { locale: ptBR })}
+            </p>
+          </div>
+        </div>
+
+        {displayWeather && (
+          <div className="relative z-10 mt-6 pt-5 w-full border-t border-white/10 flex justify-center">
+            <WeatherWidget city={weatherCity} compact variant="glass" />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Variant: GLASS (Modern, blurred look)
   if (variant === 'glass') {
@@ -132,3 +173,4 @@ export default function ClockWidget({
     </div>
   );
 }
+

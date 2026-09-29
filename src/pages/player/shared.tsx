@@ -5,6 +5,8 @@ import SocialWidget from "@/components/SocialWidget";
 import QRWidget from "@/components/QRWidget";
 import CameraWidget from "@/components/CameraWidget";
 import YoutubeWidget from "@/components/YoutubeWidget";
+import WorldEventsWidget from "@/components/WorldEventsWidget";
+import OfferWidget from "@/components/OfferWidget";
 
 export interface MediaItem {
   id: string;
@@ -93,13 +95,23 @@ export function PlayerSidebar({
                 ? city || "auto"
                 : undefined
             }
+            variant="premium"
             showWeather={wc?.clock?.showWeather !== false}
           />
         </div>
       )}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
       <div className="flex-1 overflow-hidden relative">
-        <div className="absolute inset-0 p-4 space-y-5 overflow-hidden">
+        <div className="absolute inset-0 p-4 space-y-5 overflow-y-auto overflow-x-hidden hide-scrollbar">
+          
+          {/* Widget de Ofertas de Grupos (Shopee/MercadoLivre) */}
+          <OfferWidget />
+
+          {/* Widget de Eventos no Mundo */}
+          <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group min-h-[140px]">
+            <WorldEventsWidget />
+          </div>
+
           {isWidgetEnabled(wc, "finance") && (
             <div className="bg-white/5 rounded-2xl border border-white/5 backdrop-blur-sm shadow-xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
